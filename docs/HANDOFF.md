@@ -1,6 +1,6 @@
 # Upward Spiral of Awesomeness: handoff for a new chat
 
-Last updated Sep 28, 2026. Read this first, then `README.md` in the repo.
+Last updated Sep 28, 2026 (day rings). Read this first, then `README.md` in the repo.
 
 ## How Karla wants to work
 - Run ideas and details by her **before** building. Keep answers short and plain (non-technical).
@@ -11,10 +11,10 @@ A private habit app for three people (karlastarr@gmail.com, erikjschultz@gmail.c
 
 | Page | URL | Tabs |
 |---|---|---|
-| Check-in | /challenge | Today (daily dashboard: to-dos + Work tasks, then the check-in), Meds, Journal, Categories, Targets & rules |
+| Check-in | /challenge | Today (just that day: progress rings, to-dos + Work tasks, then the check-in), Meds, Journal, Categories, Targets & rules |
 | Habits | /challenge-routines | Rituals (run step by step), Set up habits, To-dos |
 | Work | /challenge-work | Today (3–5 picked tasks), Goals (goals → milestones → tasks, dependencies, progress, "Paste a plan from Claude") |
-| Progress | /challenge-progress | Streaks & badges, My progress (energy flow), Group |
+| Progress | /challenge-progress | Streaks & badges (check-in streak, 30-day tally, floor day, streak freezes, then per-area calendars), My progress (energy flow), Group |
 
 Words: **habit** = one recurring action; **ritual** = a saved sequence of habits. Categories = the scored check-in questions.
 
@@ -27,7 +27,8 @@ Words: **habit** = one recurring action; **ritual** = a saved sequence of habits
   - Show up / Dusk (violet): check-ins, habits, rituals
 - Tile **shade = momentum**. This week is compared with the average of the 3 weeks before, on the same days so far: >20% up is surging, 5–20% up rising, within 5% steady, 5–20% down dipping, >20% down slipping. Tiles keep a slight tilt.
 - Work goals each get their own colour (blue, rose, green, gold, violet, teal, orange). Their tasks carry a matching stripe.
-- Missed days show as red lines in the Check-in tally. There are no banners at the top of Check-in.
+- Check-in → Today opens with the **day's rings** (`src/rings.js`, `src/views/rings.js`): one ring per energy group, each starting as a labelled tab (icon, name, points) that curls around the centre. Fill up / Protect / Spend well = check-in points in that group. Show up = finishing the check-in + habits due today + today's Work tasks (+ any Show up questions). Centre = average of the rings, with day points underneath. Rings sweep in, update live, turn deep with a check when full; all full shows a celebration. Tapping a tab jumps to that group.
+- Everything streak-related lives on Progress → Streaks & badges (streak count, freezes and the freeze button, red missed-day lines, floor day, never-miss-twice note). Check-in has no streak info and no banners.
 
 ## Code and deploy
 - Source: GitHub **koalable/upward-spiral** (public). `src/` holds the code and `node build.mjs` builds `dist/cdn/*`. Run tests with `node --test test/*.test.js`.

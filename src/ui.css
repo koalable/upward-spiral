@@ -375,3 +375,25 @@
 #wlc.ui .importbox ol{padding-left:18px;margin:12px 0}
 #wlc.ui .importbox textarea{width:100%;font-family:ui-monospace,Menlo,monospace;font-size:.85em}
 #wlc.ui .importmsg{margin-top:10px;color:var(--fg)}
+
+/* ---------- Check-in → Today: the day's rings ---------- */
+#wlc.ui .rings{position:relative;container-type:inline-size;max-width:540px;margin:4px auto 18px;aspect-ratio:400/236}
+#wlc.ui .rings svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+#wlc.ui .rings .track{fill:none;stroke:var(--accent)}
+#wlc.ui .rings .tab{stroke:var(--s2);stroke-linecap:round}
+#wlc.ui .rings .arc{fill:none;stroke:var(--s2);stroke-linecap:round;transition:stroke-dasharray 1.1s cubic-bezier(.2,.8,.2,1),stroke .4s}
+#wlc.ui .rings g.full .tab,#wlc.ui .rings g.full .arc{stroke:var(--h)}
+#wlc.ui .rings .rlab{position:absolute;transform:translateY(-50%);height:calc(18 / 236 * 100%);display:flex;align-items:center;justify-content:space-between;gap:4px;padding:0;margin:0;border:0;background:none;cursor:pointer;color:var(--s4);font:inherit;font-size:clamp(11px,3.1cqw,15px);font-weight:600;line-height:1;white-space:nowrap;text-align:left}
+#wlc.ui .rings .rlab .rname{display:inline-flex;align-items:center;gap:.4em;overflow:hidden;text-overflow:ellipsis}
+#wlc.ui .rings .rlab b{font-weight:700;font-variant-numeric:tabular-nums;display:inline-flex;align-items:center;gap:.25em}
+#wlc.ui .rings .rlab.full{color:#fff}
+#wlc.ui .rings .rlab:focus-visible{outline:2px solid var(--fg);outline-offset:2px;border-radius:6px}
+#wlc.ui .rings .rcenter{position:absolute;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;text-align:center;pointer-events:none}
+#wlc.ui .rings .rpct{font-family:var(--serif);font-size:clamp(22px,7cqw,34px);line-height:1;font-variant-numeric:lining-nums}
+#wlc.ui .rings .rcenter small{font-size:clamp(10px,2.6cqw,12px);color:var(--muted);margin-top:3px}
+#wlc.ui .rings .allfull .rpct{color:#eab308;animation:wlc-pop 1.2s ease-out}
+#wlc.ui .rings .rlab.full b .icon,#wlc.ui .rings .rlab.full b i{animation:wlc-pop .9s ease-out}
+@keyframes wlc-pop{0%{transform:scale(.4);opacity:0}60%{transform:scale(1.25);opacity:1}100%{transform:scale(1)}}
+@media(prefers-reduced-motion:reduce){#wlc.ui .rings .arc{transition:none}#wlc.ui .rings *{animation:none!important}}
+#wlc.ui .calkey .k.tk{width:6px;height:14px;border-radius:2px;border:0}
+#wlc.ui .calkey .k.tk.on{background:#eab308}#wlc.ui .calkey .k.tk.frz{background:#a16207}#wlc.ui .calkey .k.tk.miss{background:#ef4444}

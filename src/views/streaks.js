@@ -1,8 +1,8 @@
-// Streaks: a calendar per area (check-ins, each question category, each routine group), with badges.
-import { html, todayKey, dateRange, monthKey, monthDays, monthName, addDays, parseKey, longDate } from "../util.js";
+// Streaks: the check-in streak (with freezes), then a calendar per area (check-ins, each question category, each routine group), with badges.
+import { html, todayKey, dateRange, monthKey, monthDays, monthName, addDays, parseKey, longDate, shortDate } from "../util.js";
 import { POINTS_PER_CATEGORY } from "../constants.js";
 import { scoredQuestions, questionName, scoreDay } from "../scoring.js";
-import { state, settings, showedUp, checkedIn, joinedBy } from "../state.js";
+import { state, settings, showedUp, checkedIn, joinedBy, currentStreak, myFreezes, isStreakDay, isEditable, leadName, floorNames } from "../state.js";
 import { normalizeRoutines, inRitual, dayStatus } from "../routines.js";
 import { runs, BADGES, nextBadge } from "../streaks.js";
 import { pressed } from "./components.js";
@@ -83,6 +83,39 @@ function shelf(best) {
   ${next ? html`<p class="hint">${next[0] - best} more ${next[0] - best === 1 ? "day" : "days"} in a row for <b>${next[1]}</b>.</p>` : html`<p class="hint">Every badge earned. Legendary.</p>`}`;
 }
 
+// The main check-in streak: count, the last 30 days (red = a missed day), floor day, and freezes.
+function checkinStreak() {
+  const uid = state.uid, today = todayKey(), yesterday = addDays(today, -1);
+  const streak = currentStreak(uid), freezes = myFreezes();
+  const tally = dateRange(addDays(today, -29), today).map((d) => {
+    let cls = "";
+    if (isStreakDay(uid, d)) {
+      const day = state.days[d];
+      cls = scoreDay(day, settings()).leadMet ? "on" : day?.a?.freeze ? "frz" : "off";
+    }
+    if (d < today && joinedBy(uid, d) && !showedUp(uid, d) && cls !== "frz") cls = "miss";
+    return html`<i class="${cls}${d === today ? " today" : ""}" title="${longDate(d)}"></i>`;
+  });
+  const floor = scoreDay(state.days[today], settings()).floorMet;
+  const lead = leadName().toLowerCase();
+  // A freeze can cover any day still open for editing that has nothing logged for the streak habit.
+  const freezeRows = [today, yesterday].filter((d) => isEditable(d) && joinedBy(uid, d)).map((d) => {
+    const day = state.days[d], when = d === today ? "today" : `yesterday (${shortDate(d)})`;
+    if (day?.a?.freeze) return html`<p class="small">Freeze used for ${when}. <button class="linkbtn" data-act="unfreeze" data-date="${d}">Undo</button></p>`;
+    if (!freezes || scoreDay(day, settings()).leadMet) return "";
+    return html`<p class="small">No ${lead} logged ${when}. <button class="btn ice" data-act="freeze" data-date="${d}">Use a streak freeze</button></p>`;
+  });
+  const missedYesterday = joinedBy(uid, yesterday) && !showedUp(uid, yesterday) && !showedUp(uid, today);
+  return html`<section class="panel"><h2>Check-in streak</h2>
+    <div class="hero slim"><div><div class="big num streaknum">${streak.days}${streak.capped ? "+" : ""}<small> day${streak.days === 1 ? "" : "s"}</small></div><div class="cap">${leadName()} streak</div></div>
+      <div><div class="big num">${freezes}</div><div class="cap">Streak freeze${freezes === 1 ? "" : "s"}</div></div></div>
+    <div class="tally" aria-label="Last 30 days">${tally}</div>
+    <div class="calkey small"><span><i class="k tk on"></i>${leadName()} logged</span><span><i class="k tk frz"></i>Freeze</span><span><i class="k tk miss"></i>Missed day</span></div>
+    <div class="badges"><span class="badge ${floor ? "on" : ""}">${floor ? "✓ Floor day met today" : "Floor day not met yet today"}</span></div>
+    ${missedYesterday ? html`<p class="hint">Yesterday was a miss. A floor day today keeps the never-miss-twice rule: at least 1 point in ${floorNames()}.</p>` : ""}
+    ${freezeRows}</section>`;
+}
+
 export function streaksView() {
   const list = areas(), dates = history();
   const area = list.find((a) => a.id === state.area) || list[0];
@@ -90,6 +123,7 @@ export function streaksView() {
   const result = results[area.id], mk = monthKey(todayKey());
   const fullThisMonth = (a) => monthDays(mk).filter((d) => results[a.id].byDay[d]?.status === "all").length;
   return html`
+    ${checkinStreak()}
     <section class="panel ${area.theme}"><h2>${area.name}</h2>
       <div class="hero slim"><div><div class="big num streaknum">${result.current}<small> day${result.current === 1 ? "" : "s"}</small></div><div class="cap">Current streak</div></div>
         <div><div class="big num">${result.best}<small> day${result.best === 1 ? "" : "s"}</small></div><div class="cap">Best, last 120 days</div></div></div>

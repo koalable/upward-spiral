@@ -1,11 +1,9 @@
-// Today: the daily check-in form, plus live bits (score, streak, banners) that update in place.
-import { html, todayKey, addDays, dateRange, longDate, shortDate, clock } from "../util.js";
-import { BUILTINS, SCREEN_HABITS, WORKOUTS, MAX_DAILY } from "../constants.js";
-import { isScored, questionRule, writingMinutes, workoutMinutes, scoreDay } from "../scoring.js";
-import {
-  state, settings, isEditable, scoreOf, leadName, floorNames, currentSeason, currentStreak,
-  myFreezes, isStreakDay, joinedBy, showedUp,
-} from "../state.js";
+// Today: the day's rings, today's to-dos and Work, then the check-in form. Streaks live on Progress.
+import { html, todayKey, addDays, longDate, clock } from "../util.js";
+import { BUILTINS, SCREEN_HABITS, WORKOUTS } from "../constants.js";
+import { isScored, questionRule, writingMinutes, workoutMinutes } from "../scoring.js";
+import { state, settings, isEditable, scoreOf } from "../state.js";
+import { ringsView, patchRings } from "./rings.js";
 import { answers } from "../day.js";
 import { toggle, stepper, choices, zeroToFour, cardHead, saveStatus, icon } from "./components.js";
 import { GROUPS, groupOf, iconOf, themeOf } from "../energy.js";
@@ -115,15 +113,6 @@ function ladderProgress(q) {
   return html`<div class="weekdots" aria-label="This week">${dots}</div> ${week}${milestone}`;
 }
 
-function seasonBanner() {
-  const s = currentSeason();
-  if (!s) return "";
-  if (s.phase === "upcoming") return html`<div class="banner">Season ${s.n} starts ${longDate(s.start)}.</div>`;
-  if (s.phase === "active") return html`<div class="banner good">Season ${s.n}, week ${s.week} of 6. Ends ${shortDate(s.end)}.</div>`;
-  if (s.phase === "break") return html`<div class="banner">Season ${s.n} is over. Break until ${shortDate(s.breakEnd)}.</div>`;
-  return "";
-}
-
 export function todayView() {
   const s = settings(), a = answers(), t = s.targets;
   const today = todayKey(), isToday = state.date === today, open = isEditable(state.date);
@@ -138,16 +127,15 @@ export function todayView() {
       ${isToday ? "" : html`<button class="linkbtn" data-act="goToday">Back to today</button>`}
       ${saveStatus()}
     </div>
+    <div id="live-rings">${ringsView()}</div>
     ${isToday ? html`<div id="live-dash">${dashboardView()}</div>` : ""}
     ${open ? "" : html`<div class="banner">This day is closed for editing. ${EDIT_WINDOW_TEXT}</div>`}
-    <section class="hero" id="live-hero"></section>
-    <div id="live-freeze"></div>
     ${isToday ? medQuickLog() : ""}
     <fieldset ${open ? "" : "disabled"}>
       ${ladders.map((q) => ladderCard(q, a))}
       ${GROUPS.map((g) => {
         const mine = scored.filter((q) => groupOf(q).id === g.id);
-        return mine.length ? html`<div class="egrouphead ${g.theme}"><span class="gicon">${icon(g.icon)}</span><div><div class="tname">${g.themeName}</div><h3>${g.name}</h3></div></div>
+        return mine.length ? html`<div class="egrouphead ${g.theme}" id="grp-${g.id}"><span class="gicon">${icon(g.icon)}</span><div><div class="tname">${g.themeName}</div><h3>${g.name}</h3></div></div>
           ${mine.map((q) => questionCard(q, a, t, q.id === s.lead, true))}` : "";
       })}
       ${extras.length ? html`<h3 class="also">Also tracking <span class="muted small">(not scored)</span></h3>${extras.map((q) => questionCard(q, a, t, false))}` : ""}
@@ -161,43 +149,6 @@ export function todayView() {
 }
 
 // ---------- live parts ----------
-function hero(r) {
-  const streak = currentStreak(state.uid), freezes = myFreezes(), today = todayKey();
-  const tally = dateRange(addDays(today, -29), today).map((d) => {
-    let cls = "";
-    if (isStreakDay(state.uid, d)) {
-      const day = state.days[d];
-      cls = scoreDay(day, settings()).leadMet ? "on" : day?.a?.freeze ? "frz" : "off";
-    }
-    if (d < today && joinedBy(state.uid, d) && !showedUp(state.uid, d) && cls !== "frz") cls = "miss"; // a missed day: red line
-    return html`<i class="${cls}${d === state.date ? " today" : ""}" title="${d}"></i>`;
-  });
-  return html`
-    <div><div class="big num">${r.total}<small> / ${MAX_DAILY}</small></div><div class="cap">Points for this day</div></div>
-    <div><div class="big num streaknum">${streak.days}${streak.capped ? "+" : ""}<small> day ${leadName().toLowerCase()} streak</small></div>
-      <div class="tally" aria-hidden="true">${tally}</div></div>
-    <div class="badges">
-      <span class="badge ${r.floorMet ? "on" : ""}">${r.floorMet ? "✓ Floor day met" : "Floor day not met yet"}</span>
-      <span class="badge ${r.logged ? "on" : ""}">${r.logged ? "✓ Checked in" : "Not checked in"}</span>
-      <span class="badge ice">${freezes} streak freeze${freezes === 1 ? "" : "s"}</span>
-    </div>`;
-}
-
-function freezeBanner(r, a) {
-  if (!isEditable(state.date)) return "";
-  if (a.freeze) return html`<div class="banner good">Streak freeze used for this day. <button class="linkbtn" data-act="unfreeze">Undo</button></div>`;
-  const n = myFreezes();
-  if (r.leadMet || !n) return "";
-  return html`<div class="banner">No ${leadName().toLowerCase()} logged for this day yet. <button class="btn ice" data-act="freeze">Use a streak freeze</button> <span class="small muted">${n} available</span></div>`;
-}
-
-function missBanner() {
-  const today = todayKey(), yesterday = addDays(today, -1);
-  if (state.date !== today || !joinedBy(state.uid, yesterday) || showedUp(state.uid, yesterday)) return "";
-  if (showedUp(state.uid, today)) return html`<div class="banner good">Yesterday was a miss, and today you showed up. Rule kept.</div>`;
-  return html`<div class="banner bad">Yesterday was a miss. A floor day today keeps the never-miss-twice rule: at least 1 point in ${floorNames()}.</div>`;
-}
-
 function finishBox(a) {
   return a.doneAt
     ? html`<span class="done">✓ Finished at ${clock(a.doneAt)}</span> <button class="linkbtn" data-act="unfinish">Undo</button>`
@@ -207,8 +158,7 @@ function finishBox(a) {
 export function patchToday(view) {
   const set = (id, content) => { const el = view.querySelector(`#${id}`); if (el) el.innerHTML = String(content); };
   const a = answers(), r = scoreOf(state.date);
-  set("live-hero", hero(r));
-  set("live-freeze", freezeBanner(r, a));
+  patchRings(view.querySelector("#live-rings"));
   set("live-finish", finishBox(a));
   view.querySelectorAll("[data-points]").forEach((el) => {
     const p = r.points[el.dataset.points] || 0;

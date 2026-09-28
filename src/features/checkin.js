@@ -1,5 +1,5 @@
 // The daily check-in: answering questions, editing my questions, level-ups, journal, and targets.
-import { state, settings, targets, isEditable, myFreezes, findQuestion } from "../state.js";
+import { state, settings, targets, isEditable, findQuestion } from "../state.js";
 import { answers, commitDay, saveSettings, saveMember } from "../day.js";
 import { builtinAsCustom, scoredQuestions } from "../scoring.js";
 import { clone, getPath, setPath, isSet, toNum, todayKey, newId } from "../util.js";
@@ -67,6 +67,12 @@ function saveQuestion() {
 }
 
 const actions = {
+  // tapping a ring's tab jumps to that group's questions (Show up → today's to-dos and Work)
+  jumpGroup(el) {
+    const target = $(`#grp-${el.dataset.group}`) || (el.dataset.group === "show" ? $("#live-dash") || $("#live-finish") : null);
+    target?.scrollIntoView({ behavior: "smooth", block: "start" });
+    return "none";
+  },
   icsReminder: () => (openIcs(reminderOpts(settings().targets)), "none"),
   // answering
   toggle: (el) => answer((a) => {
@@ -98,8 +104,6 @@ const actions = {
     answers().sessions.splice(Number(el.dataset.index), 1);
     commitDay();
   },
-  freeze: () => (myFreezes() > 0 ? answer((a) => { a.freeze = true; }) : "none"),
-  unfreeze: () => answer((a) => { a.freeze = false; }),
   finish: () => answer((a) => { a.doneAt = Date.now(); }),
   unfinish: () => answer((a) => { delete a.doneAt; }),
 
