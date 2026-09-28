@@ -10,7 +10,7 @@
 //   tick()             every 30 seconds; midnight() when the date changes
 export const PAGES = [
   ["checkin", "Check-in", "/challenge"],
-  ["routines", "Routines", "/challenge-routines"],
+  ["routines", "Habits", "/challenge-routines"],
   ["work", "Work", "/challenge-work"],
   ["progress", "Progress", "/challenge-progress"],
 ];

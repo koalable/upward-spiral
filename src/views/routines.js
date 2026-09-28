@@ -56,7 +56,7 @@ const STARTERS = [["morning", "Morning starter"], ["evening", "Evening starter"]
 
 function emptyState() {
   return html`<article class="round padding"><h5>Start with a ritual</h5>
-    <p>A ritual is a set of steps you do in order, like a morning routine or a work shutdown. Tap Start and the app walks you through one step at a time, so there's nothing to decide.</p>
+    <p>A ritual is a saved sequence of habits you do in order, like a morning ritual or a work shutdown. Tap Start and the app walks you through one step at a time, so there's nothing to decide.</p>
     <nav class="wrap">${STARTERS.map(([id, label]) => html`<button class="border" data-act="rStarter" data-starter="${id}">${icon("add")}<span>${label}</span></button>`)}
       <button class="transparent" data-act="rNew">${icon("edit")}<span>Build my own</span></button></nav></article>`;
 }
@@ -88,7 +88,7 @@ function runnerView() {
     return html`<article class="round padding center-align runner">
       <div class="big-emoji" aria-hidden="true">🎉</div><h4>${rit?.name || "Ritual"} done</h4>
       <p>${steps.filter((r) => isDone(r, state.date, state.routinelog)).length} of ${steps.length} steps checked off.</p>
-      <button class="large" data-act="runExit">${icon("arrow_back")}<span>Back to routines</span></button></article>`;
+      <button class="large" data-act="runExit">${icon("arrow_back")}<span>Back to rituals</span></button></article>`;
   }
   const t = state.timer?.id === step.id ? state.timer : null;
   return html`<article class="round padding runner">
@@ -113,10 +113,10 @@ const field = (label, input) => html`<label class="field"><span>${label}</span>$
 
 function routineForm() {
   const e = state.editRoutine;
-  if (!e) return html`<nav class="wrap"><button data-act="rNew">${icon("add")}<span>Add a routine</span></button>
+  if (!e) return html`<nav class="wrap"><button data-act="rNew">${icon("add")}<span>Add a habit</span></button>
     <button class="border" data-act="ritNew">${icon("playlist_add")}<span>New ritual</span></button></nav>`;
   const mode = e.mode || modeOf(e), days = e.days || EVERY_DAY;
-  return html`<article class="border round padding"><h6>${e.id ? "Edit routine" : "New routine"}</h6>
+  return html`<article class="border round padding"><h6>${e.id ? "Edit habit" : "New habit"}</h6>
     <div class="grid">
       <div class="s12 m6">${field("Name", html`<input placeholder=" " id="r-name" maxlength="60" value="${e.name || ""}">`)}</div>
       <div class="s6 m3">${field("Emoji", html`<input placeholder=" " id="r-icon" maxlength="4" value="${e.icon || ""}">`)}</div>

@@ -14,6 +14,6 @@ function goalList(key, title) {
 
 export function todosView() {
   const today = todayKey();
-  return html`<p class="hint">One-off tasks. For things you do again and again, add a routine instead. Private to you.</p>
+  return html`<p class="hint">One-off tasks. For things you do again and again, add a habit instead. Private to you.</p>
     <div class="goalcols">${goalList("d" + today, "Today")}${goalList("w" + weekStart(today), "This week")}${goalList("m" + monthKey(today), "This month")}</div>`;
 }

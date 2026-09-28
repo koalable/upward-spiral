@@ -71,7 +71,7 @@ function saveRoutine() {
 }
 
 export default {
-  tabs: [["routines", "Routines", routinesView], ["rsetup", "Set up routines", routineSetupView]],
+  tabs: [["routines", "Rituals", routinesView], ["rsetup", "Set up habits", routineSetupView]],
   actions: {
     rIcs: (el) => (openIcs(reminderOpts(el.dataset.id)), "none"),
     runStart(el) {

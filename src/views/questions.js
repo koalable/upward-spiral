@@ -7,8 +7,8 @@ import { BUILTIN_ORDER, BUILTINS, QUESTION_KINDS, MAX_DAILY, DEFAULT_WEEKS_TO_LE
 import { isLadder, levelOf, levelLabel } from "../ladder.js";
 import { isScored, scoredQuestions, questionName } from "../scoring.js";
 import { state, settings, hasQuestion } from "../state.js";
-import { saveStatus } from "./components.js";
-import { GROUPS, groupOf } from "../energy.js";
+import { saveStatus, icon } from "./components.js";
+import { GROUPS, groupOf, iconOf } from "../energy.js";
 
 function editor() {
   const e = state.editQuestion;
@@ -76,22 +76,37 @@ export function readQuestionForm(view) {
 
 export function questionsView() {
   const s = settings(), scored = scoredQuestions(s), last = s.cats.length - 1;
-  const rows = s.cats.map((q, i) => html`<li class="qrow">
-    <div class="qmain"><b>${questionName(q)}</b>
+  // Sections: the three energy groups (scored), then everything tracked but not scored.
+  const sections = [
+    ...GROUPS.filter((g) => g.id !== "show").map((g) => ({ g, test: (q) => isScored(q) && groupOf(q).id === g.id })),
+    { g: null, test: (q) => !isScored(q) },
+  ];
+  const row = (q, i, list, k) => {
+    const up = k > 0 ? list[k - 1][1] - i : 0, down = k < list.length - 1 ? list[k + 1][1] - i : 0;
+    return html`<li class="qrow">
+    <div class="qmain">${isScored(q) ? html`<span class="tchip">${icon(iconOf(q))}</span>` : ""}<b>${questionName(q)}</b>
       <span class="tag">${q.kind === "builtin" ? "Built-in" : QUESTION_KINDS[q.kind].replace(" (not scored)", "")}</span>
-      <span class="tag ${isScored(q) || isLadder(q) ? "on" : ""}">${isScored(q) ? "Scored" : isLadder(q) ? `Level ${levelOf(q).number}: ${levelLabel(q)}` : "Tracked only"}</span>
+      ${isLadder(q) ? html`<span class="tag on">Level ${levelOf(q).number}: ${levelLabel(q)}</span>` : isScored(q) ? "" : html`<span class="tag">Tracked only</span>`}
       ${q.id === s.lead ? html`<span class="tag lead">Streak</span>` : ""}</div>
     <div class="qbtns">
-      <button class="x" data-act="qMove" data-index="${i}" data-by="-1" aria-label="Move ${questionName(q)} up" ${i ? "" : "disabled"}>↑</button>
-      <button class="x" data-act="qMove" data-index="${i}" data-by="1" aria-label="Move ${questionName(q)} down" ${i < last ? "" : "disabled"}>↓</button>
+      <button class="x" data-act="qMove" data-index="${i}" data-by="${up}" aria-label="Move ${questionName(q)} up" ${up ? "" : "disabled"}>↑</button>
+      <button class="x" data-act="qMove" data-index="${i}" data-by="${down}" aria-label="Move ${questionName(q)} down" ${down ? "" : "disabled"}>↓</button>
       <button class="linkbtn" data-act="qEdit" data-index="${i}">Edit</button>
-      <button class="x" data-act="qRemove" data-index="${i}" aria-label="Remove ${questionName(q)}">×</button></div></li>`);
+      <button class="x" data-act="qRemove" data-index="${i}" aria-label="Remove ${questionName(q)}">×</button></div></li>`;
+  };
+  const groupsHtml = sections.map(({ g, test }) => {
+    const list = s.cats.map((q, i) => [q, i]).filter(([q]) => test(q));
+    if (!list.length) return "";
+    const head = g ? html`<div class="egrouphead ${g.theme}"><span class="gicon">${icon(g.icon)}</span><div><div class="tname">${g.themeName}</div><h3>${g.name}</h3></div></div>`
+      : html`<h3 class="also">Also tracking <span class="muted small">(not scored)</span></h3>`;
+    return html`${head}<ul class="qlist${g ? ` qgroup themed ${g.theme}` : ""}">${list.map(([q, i], k) => row(q, i, list, k))}</ul>`;
+  });
   const missing = BUILTIN_ORDER.filter((id) => !hasQuestion(id));
   return html`
     <section class="panel"><h2>Categories</h2>
-      <p class="hint">🔒 Only you can see these. Each scored question is worth 4 points. Your total is scaled so it's always out of ${MAX_DAILY}, however many you pick. Eight is the classic setup.</p>
+      <p class="hint">🔒 Only you can see these. Each scored category is worth 4 points. Your total is scaled so it's always out of ${MAX_DAILY}, however many you pick. Eight is the classic setup.</p>
       <p class="small"><b>${scored.length}</b> scored · <b>${s.cats.length - scored.length}</b> tracked only ${saveStatus()}</p>
-      <ul class="qlist">${rows.length ? rows : html`<li class="muted">No questions yet.</li>`}</ul>
+      ${s.cats.length ? groupsHtml : html`<p class="muted">No categories yet.</p>`}
       ${missing.length ? html`<p class="hint spaced">Add back a built-in:</p><div class="chips">${missing.map((id) => html`<button class="chip" data-act="qAddBuiltin" data-id="${id}">+ ${BUILTINS[id].name}</button>`)}</div>` : ""}
       <div class="formslot">${editor()}</div></section>
     <section class="panel"><h2>Streak and floor day</h2>

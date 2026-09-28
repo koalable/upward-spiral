@@ -331,3 +331,7 @@
 #wlc.ui .calkey .k{border-color:var(--h,#22c55e)}#wlc.ui .calkey .k.all{background:var(--h,#22c55e)}#wlc.ui .calkey .k.some{border-color:var(--h,#22c55e)}
 #wlc.ui .chips.areas .chip[aria-pressed="true"]{background:var(--h,var(--primary));color:#fff;border-color:var(--h,var(--primary))}
 #wlc.ui p{height:auto}
+#wlc.ui .qgroup{border:1px solid color-mix(in srgb,var(--h) 35%,transparent);border-radius:18px;padding:2px 12px;margin:0 0 6px}
+#wlc.ui .qgroup .qrow:first-child{border-top:0}
+#wlc.ui .qgroup .qrow{border-top-color:color-mix(in srgb,var(--h) 25%,transparent)}
+#wlc.ui .qmain .tchip{width:28px;height:28px;border-radius:9px;font-size:.95em}

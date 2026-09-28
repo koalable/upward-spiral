@@ -41,10 +41,10 @@ export function energyView() {
       tiles.push({ name: "Check-ins", ico: "notebook-pen", values, t: trend(values), unit: `/${w.days} days`, note: `usually ${round(trend(values).avg)} days` });
       if (items.length) {
         const rv = w.windows.map((dates) => dates.filter((d) => dayStatus(items, d, state.routinelog) === "all").length);
-        tiles.push({ name: "Routines", ico: "list-checks", values: rv, t: trend(rv), unit: `/${w.days} days`, note: "all done · no points" });
+        tiles.push({ name: "Habits", ico: "list-checks", values: rv, t: trend(rv), unit: `/${w.days} days`, note: "all done · no points" });
       }
     }
-    const counted = tiles.filter((x) => x.name !== "Routines").map((x) => x.values); // routines are streak-only
+    const counted = tiles.filter((x) => x.name !== "Habits").map((x) => x.values); // routines are streak-only
     const values = counted.length ? sumSeries(counted) : w.windows.map(() => 0);
     return { ...g, tiles, values, t: trend(values) };
   }).filter((g) => g.tiles.length);

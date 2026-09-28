@@ -35,10 +35,10 @@ export function areas() {
   }
   const { items, rituals } = normalizeRoutines(state.routines), log = state.routinelog;
   if (items.length) {
-    list.push({ id: "r-all", name: "All routines", theme: "dusk", about: "Filled: every routine due that day. Ring: some.", status: (d) => dayStatus(items, d, log) });
+    list.push({ id: "r-all", name: "All habits", theme: "dusk", about: "Filled: every habit due that day. Ring: some.", status: (d) => dayStatus(items, d, log) });
     for (const { id: g, name } of rituals) {
       const mine = inRitual(items, g);
-      if (mine.length) list.push({ id: `r-${g}`, name: `${name} ritual`, theme: "dusk", about: "Filled: every routine due that day. Ring: some.", status: (d) => dayStatus(mine, d, log) });
+      if (mine.length) list.push({ id: `r-${g}`, name: `${name} ritual`, theme: "dusk", about: "Filled: every habit due that day. Ring: some.", status: (d) => dayStatus(mine, d, log) });
     }
   }
   return list;
