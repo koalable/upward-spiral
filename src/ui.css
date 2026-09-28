@@ -127,7 +127,7 @@
 #wlc.ui .done{color:var(--good);font-weight:600}
 #wlc.ui .hero{display:grid;grid-template-columns:auto 1fr;gap:12px 28px;align-items:end;border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;margin-bottom:14px}
 #wlc.ui .hero.slim{grid-template-columns:1fr 1fr}
-#wlc.ui .big{font-family:var(--serif);font-size:3em;font-weight:400;line-height:1;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+#wlc.ui .big{font-family:var(--serif);font-size:3em;font-weight:400;font-feature-settings:"lnum";line-height:1;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
 #wlc.ui .big small{font-size:.38em;font-weight:500;color:var(--muted);letter-spacing:0}
 #wlc.ui .streaknum{color:#eab308}
 #wlc.ui .cap{color:var(--muted);font-size:.8em;margin-top:6px}
@@ -223,19 +223,20 @@
 #wlc.ui .cday.some{border-color:#22c55e}
 #wlc.ui .cday.none{border-color:var(--border);border-style:dashed;color:var(--muted)}
 #wlc.ui .cday.rest,#wlc.ui .cday.future{color:var(--muted);opacity:.6}
-#wlc.ui .cday.today{outline:2px solid var(--fg);outline-offset:2px}
+#wlc.ui .cday.today{outline:2px solid var(--fg);outline-offset:1px}
 #wlc.ui .cstar{position:absolute;top:-6px;right:-6px;color:#eab308;font-style:normal;font-size:1em;line-height:1}
-#wlc.ui .calkey{display:flex;flex-wrap:wrap;gap:6px 16px;justify-content:center;margin:12px 0 6px;color:var(--muted)}
+#wlc.ui .calkey{display:flex;flex-wrap:wrap;gap:8px 16px;justify-content:center;margin:14px 0 12px;color:var(--muted);line-height:1.4;height:auto!important}
 #wlc.ui .calkey span{display:inline-flex;align-items:center;gap:6px}
 #wlc.ui .calkey .cstar{position:static}
 #wlc.ui .k{display:inline-block;width:12px;height:12px;border-radius:50%;border:2px solid #22c55e}
 #wlc.ui .k.all{background:#22c55e}
 #wlc.ui .k.none{border-color:var(--border);border-style:dashed}
-#wlc.ui .shelf{display:flex;gap:10px;overflow-x:auto;padding:4px 2px 10px}
-#wlc.ui .bdg{flex:none;width:124px;border:1px solid var(--border);border-radius:var(--radius);padding:12px 8px;text-align:center;display:flex;flex-direction:column;gap:2px;align-items:center;opacity:.5}
-#wlc.ui .bdg.got{opacity:1;border-color:#a16207}
+#wlc.ui .shelf{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:8px;padding:4px 0 10px}
+#wlc.ui .bdg{min-width:0;border:1px solid var(--border);border-radius:var(--radius);padding:10px 6px;line-height:1.25;text-align:center;display:flex;flex-direction:column;gap:2px;align-items:center;opacity:.5}
+#wlc.ui .bdg.got{opacity:1;border-color:var(--h,#a16207);background:color-mix(in srgb,var(--h,#a16207) 12%,transparent)}
+#wlc.ui .bdg .small{font-size:.72em;white-space:nowrap}
 #wlc.ui .bico{font-size:1.8em;line-height:1.2;color:#eab308}
-#wlc.ui .bdg b{font-size:.9em}
+#wlc.ui .bdg b{font-size:.8em}
 @media(max-width:600px){#wlc.ui .hero{grid-template-columns:1fr}#wlc.ui .hero.slim{grid-template-columns:1fr 1fr}#wlc.ui .row .lbl{min-width:100%}#wlc.ui input.field,#wlc.ui textarea{font-size:16px}}
 /* Work */
 #wlc.ui .badge.bad{color:#fca5a5;border-color:#7f1d1d}
@@ -255,7 +256,7 @@
 
 /* ---------- Energy themes: Garden (Fill up) · Tide (Protect) · Ember (Spend well) · Dusk (Show up) ----------
    Five shades each: s0 pale (slipping) → s4 deep (surging). --h is the theme's signature colour. */
-#wlc.ui .serif{font-family:var(--serif);font-weight:400;letter-spacing:-.01em}
+#wlc.ui .serif{font-family:var(--serif);font-weight:400;letter-spacing:-.01em;font-variant-numeric:lining-nums;font-feature-settings:"lnum"}
 #wlc.ui .garden{--h:#3f7f3a;--s0:#e3ecd8;--s1:#bcd6a6;--s2:#86b66f;--s3:#3f7f3a;--s4:#1d4a21}
 #wlc.ui .tide{--h:#2f6fc0;--s0:#dde9f5;--s1:#abcdee;--s2:#6aa6de;--s3:#2f6fc0;--s4:#183a80}
 #wlc.ui .ember{--h:#d4612a;--s0:#fbe5d5;--s1:#f5c29d;--s2:#ec9860;--s3:#d4612a;--s4:#9c3a17}
@@ -329,3 +330,4 @@
 #wlc.ui .cal.garden .cday.some,#wlc.ui .cal.tide .cday.some,#wlc.ui .cal.ember .cday.some,#wlc.ui .cal.dusk .cday.some{border-color:var(--h)}
 #wlc.ui .calkey .k{border-color:var(--h,#22c55e)}#wlc.ui .calkey .k.all{background:var(--h,#22c55e)}#wlc.ui .calkey .k.some{border-color:var(--h,#22c55e)}
 #wlc.ui .chips.areas .chip[aria-pressed="true"]{background:var(--h,var(--primary));color:#fff;border-color:var(--h,var(--primary))}
+#wlc.ui p{height:auto}

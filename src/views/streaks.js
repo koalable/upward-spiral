@@ -66,7 +66,7 @@ function calendar(area, result) {
     <div class="cal ${area.theme}" role="grid" aria-label="${area.name}, ${monthName(mk)}">
       ${["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"].map((w) => html`<span class="cwd" aria-hidden="true">${w}</span>`)}
       ${Array.from({ length: lead }, () => html`<span class="cpad"></span>`)}${cells}</div>
-    <p class="calkey small"><span><i class="k all"></i>All done</span><span><i class="k some"></i>Some done</span><span><i class="k none"></i>Missed</span><span><i class="cstar">★</i>Badge earned</span></p>
+    <div class="calkey small"><span><i class="k all"></i>All done</span><span><i class="k some"></i>Some done</span><span><i class="k none"></i>Missed</span><span><i class="cstar">★</i>Badge earned</span></div>
     <p class="hint">${area.about} Days with nothing due don't break a streak.</p>`;
 }
 

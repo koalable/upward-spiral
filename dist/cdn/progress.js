@@ -35,7 +35,7 @@
     <div class="cal ${e.theme}" role="grid" aria-label="${e.name}, ${F(n)}">
       ${["Mo","Tu","We","Th","Fr","Sa","Su"].map(u=>i`<span class="cwd" aria-hidden="true">${u}</span>`)}
       ${Array.from({length:l},()=>i`<span class="cpad"></span>`)}${c}</div>
-    <p class="calkey small"><span><i class="k all"></i>All done</span><span><i class="k some"></i>Some done</span><span><i class="k none"></i>Missed</span><span><i class="cstar">★</i>Badge earned</span></p>
+    <div class="calkey small"><span><i class="k all"></i>All done</span><span><i class="k some"></i>Some done</span><span><i class="k none"></i>Missed</span><span><i class="cstar">★</i>Badge earned</span></div>
     <p class="hint">${e.about} Days with nothing due don't break a streak.</p>`}function js(e){let t=Kt(e);return i`<div class="shelf" role="list">${Le.map(([s,n])=>{let o=e>=s;return i`<div class="bdg${o?" got":""}" role="listitem" aria-label="${n}, ${s}-day streak, ${o?"earned":"locked"}">
       <span class="bico" aria-hidden="true">${o?"\u2605":"\u{1F512}"}</span><b>${n}</b><span class="small muted">${s}-day streak</span></div>`})}</div>
   ${t?i`<p class="hint">${t[0]-e} more ${t[0]-e===1?"day":"days"} in a row for <b>${t[1]}</b>.</p>`:i`<p class="hint">Every badge earned. Legendary.</p>`}`}function Vt(){let e=Ys(),t=zs(),s=e.find(c=>c.id===a.area)||e[0],n=Object.fromEntries(e.map(c=>[c.id,zt(t,c.status)])),o=n[s.id],r=P(h()),l=c=>Z(r).filter(u=>{var m;return((m=n[c.id].byDay[u])==null?void 0:m.status)==="all"}).length;return i`
