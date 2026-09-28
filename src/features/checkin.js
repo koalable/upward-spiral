@@ -47,6 +47,7 @@ function saveQuestion() {
 
   const q = { id: e.id || newId("q"), kind: e.kind, name: e.name, scored: e.kind !== "text" && e.scored !== false };
   if (e.origin) q.origin = "builtin";
+  if (e.group) q.group = e.group;
   if (e.kind === "check") q.items = e.items;
   if (e.kind === "ladder") {
     Object.assign(q, {

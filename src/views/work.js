@@ -42,7 +42,7 @@ export function workTodayView() {
   const t = todayState(w, key), picks = todayPicks(w, key), pins = t.pins || [];
   const done = picks.filter((x) => x.done).length, all = picks.length && done === picks.length;
   const open = w.tasks.filter((x) => !x.done), blocked = open.filter((x) => blocker(x, w.tasks)).length;
-  return html`<article class="round no-padding ritual">
+  return html`<article class="round no-padding ritual themed ember">
       <nav class="padding">${icon("target")}<div class="max"><h6>${longDate(key)}</h6><div class="small-text">${done} of ${picks.length} done</div></div>
         ${all ? html`<span class="chip fill">${icon("done_all")}Done</span>` : ""}</nav>
       <progress value="${picks.length ? Math.round((100 * done) / picks.length) : 0}" max="100"></progress>
@@ -93,7 +93,7 @@ function goalCards(w, key, compact) {
   return w.goals.map((g) => {
     const tasks = w.tasks.filter((t) => t.goal === g.id), p = progress(tasks, key);
     const ms = w.milestones.filter((m) => m.goal === g.id).sort((a, b) => (a.due || "9999").localeCompare(b.due || "9999"));
-    return html`<article class="round no-padding goal">
+    return html`<article class="round no-padding goal themed ember">
       <nav class="padding">${icon("target")}<div class="max"><h6>${g.name}</h6>
         <div class="small-text">${g.due ? `${shortDate(g.due)} · ${countdown(g.due, key)} · ` : ""}${p.pct}% · ${p.done}/${p.total} tasks${p.hoursLeft ? ` · ${p.hoursLeft}h left` : ""}</div>
         <div class="stat">${status(p, g.due, key)}</div></div>

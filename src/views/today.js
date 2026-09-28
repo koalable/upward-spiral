@@ -7,7 +7,8 @@ import {
   myFreezes, isStreakDay, joinedBy, showedUp,
 } from "../state.js";
 import { answers } from "../day.js";
-import { toggle, stepper, choices, zeroToFour, cardHead, saveStatus } from "./components.js";
+import { toggle, stepper, choices, zeroToFour, cardHead, saveStatus, icon } from "./components.js";
+import { GROUPS, groupOf, iconOf, themeOf } from "../energy.js";
 import { medQuickLog, patchMedStatus } from "./meds.js";
 import { isLadder, ladderStatus, levelLabel, levelOf } from "../ladder.js";
 import { WEEK_GOAL_BONUS, LEVEL_UP_BONUS, EDIT_WINDOW_TEXT } from "../constants.js";
@@ -74,11 +75,12 @@ function customCard(q, a) {
   }
 }
 
-function questionCard(q, a, t, lead) {
+function questionCard(q, a, t, lead, themed = false) {
   const scored = isScored(q);
-  const title = q.kind === "builtin" ? BUILTINS[q.id].name : q.name;
+  const name = q.kind === "builtin" ? BUILTINS[q.id].name : q.name;
+  const title = themed ? html`<span class="tchip">${icon(iconOf(q))}</span>${name}` : name;
   const body = q.kind === "builtin" ? builtinCard(q.id, a, t) : html`${scored ? html`<p class="hint">${questionRule(q)}</p>` : ""}${customCard(q, a)}`;
-  return html`<section class="cat${lead ? " lead" : ""}">${cardHead(title, scored ? q.id : null)}${body}</section>`;
+  return html`<section class="cat${lead ? " lead" : ""}${themed ? ` themed ${themeOf(q)}` : ""}">${cardHead(title, scored ? q.id : null)}${body}</section>`;
 }
 
 function ladderCard(q, a) {
@@ -144,7 +146,11 @@ export function todayView() {
     ${isToday ? medQuickLog() : ""}
     <fieldset ${open ? "" : "disabled"}>
       ${ladders.map((q) => ladderCard(q, a))}
-      ${scored.map((q) => questionCard(q, a, t, q.id === s.lead))}
+      ${GROUPS.map((g) => {
+        const mine = scored.filter((q) => groupOf(q).id === g.id);
+        return mine.length ? html`<div class="egrouphead ${g.theme}"><span class="gicon">${icon(g.icon)}</span><div><div class="tname">${g.themeName}</div><h3>${g.name}</h3></div></div>
+          ${mine.map((q) => questionCard(q, a, t, q.id === s.lead, true))}` : "";
+      })}
       ${extras.length ? html`<h3 class="also">Also tracking <span class="muted small">(not scored)</span></h3>${extras.map((q) => questionCard(q, a, t, false))}` : ""}
       <section class="cat">${cardHead("Rest day")}<div class="row">${toggle("dayOff", "Intentional day off", a.dayOff)}</div>
         <p class="hint">A planned day off keeps your streak and counts as showing up.</p></section>

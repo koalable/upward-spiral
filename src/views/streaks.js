@@ -6,6 +6,7 @@ import { state, settings, showedUp, checkedIn, joinedBy } from "../state.js";
 import { normalizeRoutines, inRitual, dayStatus } from "../routines.js";
 import { runs, BADGES, nextBadge } from "../streaks.js";
 import { pressed } from "./components.js";
+import { themeOf } from "../energy.js";
 
 const LABEL = { all: "all done", some: "some done", none: "not done" };
 
@@ -14,13 +15,13 @@ export function areas() {
   const uid = state.uid, cfg = settings();
   const started = (d) => joinedBy(uid, d);
   const list = [{
-    id: "checkins", name: "Check-ins",
+    id: "checkins", name: "Check-ins", theme: "dusk",
     about: "Filled: a floor day (you showed up). Ring: checked in but under the floor.",
     status: (d) => (!started(d) ? null : showedUp(uid, d) ? "all" : checkedIn(uid, d) ? "some" : "none"),
   }];
   for (const q of scoredQuestions(cfg)) {
     list.push({
-      id: `q-${q.id}`, name: questionName(q),
+      id: `q-${q.id}`, name: questionName(q), theme: themeOf(q),
       about: `Filled: full ${POINTS_PER_CATEGORY} points. Ring: some points.`,
       status: (d) => {
         if (!started(d)) return null;
@@ -34,10 +35,10 @@ export function areas() {
   }
   const { items, rituals } = normalizeRoutines(state.routines), log = state.routinelog;
   if (items.length) {
-    list.push({ id: "r-all", name: "All routines", about: "Filled: every routine due that day. Ring: some.", status: (d) => dayStatus(items, d, log) });
+    list.push({ id: "r-all", name: "All routines", theme: "dusk", about: "Filled: every routine due that day. Ring: some.", status: (d) => dayStatus(items, d, log) });
     for (const { id: g, name } of rituals) {
       const mine = inRitual(items, g);
-      if (mine.length) list.push({ id: `r-${g}`, name: `${name} ritual`, about: "Filled: every routine due that day. Ring: some.", status: (d) => dayStatus(mine, d, log) });
+      if (mine.length) list.push({ id: `r-${g}`, name: `${name} ritual`, theme: "dusk", about: "Filled: every routine due that day. Ring: some.", status: (d) => dayStatus(mine, d, log) });
     }
   }
   return list;
@@ -62,7 +63,7 @@ function calendar(area, result) {
       <button class="iconbtn" data-act="calMonth" data-by="-1" aria-label="Previous month" ${mk <= first ? "disabled" : ""}>‹</button>
       <h3>${monthName(mk)} ${mk.slice(0, 4)}</h3>
       <button class="iconbtn" data-act="calMonth" data-by="1" aria-label="Next month" ${mk >= monthKey(today) ? "disabled" : ""}>›</button></div>
-    <div class="cal" role="grid" aria-label="${area.name}, ${monthName(mk)}">
+    <div class="cal ${area.theme}" role="grid" aria-label="${area.name}, ${monthName(mk)}">
       ${["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"].map((w) => html`<span class="cwd" aria-hidden="true">${w}</span>`)}
       ${Array.from({ length: lead }, () => html`<span class="cpad"></span>`)}${cells}</div>
     <p class="calkey small"><span><i class="k all"></i>All done</span><span><i class="k some"></i>Some done</span><span><i class="k none"></i>Missed</span><span><i class="cstar">★</i>Badge earned</span></p>
@@ -86,12 +87,12 @@ export function streaksView() {
   const result = results[area.id], mk = monthKey(todayKey());
   const fullThisMonth = (a) => monthDays(mk).filter((d) => results[a.id].byDay[d]?.status === "all").length;
   return html`
-    <section class="panel"><h2>${area.name}</h2>
+    <section class="panel ${area.theme}"><h2>${area.name}</h2>
       <div class="hero slim"><div><div class="big num streaknum">${result.current}<small> day${result.current === 1 ? "" : "s"}</small></div><div class="cap">Current streak</div></div>
         <div><div class="big num">${result.best}<small> day${result.best === 1 ? "" : "s"}</small></div><div class="cap">Best, last 120 days</div></div></div>
-      <div class="chips areas" role="group" aria-label="Choose an area">${list.map((a) => html`<button class="chip" data-act="area" data-area="${a.id}" aria-pressed="${pressed(a.id === area.id)}">${a.name}</button>`)}</div>
+      <div class="chips areas" role="group" aria-label="Choose an area">${list.map((a) => html`<button class="chip ${a.theme}" data-act="area" data-area="${a.id}" aria-pressed="${pressed(a.id === area.id)}">${a.name}</button>`)}</div>
       ${calendar(area, result)}</section>
-    <section class="panel"><h2>Badges: ${area.name}</h2>${shelf(result.best)}</section>
+    <section class="panel ${area.theme}"><h2>Badges: ${area.name}</h2>${shelf(result.best)}</section>
     <section class="panel"><h2>All areas</h2><div class="scroll"><table>
       <thead><tr><th>Area</th><th class="n">Streak</th><th class="n">Best</th><th class="n">This month</th></tr></thead>
       <tbody>${list.map((a) => html`<tr class="${a.id === area.id ? "me" : ""}"><td><button class="linkbtn" data-act="area" data-area="${a.id}">${a.name}</button></td>

@@ -5,8 +5,9 @@ import { scoredQuestions, questionName, scoreDay, writingMinutes } from "../scor
 import { state, settings, currentStreak, longestStreak, myFreezes, dayTotal, showedUp, seasonDays, leadName, hasBuiltin, sumPoints } from "../state.js";
 import { change, progressBar } from "./components.js";
 import { spiral, spiralDays, spiralLegend } from "./spiral.js";
+import { energyView } from "./energy.js";
 
-function totals(dates) {
+export function totals(dates) {
   const today = todayKey(), out = { total: 0, checkins: 0, byQuestion: {} };
   for (const d of dates) {
     if (d > today) continue;
@@ -26,7 +27,6 @@ function doubleMisses() {
 
 export function progressView() {
   const today = todayKey(), uid = state.uid;
-  const thisWeek = totals(weekOf(today)), lastWeek = totals(weekOf(addDays(weekStart(today), -1)));
   const mk = monthKey(today), pmk = monthKey(addDays(`${mk}-01`, -1));
   const thisMonth = totals(monthDays(mk)), lastMonth = totals(monthDays(pmk));
   const streak = currentStreak(uid), last14 = dateRange(addDays(today, -13), today);
@@ -39,9 +39,9 @@ export function progressView() {
     if (a && d <= today) { writeMin += writingMinutes(a); readMin += toNum(a.reading); }
   }
   const row = (label, now, before, bold) => html`<tr${bold ? html` class="totalrow"` : ""}><td>${label}</td><td class="n">${now}</td><td class="n">${before}</td><td class="n">${change(now, before)}</td></tr>`;
-  const questionRows = scoredQuestions(settings()).map((q) => row(questionName(q), thisWeek.byQuestion[q.id] || 0, lastWeek.byQuestion[q.id] || 0));
 
   return html`
+    ${energyView()}
     <section class="hero">
       <div><div class="big num streaknum">${streak.days}${streak.capped ? "+" : ""}<small> days</small></div><div class="cap">Current ${leadName().toLowerCase()} streak</div></div>
       <div><div class="big num">${longestStreak(uid)}<small> days</small></div><div class="cap">Longest streak in the last 120 days</div></div>
@@ -60,9 +60,6 @@ export function progressView() {
         return html`<div class="${n ? "" : "zero"}" style="height:${Math.max(2, (n / MAX_DAILY) * 100)}%" title="${d}: ${n} pts"></div>`;
       })}</div>
       <div class="barlbl" aria-hidden="true">${last14.map((d) => html`<span>${weekday(d)[0]}</span>`)}</div></section>
-    <section class="panel"><h2>This week against last week</h2><div class="scroll"><table>
-      <thead><tr><th>Category</th><th class="n">This week</th><th class="n">Last week</th><th class="n">Change</th></tr></thead>
-      <tbody>${questionRows}${row("Check-ins", thisWeek.checkins, lastWeek.checkins)}${row("Total", thisWeek.total, lastWeek.total, true)}</tbody></table></div></section>
     <section class="panel"><h2>${monthName(mk)} against ${monthName(pmk)}</h2><div class="scroll"><table>
       <thead><tr><th></th><th class="n">${monthName(mk)}</th><th class="n">${monthName(pmk)}</th><th class="n">Change</th></tr></thead>
       <tbody>${row("Points", thisMonth.total, lastMonth.total)}${row("Days checked in", thisMonth.checkins, lastMonth.checkins)}</tbody></table></div></section>`;

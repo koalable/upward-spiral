@@ -31,7 +31,7 @@
     aria-label="${s?"Done":"Mark done"}: ${e.name}">${s?u("check"):""}</button>`}function Tt(e,t,n){let o=Y(e,t,a.routinelog),r=e.perWeek?` \xB7 ${Te(e,t,a.routinelog)}/${e.perWeek} this week`:"";return i`<li class="${o?"done":""}">
     <span class="remoji" aria-hidden="true">${e.icon||"\u2022"}</span>
     <div class="max"><div class="rname">${e.name}</div><div class="small-text">${Ee(e)}${e.minutes?` \xB7 ${e.minutes} min`:""}${r}</div></div>
-    ${mn(e,t,n)}</li>`}function pn(e,t,n){let o=F(e.id,t);if(!o.length)return"";let r=o.filter(c=>Y(c,t,a.routinelog)).length,s=r===o.length;return i`<article class="round no-padding ritual">
+    ${mn(e,t,n)}</li>`}function pn(e,t,n){let o=F(e.id,t);if(!o.length)return"";let r=o.filter(c=>Y(c,t,a.routinelog)).length,s=r===o.length;return i`<article class="round no-padding ritual themed dusk">
     <nav class="padding">
       ${u(e.icon||"checklist")}
       <div class="max"><h6>${e.name}</h6><div class="small-text">${e.time?un(e.time)+" \xB7 ":""}${r} of ${o.length} done</div></div>

@@ -12,7 +12,7 @@ const REPO = "koalable/upward-spiral";
 const RELEASE = process.env.RELEASE || "main";
 const CDN = `https://cdn.jsdelivr.net/gh/${REPO}@${RELEASE}/dist/cdn`;
 const LUCIDE = "https://cdn.jsdelivr.net/npm/lucide-static@0.577.0/font/lucide.css";
-const INTER = "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap";
+const INTER = "https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&display=swap";
 
 const PAGES = [
   // id, Webflow slug, title

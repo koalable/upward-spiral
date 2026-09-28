@@ -41,7 +41,7 @@ function ritualCard(rit, key, open) {
   const steps = ritualSteps(rit.id, key);
   if (!steps.length) return "";
   const done = steps.filter((r) => isDone(r, key, state.routinelog)).length, all = done === steps.length;
-  return html`<article class="round no-padding ritual">
+  return html`<article class="round no-padding ritual themed dusk">
     <nav class="padding">
       ${icon(rit.icon || "checklist")}
       <div class="max"><h6>${rit.name}</h6><div class="small-text">${rit.time ? clock12(rit.time) + " · " : ""}${done} of ${steps.length} done</div></div>

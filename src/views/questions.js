@@ -8,6 +8,7 @@ import { isLadder, levelOf, levelLabel } from "../ladder.js";
 import { isScored, scoredQuestions, questionName } from "../scoring.js";
 import { state, settings, hasQuestion } from "../state.js";
 import { saveStatus } from "./components.js";
+import { GROUPS, groupOf } from "../energy.js";
 
 function editor() {
   const e = state.editQuestion;
@@ -16,6 +17,7 @@ function editor() {
   const canRevert = e.origin && settings().cats.some((q) => q.id === e.id && q.kind !== "builtin");
   return html`<div class="qform"><h3>${e.id ? "Edit question" : "New question"}</h3><div class="targets">
     <label>Name<input class="field" id="q-name" maxlength="60" value="${e.name || ""}" placeholder="e.g. Water"></label>
+    <label>Energy group<select class="field" id="q-group">${GROUPS.filter((g) => g.id !== "show").map((g) => html`<option value="${g.id}" ${g.id === groupOf(e).id ? "selected" : ""}>${g.name} (${g.themeName})</option>`)}</select></label>
     <label>Type<select class="field" id="q-kind">${Object.entries(QUESTION_KINDS).map(([k, label]) => html`<option value="${k}" ${k === kind ? "selected" : ""}>${label}</option>`)}</select></label>
     ${kind === "check" ? html`<label class="full">Items, one per line (up to 4)<textarea class="field" id="q-items" rows="4" placeholder="Took vitamins">${(e.items || []).join("\n")}</textarea></label>` : ""}
     ${kind === "number" ? html`
@@ -55,6 +57,7 @@ export function readQuestionForm(view) {
   const val = (id) => view.querySelector(`#${id}`)?.value;
   const name = val("q-name"); if (name !== undefined) e.name = name.trim();
   const kind = val("q-kind"); if (kind) e.kind = kind;
+  const group = val("q-group"); if (group) e.group = group;
   const items = val("q-items"); if (items !== undefined) e.items = items.split(LINE_BREAK).map((s) => s.trim()).filter(Boolean).slice(0, 4);
   const unit = val("q-unit"); if (unit !== undefined) e.unit = unit.trim();
   const dir = val("q-dir"); if (dir) e.dir = dir;

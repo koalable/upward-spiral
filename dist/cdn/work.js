@@ -32,7 +32,7 @@
     ${t.done?"":i`<button class="circle transparent${n?" on":""}" data-act="wPin" data-id="${t.id}" aria-pressed="${K(n)}" aria-label="${n?"Unpin":"Pin to today"}: ${t.name}" title="Pin">${p("pin")}</button>
       ${n?"":i`<button class="circle transparent" data-act="wSwap" data-id="${t.id}" aria-label="Swap out: ${t.name}" title="Not today">${p("swap")}</button>`}`}</li>`}function it(){let e=U(),t=s.date;if(!e.goals.length)return i`<article class="round padding"><h5>Start with one big goal</h5>
       <p>Add a goal with a deadline, break it into monthly milestones, then into small tasks. Each day this page picks a few tasks for you, most urgent first, so there's nothing to decide.</p>
-      <nav><button data-act="wNew" data-kind="goal">${p("add")}<span>Add a goal</span></button></nav></article>`;let o=C(e,t),n=tt(e,t),a=o.pins||[],r=n.filter(c=>c.done).length,l=n.length&&r===n.length,d=e.tasks.filter(c=>!c.done),f=d.filter(c=>X(c,e.tasks)).length;return i`<article class="round no-padding ritual">
+      <nav><button data-act="wNew" data-kind="goal">${p("add")}<span>Add a goal</span></button></nav></article>`;let o=C(e,t),n=tt(e,t),a=o.pins||[],r=n.filter(c=>c.done).length,l=n.length&&r===n.length,d=e.tasks.filter(c=>!c.done),f=d.filter(c=>X(c,e.tasks)).length;return i`<article class="round no-padding ritual themed ember">
       <nav class="padding">${p("target")}<div class="max"><h6>${ve(t)}</h6><div class="small-text">${r} of ${n.length} done</div></div>
         ${l?i`<span class="chip fill">${p("done_all")}Done</span>`:""}</nav>
       <progress value="${n.length?Math.round(100*r/n.length):0}" max="100"></progress>
@@ -51,7 +51,7 @@
       ${o?i`<button class="circle transparent" data-act="wEdit" data-kind="ms" data-id="${o.id}" aria-label="Edit ${o.name}">${p("edit")}</button>`:""}</nav>
     ${a.length?ct(r):""}
     ${a.length?i`<ul class="list">${a.sort((l,d)=>(l.due||"9999").localeCompare(d.due||"9999")).map(l=>zt(e,l,n))}</ul>`:""}
-    ${o?i`<nav class="padding"><button class="transparent small" data-act="wNew" data-kind="task" data-goal="${t.id}" data-ms="${o.id}">${p("add")}<span>Task</span></button></nav>`:""}</div>`}function dt(e,t,o){return e.goals.map(n=>{let a=e.tasks.filter(d=>d.goal===n.id),r=de(a,t),l=e.milestones.filter(d=>d.goal===n.id).sort((d,f)=>(d.due||"9999").localeCompare(f.due||"9999"));return i`<article class="round no-padding goal">
+    ${o?i`<nav class="padding"><button class="transparent small" data-act="wNew" data-kind="task" data-goal="${t.id}" data-ms="${o.id}">${p("add")}<span>Task</span></button></nav>`:""}</div>`}function dt(e,t,o){return e.goals.map(n=>{let a=e.tasks.filter(d=>d.goal===n.id),r=de(a,t),l=e.milestones.filter(d=>d.goal===n.id).sort((d,f)=>(d.due||"9999").localeCompare(f.due||"9999"));return i`<article class="round no-padding goal themed ember">
       <nav class="padding">${p("target")}<div class="max"><h6>${n.name}</h6>
         <div class="small-text">${n.due?`${D(n.due)} \xB7 ${ue(n.due,t)} \xB7 `:""}${r.pct}% · ${r.done}/${r.total} tasks${r.hoursLeft?` \xB7 ${r.hoursLeft}h left`:""}</div>
         <div class="stat">${lt(r,n.due,t)}</div></div>
