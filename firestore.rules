@@ -1,0 +1,77 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Only these Google accounts can see or log anything.
+    // Add or remove emails here, then click Publish.
+    function member() {
+      return request.auth != null
+        && request.auth.token.email_verified == true
+        && request.auth.token.email in [
+          'karlastarr@gmail.com',
+          'erikjschultz@gmail.com',
+          'ssstarr29@gmail.com'
+        ];
+    }
+    function me(uid) {
+      return member() && request.auth.uid == uid;
+    }
+    function data() {
+      return request.resource.data;
+    }
+
+    // ---------- PRIVATE: only the owner can read or write ----------
+    // Questions, answers, targets, journal, goals, weekly reset.
+    match /users/{uid}/{document=**} {
+      allow read, write: if me(uid);
+    }
+
+    // ---------- SHARED: visible to the group, numbers only ----------
+    // Name and freeze count. No other fields are allowed in.
+    match /members/{uid} {
+      allow read: if member();
+      allow create, update: if me(uid)
+        && data().keys().hasOnly(['uid', 'name', 'display', 'joined', 'freezes', 'updated'])
+        && data().uid == uid
+        && data().name is string && data().name.size() <= 80
+        && (!('display' in data()) || (data().display is string && data().display.size() <= 80))
+        && (!('freezes' in data()) || data().freezes is number);
+    }
+
+    // One doc per person per day: score and check-in flags only.
+    match /scores/{id} {
+      allow read: if member();
+      allow create, update: if member()
+        && data().keys().hasOnly(['uid', 'date', 'total', 'logged', 'showed', 'streak', 'updated', 'doneAt', 'bonus', 'levelUp'])
+        && data().uid == request.auth.uid
+        && id == request.auth.uid + '_' + data().date
+        && data().total is number && data().total >= 0 && data().total <= 33
+        && data().logged is bool && data().showed is bool && data().streak is bool
+        && (!('doneAt' in data()) || data().doneAt is number)
+        && (!('bonus' in data()) || (data().bonus is int && data().bonus >= 0 && data().bonus <= 40))
+        && (!('levelUp' in data()) || data().levelUp is bool);
+    }
+
+    // Weekly wins, only when someone clicks Share.
+    match /wins/{id} {
+      allow read: if member();
+      allow create, update: if member()
+        && data().keys().hasOnly(['uid', 'week', 'text'])
+        && data().uid == request.auth.uid
+        && id == request.auth.uid + '_' + data().week
+        && data().text is string && data().text.size() <= 1000;
+      allow delete: if member() && resource.data.uid == request.auth.uid;
+    }
+
+    // Season settings are shared; any member can start or move a season.
+    // Only a well-formed season document is accepted.
+    match /config/season {
+      allow read: if member();
+      allow create, update: if member()
+        && data().keys().hasOnly(['start', 'n', 'weeks', 'breakDays', 'uid'])
+        && data().start is string && data().start.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
+        && data().n is int && data().n >= 1 && data().n <= 1000
+        && data().uid == request.auth.uid;
+    }
+  }
+}
