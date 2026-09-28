@@ -7,7 +7,8 @@ import { dailyReminderLink } from "../calendar.js";
 import { rule, saveStatus } from "./components.js";
 import { gameRules } from "./rules.js";
 
-export const reminderLink = (t) => dailyReminderLink({ title: `Log the ${APP_NAME}`, time: t.reminder, details: `60-second check-in: ${location.href}` });
+export const reminderOpts = (t) => ({ title: `Log the ${APP_NAME}`, time: t.reminder, details: `60-second check-in: ${location.href}` });
+export const reminderLink = (t) => dailyReminderLink(reminderOpts(t));
 
 export function targetsView() {
   const t = settings().targets, me = state.members[state.uid] || {};
@@ -27,7 +28,8 @@ export function targetsView() {
     <section class="panel"><h2>My targets</h2>
       <p class="hint">Private. Lower a target any time rather than dropping it. Past days keep the targets they were scored with.</p>
       <div class="targets">${fields}</div>
-      <p class="spaced"><a class="btn ghost" id="reminder-link" href="${reminderLink(t)}" target="_blank" rel="noopener">Add daily reminder to Google Calendar</a></p>
+      <p class="spaced"><a class="btn ghost" id="reminder-link" href="${reminderLink(t)}" target="_blank" rel="noopener">Google Calendar reminder</a>
+        <button class="btn ghost" data-act="icsReminder">Apple Calendar (iCal) reminder</button></p>
       ${saveStatus()}</section>
     <section class="panel prose"><h2>How scoring works</h2>
       <h3 class="rulehead">Your categories</h3><dl class="rules">${scoredQuestions(settings()).map((q) => rule(questionName(q), "up to 4", questionRule(q)))}</dl>

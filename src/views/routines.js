@@ -140,17 +140,19 @@ function ritualForm() {
       ${e.id && e.custom ? html`<button class="transparent error-text" data-act="ritRemove">Delete ritual</button>` : ""}</nav></article>`;
 }
 
-export function reminderHref(id) {
+export function reminderOpts(id) {
   const rit = findRitual(id), list = inRitual(routineData().items, id);
-  return dailyReminderLink({ title: `${rit.name} ritual`, time: rit.time || "09:00", days: reminderDays(list), details: `${list.map((r) => r.name).join(", ")}\n\n${APP_NAME}: ${location.href}` });
+  return { title: `${rit.name} ritual`, time: rit.time || "09:00", days: reminderDays(list), details: `${list.map((r) => r.name).join(", ")}\n\n${APP_NAME}: ${location.href}` };
 }
+export const reminderHref = (id) => dailyReminderLink(reminderOpts(id));
 
 export function routineSetupView() {
   const { items, rituals } = routineData();
   const sections = rituals.map((rit) => {
     const mine = items.map((r, i) => [r, i]).filter(([r]) => (r.group || "anytime") === rit.id);
     return html`<article class="round no-padding"><nav class="padding">${icon(rit.icon || "checklist")}<h6 class="max">${rit.name}</h6>
-        ${rit.time ? html`<a class="button border small" id="rlink-${rit.id}" href="${reminderHref(rit.id)}" target="_blank" rel="noopener">${icon("event")}<span>Remind me</span></a>` : ""}
+        ${rit.time ? html`<a class="button border small" id="rlink-${rit.id}" href="${reminderHref(rit.id)}" target="_blank" rel="noopener">${icon("event")}<span>Google</span></a>
+          <button class="border small" data-act="rIcs" data-id="${rit.id}" aria-label="Add ${rit.name} reminder to Apple Calendar">${icon("event")}<span>iCal</span></button>` : ""}
         <button class="circle transparent" data-act="ritEdit" data-id="${rit.id}" aria-label="Edit ${rit.name}">${icon("edit")}</button></nav>
       ${mine.length ? html`<ul class="list">${mine.map(([r, i]) => html`<li>
         <span class="remoji" aria-hidden="true">${r.icon || "•"}</span>
@@ -162,7 +164,7 @@ export function routineSetupView() {
         : html`<p class="padding small-text">No steps yet.</p>`}</article>`;
   });
   return html`${routineForm()}${ritualForm()}${sections}
-    <p class="small-text">Steps run in this order. "Remind me" adds a repeating Google Calendar event on the days that ritual has steps. ${saveStatus()}</p>`;
+    <p class="small-text">Steps run in this order. "Google" and "iCal" add a repeating calendar reminder on the days that ritual has steps. ${saveStatus()}</p>`;
 }
 
 // Reads the open routine form into state.editRoutine so a redraw doesn't lose typing.

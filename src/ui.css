@@ -7,6 +7,9 @@
 #wlc.ui h4,#wlc.ui h5,#wlc.ui h6{margin:0;font-weight:600;letter-spacing:-.02em;line-height:1.25}
 #wlc.ui h4{font-size:1.6em}#wlc.ui h5{font-size:1.3em}#wlc.ui h6{font-size:1.05em}
 #wlc.ui p{margin:0 0 12px}
+#wlc.ui h1,#wlc.ui h2,#wlc.ui h3,#wlc.ui h4,#wlc.ui h5,#wlc.ui h6{line-height:1.25!important;height:auto!important;position:static}
+#wlc.ui article>h5{margin:0 0 10px!important}
+#wlc.ui a{text-decoration:none}
 #wlc.ui .small-text{font-size:.85em;color:var(--muted)}
 #wlc.ui .max{flex:1;min-width:0}
 #wlc.ui .center-align{text-align:center;justify-content:center}
@@ -44,7 +47,7 @@
 #wlc.ui label.field input,#wlc.ui label.field select,#wlc.ui textarea,#wlc.ui input.field,#wlc.ui select.field{font:inherit;font-size:1rem;font-weight:400;height:38px;padding:0 10px;border:1px solid var(--input);border-radius:calc(var(--radius) - 2px);background:transparent;color:var(--fg);width:100%}
 #wlc.ui select option{background:var(--card)}
 #wlc.ui .tabs{display:flex;gap:4px;padding:4px;margin:12px 0 20px;background:var(--accent);border-radius:var(--radius);overflow-x:auto}
-#wlc.ui .tabs a{flex:1;text-align:center;padding:6px 12px;border-radius:calc(var(--radius) - 3px);font-size:.9em;font-weight:500;color:var(--muted);cursor:pointer;white-space:nowrap}
+#wlc.ui .tabs a{text-decoration:none!important;flex:1;text-align:center;padding:6px 12px;border-radius:calc(var(--radius) - 3px);font-size:.9em;font-weight:500;color:var(--muted);cursor:pointer;white-space:nowrap}
 #wlc.ui .tabs a.active{background:var(--bg);color:var(--fg);box-shadow:0 1px 2px rgb(0 0 0 / .3)}
 #wlc.ui .error-text{color:var(--bad)}
 #wlc.ui details summary{cursor:pointer;padding:8px 0}

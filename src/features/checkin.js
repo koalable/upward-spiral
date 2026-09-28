@@ -9,7 +9,8 @@ import { LADDER_TEMPLATES, DEFAULT_WEEKS_TO_LEVEL } from "../constants.js";
 import { todayView, patchToday } from "../views/today.js";
 import { journalView, filterJournal } from "../views/journal.js";
 import { questionsView, readQuestionForm } from "../views/questions.js";
-import { targetsView, reminderLink } from "../views/targets.js";
+import { targetsView, reminderLink, reminderOpts } from "../views/targets.js";
+import { openIcs } from "../calendar.js";
 
 const $ = (sel) => ui.view.querySelector(sel);
 
@@ -65,6 +66,7 @@ function saveQuestion() {
 }
 
 const actions = {
+  icsReminder: () => (openIcs(reminderOpts(settings().targets)), "none"),
   // answering
   toggle: (el) => answer((a) => {
     const on = !getPath(a, el.dataset.answer);
