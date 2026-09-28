@@ -1,4 +1,4 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&display=swap">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lucide-static@0.577.0/font/lucide.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/koalable/upward-spiral@346a8cee9af4e32e5d97482e2fbb392e35935d2e/dist/cdn/app.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/koalable/upward-spiral@05317d38608a0b96cecef63910f332407d0d74b3/dist/cdn/app.css">
