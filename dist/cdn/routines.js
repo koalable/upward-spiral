@@ -2,7 +2,7 @@
   <div class="rule"><dt>${e}${t?i` <span class="rulepts">${t}</span>`:""}</dt><dd>${n}</dd></div>`,xe=()=>i`<span class="saved" id="saved" role="status" aria-live="polite"></span>`;var Xt={check:"check",play_arrow:"play",close:"x",skip_next:"skip-forward",arrow_back:"arrow-left",timer:"timer",stop:"square",add:"plus",edit:"pencil",playlist_add:"list-plus",event:"calendar-plus",arrow_upward:"arrow-up",arrow_downward:"arrow-down",delete:"trash-2",lock:"lock",chevron_left:"chevron-left",chevron_right:"chevron-right",wb_sunny:"sunrise",light_mode:"sun",bedtime:"moon",all_inclusive:"infinity",checklist:"list-checks",done_all:"check-check",dark_mode:"moon",edit_note:"notebook-pen",insights:"chart-line",work:"briefcase",circle:"circle",pin:"pin",swap:"shuffle",flag:"flag",target:"target"},u=e=>i`<i class="icon-${Xt[e]||e}" aria-hidden="true"></i>`;var it=()=>i`
   ${R("Your total","",`Each scored question is worth 4. Your points are scaled to 32, plus 1 for checking in, so everyone plays out of ${33}.`)}
   ${R("Check-in","1 point","For logging the day at all, even a bad one.")}
-  ${R("Streak","","Runs on the category you pick under My questions.")}
+  ${R("Streak","","Runs on the category you pick under Categories.")}
   ${R("Floor day","","At least 1 point in each of your floor categories. The minimum that counts as showing up.")}
   ${R("Never miss twice","","One missed day happens. The group sees when someone is one miss from two.")}
   ${R("Streak freezes","","Earn one for each week you hit your weekly points goal (bank up to 2). Spend one to save your streak on a missed day.")}

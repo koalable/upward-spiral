@@ -4,7 +4,7 @@
   <div class="prog" role="progressbar" aria-label="${e}" aria-valuenow="${t}" aria-valuemax="${s}"><b style="width:${s?Math.min(100,Math.round(t/s*100)):0}%"></b></div></div>`,$s={check:"check",play_arrow:"play",close:"x",skip_next:"skip-forward",arrow_back:"arrow-left",timer:"timer",stop:"square",add:"plus",edit:"pencil",playlist_add:"list-plus",event:"calendar-plus",arrow_upward:"arrow-up",arrow_downward:"arrow-down",delete:"trash-2",lock:"lock",chevron_left:"chevron-left",chevron_right:"chevron-right",wb_sunny:"sunrise",light_mode:"sun",bedtime:"moon",all_inclusive:"infinity",checklist:"list-checks",done_all:"check-check",dark_mode:"moon",edit_note:"notebook-pen",insights:"chart-line",work:"briefcase",circle:"circle",pin:"pin",swap:"shuffle",flag:"flag",target:"target"},ne=e=>i`<i class="icon-${$s[e]||e}" aria-hidden="true"></i>`;var _t=()=>i`
   ${z("Your total","",`Each scored question is worth 4. Your points are scaled to 32, plus 1 for checking in, so everyone plays out of ${33}.`)}
   ${z("Check-in","1 point","For logging the day at all, even a bad one.")}
-  ${z("Streak","","Runs on the category you pick under My questions.")}
+  ${z("Streak","","Runs on the category you pick under Categories.")}
   ${z("Floor day","","At least 1 point in each of your floor categories. The minimum that counts as showing up.")}
   ${z("Never miss twice","","One missed day happens. The group sees when someone is one miss from two.")}
   ${z("Streak freezes","","Earn one for each week you hit your weekly points goal (bank up to 2). Spend one to save your streak on a missed day.")}

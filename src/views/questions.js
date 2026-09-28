@@ -12,10 +12,10 @@ import { GROUPS, groupOf } from "../energy.js";
 
 function editor() {
   const e = state.editQuestion;
-  if (!e) return html`<p><button class="btn" data-act="qNew">Add a question</button></p>`;
+  if (!e) return html`<p><button class="btn" data-act="qNew">Add a category</button></p>`;
   const kind = e.kind || "check";
   const canRevert = e.origin && settings().cats.some((q) => q.id === e.id && q.kind !== "builtin");
-  return html`<div class="qform"><h3>${e.id ? "Edit question" : "New question"}</h3><div class="targets">
+  return html`<div class="qform"><h3>${e.id ? "Edit category" : "New category"}</h3><div class="targets">
     <label>Name<input class="field" id="q-name" maxlength="60" value="${e.name || ""}" placeholder="e.g. Water"></label>
     <label>Energy group<select class="field" id="q-group">${GROUPS.filter((g) => g.id !== "show").map((g) => html`<option value="${g.id}" ${g.id === groupOf(e).id ? "selected" : ""}>${g.name} (${g.themeName})</option>`)}</select></label>
     <label>Type<select class="field" id="q-kind">${Object.entries(QUESTION_KINDS).map(([k, label]) => html`<option value="${k}" ${k === kind ? "selected" : ""}>${label}</option>`)}</select></label>
@@ -88,7 +88,7 @@ export function questionsView() {
       <button class="x" data-act="qRemove" data-index="${i}" aria-label="Remove ${questionName(q)}">×</button></div></li>`);
   const missing = BUILTIN_ORDER.filter((id) => !hasQuestion(id));
   return html`
-    <section class="panel"><h2>My questions</h2>
+    <section class="panel"><h2>Categories</h2>
       <p class="hint">🔒 Only you can see these. Each scored question is worth 4 points. Your total is scaled so it's always out of ${MAX_DAILY}, however many you pick. Eight is the classic setup.</p>
       <p class="small"><b>${scored.length}</b> scored · <b>${s.cats.length - scored.length}</b> tracked only ${saveStatus()}</p>
       <ul class="qlist">${rows.length ? rows : html`<li class="muted">No questions yet.</li>`}</ul>

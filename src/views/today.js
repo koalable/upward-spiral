@@ -105,7 +105,7 @@ function ladderProgress(q) {
   if (s.completedOn && q.stayedAt !== s.level.index) {
     milestone = html`<div class="banner good levelup"><b>🎉 Level ${s.level.number} complete! +${LEVEL_UP_BONUS} bonus.</b>
       ${s.level.isTop
-        ? html` You've done every level. Add a harder one under My questions whenever you're ready.`
+        ? html` You've done every level. Add a harder one under Categories whenever you're ready.`
         : html` <button class="btn" data-act="levelUp" data-id="${q.id}">Move up: ${levelLabel(q, levelOf(q, s.level.index + 1))}</button>
           <button class="linkbtn" data-act="stayLevel" data-id="${q.id}">Stay here for now</button>`}</div>`;
   } else if (s.completedOn && !s.level.isTop) {

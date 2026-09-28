@@ -162,7 +162,7 @@ export default {
   tabs: [
     ["today", "Today", todayView],
     ["journal", "Journal", journalView],
-    ["setup", "My questions", questionsView],
+    ["setup", "Categories", questionsView],
     ["targets", "Targets & rules", targetsView],
   ],
   actions,
