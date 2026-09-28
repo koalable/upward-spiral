@@ -2,7 +2,7 @@
 import { html, todayKey, weekStart, monthKey } from "../util.js";
 import { state } from "../state.js";
 
-function goalList(key, title) {
+export function goalList(key, title) {
   const items = state.goals[key]?.items || [];
   return html`<section class="panel"><h2>${title}</h2><ul class="goallist">
     ${items.length ? items.map((g, i) => html`<li class="${g.done ? "done" : ""}">
@@ -14,6 +14,6 @@ function goalList(key, title) {
 
 export function todosView() {
   const today = todayKey();
-  return html`<p class="hint">One-off tasks. For things you do again and again, add a habit instead. Private to you.</p>
+  return html`<p class="hint">One-off tasks. Today's list also shows on Check-in → Today. For things you do again and again, add a habit instead. Private to you.</p>
     <div class="goalcols">${goalList("d" + today, "Today")}${goalList("w" + weekStart(today), "This week")}${goalList("m" + monthKey(today), "This month")}</div>`;
 }

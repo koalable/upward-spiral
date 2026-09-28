@@ -6,7 +6,8 @@ import { state, settings, showedUp, checkedIn, joinedBy } from "../state.js";
 import { normalizeRoutines, inRitual, dayStatus } from "../routines.js";
 import { runs, BADGES, nextBadge } from "../streaks.js";
 import { pressed } from "./components.js";
-import { themeOf } from "../energy.js";
+import { groupOf, iconOf, GROUPS } from "../energy.js";
+import { icon } from "./components.js";
 
 const LABEL = { all: "all done", some: "some done", none: "not done" };
 
@@ -15,13 +16,13 @@ export function areas() {
   const uid = state.uid, cfg = settings();
   const started = (d) => joinedBy(uid, d);
   const list = [{
-    id: "checkins", name: "Check-ins", theme: "dusk",
+    id: "checkins", name: "Check-ins", group: "show", ico: "notebook-pen",
     about: "Filled: a floor day (you showed up). Ring: checked in but under the floor.",
     status: (d) => (!started(d) ? null : showedUp(uid, d) ? "all" : checkedIn(uid, d) ? "some" : "none"),
   }];
   for (const q of scoredQuestions(cfg)) {
     list.push({
-      id: `q-${q.id}`, name: questionName(q), theme: themeOf(q),
+      id: `q-${q.id}`, name: questionName(q), group: groupOf(q).id, ico: iconOf(q),
       about: `Filled: full ${POINTS_PER_CATEGORY} points. Ring: some points.`,
       status: (d) => {
         if (!started(d)) return null;
@@ -35,13 +36,15 @@ export function areas() {
   }
   const { items, rituals } = normalizeRoutines(state.routines), log = state.routinelog;
   if (items.length) {
-    list.push({ id: "r-all", name: "All habits", theme: "dusk", about: "Filled: every habit due that day. Ring: some.", status: (d) => dayStatus(items, d, log) });
+    list.push({ id: "r-all", name: "All habits", group: "show", ico: "list-checks", about: "Filled: every habit due that day. Ring: some.", status: (d) => dayStatus(items, d, log) });
     for (const { id: g, name } of rituals) {
       const mine = inRitual(items, g);
-      if (mine.length) list.push({ id: `r-${g}`, name: `${name} ritual`, theme: "dusk", about: "Filled: every habit due that day. Ring: some.", status: (d) => dayStatus(mine, d, log) });
+      if (mine.length) list.push({ id: `r-${g}`, name: `${name} ritual`, group: "show", ico: rituals.find((r) => r.id === g).icon || "checklist", about: "Filled: every habit due that day. Ring: some.", status: (d) => dayStatus(mine, d, log) });
     }
   }
-  return list;
+  // Same order and colours as everywhere else: Fill up, Protect, Spend well, Show up.
+  const rank = (a) => GROUPS.findIndex((g) => g.id === a.group);
+  return list.map((a, i) => ({ ...a, theme: GROUPS[rank(a)].theme, i })).sort((a, b) => rank(a) - rank(b) || a.i - b.i);
 }
 
 const history = () => dateRange(state.historyStart, todayKey());
@@ -93,10 +96,14 @@ export function streaksView() {
       <div class="chips areas" role="group" aria-label="Choose an area">${list.map((a) => html`<button class="chip ${a.theme}" data-act="area" data-area="${a.id}" aria-pressed="${pressed(a.id === area.id)}">${a.name}</button>`)}</div>
       ${calendar(area, result)}</section>
     <section class="panel ${area.theme}"><h2>Badges: ${area.name}</h2>${shelf(result.best)}</section>
-    <section class="panel"><h2>All areas</h2><div class="scroll"><table>
+    <section class="panel"><h2>All areas</h2><div class="scroll"><table class="areas">
       <thead><tr><th>Area</th><th class="n">Streak</th><th class="n">Best</th><th class="n">This month</th></tr></thead>
-      <tbody>${list.map((a) => html`<tr class="${a.id === area.id ? "me" : ""}"><td><button class="linkbtn" data-act="area" data-area="${a.id}">${a.name}</button></td>
-        <td class="n num">${results[a.id].current}</td><td class="n num">${results[a.id].best}</td><td class="n num">${fullThisMonth(a)}</td></tr>`)}</tbody></table></div></section>`;
+      ${GROUPS.map((g) => {
+        const mine = list.filter((a) => a.group === g.id);
+        return mine.length ? html`<tbody class="${g.theme}"><tr class="grp"><th colspan="4"><div class="grphead"><span class="gicon">${icon(g.icon)}</span><div><div class="tname">${g.themeName}</div><div class="gname">${g.name}</div></div></div></th></tr>
+          ${mine.map((a) => html`<tr class="${a.id === area.id ? "me" : ""}"><td><button class="linkbtn arealink" data-act="area" data-area="${a.id}"><span class="tchip">${icon(a.ico)}</span>${a.name}</button></td>
+            <td class="n num">${results[a.id].current}</td><td class="n num">${results[a.id].best}</td><td class="n num">${fullThisMonth(a)}</td></tr>`)}</tbody>` : "";
+      })}</table></div></section>`;
 }
 
 export const shiftMonth = (by) => {

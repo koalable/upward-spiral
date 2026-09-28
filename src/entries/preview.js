@@ -9,7 +9,8 @@ import todos from "../features/todos.js";
 import progress from "../features/progress.js";
 import group from "../features/group.js";
 import work from "../features/work.js";
+import dashboard from "../features/dashboard.js";
 
-const PAGES = { checkin: [checkin, meds], routines: [routines, todos], progress: [progress, group], work: [work] };
+const PAGES = { checkin: [checkin, meds, dashboard], routines: [routines, todos], progress: [progress, group], work: [work] };
 const id = window.WLC_PAGE in PAGES ? window.WLC_PAGE : "checkin";
 start({ page: id, features: PAGES[id], order: CHECKIN_TABS, seed: seedPreview });

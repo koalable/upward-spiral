@@ -9,6 +9,7 @@ import {
 import { answers } from "../day.js";
 import { toggle, stepper, choices, zeroToFour, cardHead, saveStatus, icon } from "./components.js";
 import { GROUPS, groupOf, iconOf, themeOf } from "../energy.js";
+import { dashboardView } from "./dashboard.js";
 import { medQuickLog, patchMedStatus } from "./meds.js";
 import { isLadder, ladderStatus, levelLabel, levelOf } from "../ladder.js";
 import { WEEK_GOAL_BONUS, LEVEL_UP_BONUS, EDIT_WINDOW_TEXT } from "../constants.js";
@@ -143,6 +144,7 @@ export function todayView() {
     <p class="privacy small muted">🔒 Your questions and answers are private. The group sees only your score, streak, and check-in.</p>
     <section class="hero" id="live-hero"></section>
     <div id="live-freeze"></div>
+    ${isToday ? dashboardView() : ""}
     ${isToday ? medQuickLog() : ""}
     <fieldset ${open ? "" : "disabled"}>
       ${ladders.map((q) => ladderCard(q, a))}

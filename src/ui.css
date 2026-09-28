@@ -335,3 +335,15 @@
 #wlc.ui .qgroup .qrow:first-child{border-top:0}
 #wlc.ui .qgroup .qrow{border-top-color:color-mix(in srgb,var(--h) 25%,transparent)}
 #wlc.ui .qmain .tchip{width:28px;height:28px;border-radius:9px;font-size:.95em}
+#wlc.ui article.border.padding>nav:last-child{margin-top:14px}
+#wlc.ui table.areas tr.grp th{padding:18px 4px 8px;text-align:left;border-bottom:1px solid color-mix(in srgb,var(--h) 45%,transparent);color:var(--fg)}
+#wlc.ui .grphead{display:flex;align-items:center;gap:10px}
+#wlc.ui .grphead .gicon{width:32px;height:32px;border-radius:10px;font-size:1em}
+#wlc.ui .grphead .gname{font-family:var(--serif);font-weight:400;font-size:1.5em;line-height:1}
+#wlc.ui .grphead .tname{font-weight:500}
+#wlc.ui table.areas tbody tr:not(.grp) td{border-bottom-color:color-mix(in srgb,var(--h) 20%,var(--border))}
+#wlc.ui table.areas tr.me td{background:color-mix(in srgb,var(--h) 18%,transparent)}
+#wlc.ui .arealink{display:inline-flex;align-items:center;gap:10px;text-decoration:none;padding:2px 0}
+#wlc.ui .arealink .tchip{width:26px;height:26px;border-radius:8px;font-size:.9em}
+#wlc.ui .dashboard .goalcols,#wlc.ui .dashboard{display:block}
+#wlc.ui .list.dash{margin:4px -4px 0}

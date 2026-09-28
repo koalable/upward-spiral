@@ -23,8 +23,8 @@ function addGoal(key) {
   return "none";
 }
 
-export default {
-  tabs: [["todos", "To-dos", todosView]],
+// The handlers without the tab, so other pages (the Check-in dashboard) can show today's list.
+export const todoHandlers = {
   actions: {
     goalAdd: (el) => addGoal(el.dataset.goal),
     goalRemove: (el) => editGoals(el.dataset.goal, (items) => items.splice(Number(el.dataset.index), 1)),
@@ -41,3 +41,5 @@ export default {
     return addGoal(key), true;
   },
 };
+
+export default { tabs: [["todos", "To-dos", todosView]], ...todoHandlers };
