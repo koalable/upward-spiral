@@ -144,7 +144,7 @@ export function todayView() {
     <p class="privacy small muted">🔒 Your questions and answers are private. The group sees only your score, streak, and check-in.</p>
     <section class="hero" id="live-hero"></section>
     <div id="live-freeze"></div>
-    ${isToday ? dashboardView() : ""}
+    ${isToday ? html`<div id="live-dash">${dashboardView()}</div>` : ""}
     ${isToday ? medQuickLog() : ""}
     <fieldset ${open ? "" : "disabled"}>
       ${ladders.map((q) => ladderCard(q, a))}

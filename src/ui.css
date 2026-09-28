@@ -278,7 +278,7 @@
 
 /* Progress: energy flow */
 #wlc.ui .energy{margin-bottom:20px}
-#wlc.ui .etitle{font-size:2.6em;line-height:1;margin:4px 0 6px}
+#wlc.ui .etitle{font-size:2.6em;line-height:1.15!important;margin:4px 0 12px!important;padding-bottom:2px}
 #wlc.ui .etitle em{color:var(--muted)}
 #wlc.ui .eover{background:var(--card);border:1px solid var(--border);border-radius:22px;padding:18px;margin:12px 0 4px}
 #wlc.ui .eover .row{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
@@ -286,16 +286,16 @@
 #wlc.ui .delta{font-size:.85em;font-weight:500;padding:3px 9px;border-radius:999px;background:var(--accent);white-space:nowrap}
 #wlc.ui .up{color:#4ade80}#wlc.ui .down{color:#f87171}#wlc.ui .flat{color:var(--muted)}
 #wlc.ui.light .up{color:#15803d}#wlc.ui.light .down{color:#b91c1c}
-#wlc.ui .quad{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:16px}
-#wlc.ui .quad a{border-radius:16px;padding:10px 8px 8px;text-decoration:none;color:#15130f;display:flex;flex-direction:column;gap:2px;min-height:86px;justify-content:space-between}
-#wlc.ui .quad a.lt{color:#fbf8f1}
-#wlc.ui .quad b{font-weight:600;font-size:.78em;line-height:1.2}
-#wlc.ui .quad .serif{font-size:1.9em;line-height:1}
-#wlc.ui .quad small{font-size:.7em;opacity:.85}
-#wlc.ui .scale{display:flex;align-items:center;gap:8px;margin-top:14px;font-size:.75em;color:var(--muted)}
-#wlc.ui .scale .sw{display:flex;flex:1;height:10px;border-radius:999px;overflow:hidden}
-#wlc.ui .scale .sw i{flex:1}
-#wlc.ui .scale .sw i:nth-child(1){background:var(--s0)}#wlc.ui .scale .sw i:nth-child(2){background:var(--s1)}#wlc.ui .scale .sw i:nth-child(3){background:var(--s2)}#wlc.ui .scale .sw i:nth-child(4){background:var(--s3)}#wlc.ui .scale .sw i:nth-child(5){background:var(--s4)}
+#wlc.ui .eq4{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:8px;margin-top:16px}
+#wlc.ui .eq4 a{border-radius:16px;padding:10px 8px 8px;text-decoration:none;color:#15130f;display:flex;flex-direction:column;gap:2px;min-height:86px;justify-content:space-between}
+#wlc.ui .eq4 a.lt{color:#fbf8f1}
+#wlc.ui .eq4 b{font-weight:600;font-size:.78em;line-height:1.2}
+#wlc.ui .eq4 .serif{font-size:1.9em;line-height:1}
+#wlc.ui .eq4 small{font-size:.7em;opacity:.85}
+#wlc.ui .escale{display:flex;align-items:center;gap:8px;margin-top:14px;font-size:.75em;color:var(--muted)}
+#wlc.ui .escale .sw{display:flex;flex:1;height:10px;border-radius:999px;overflow:hidden}
+#wlc.ui .escale .sw i{flex:1}
+#wlc.ui .escale .sw i:nth-child(1){background:var(--s0)}#wlc.ui .escale .sw i:nth-child(2){background:var(--s1)}#wlc.ui .escale .sw i:nth-child(3){background:var(--s2)}#wlc.ui .escale .sw i:nth-child(4){background:var(--s3)}#wlc.ui .escale .sw i:nth-child(5){background:var(--s4)}
 #wlc.ui .egroup{margin-top:22px;border-radius:26px;padding:16px 12px 14px;background:color-mix(in srgb,var(--h) 10%,transparent);border:1px solid color-mix(in srgb,var(--h) 30%,transparent)}
 #wlc.ui.light .egroup{background:color-mix(in srgb,var(--h) 15%,transparent)}
 #wlc.ui .egroup .ghead{padding:0 4px}
@@ -347,3 +347,24 @@
 #wlc.ui .arealink .tchip{width:26px;height:26px;border-radius:8px;font-size:.9em}
 #wlc.ui .dashboard .goalcols,#wlc.ui .dashboard{display:block}
 #wlc.ui .list.dash{margin:4px -4px 0}
+
+/* More colours: extra themes for Work goals */
+#wlc.ui .rose{--h:#c8406f;--s0:#fbe1ea;--s1:#f5b6cb;--s2:#e97fa2;--s3:#c8406f;--s4:#8f2248}
+#wlc.ui .sun{--h:#b88400;--s0:#fbf1cc;--s1:#f5de86;--s2:#e8c14a;--s3:#b88400;--s4:#7a5700}
+#wlc.ui .teal{--h:#0e8a80;--s0:#d5f1ee;--s1:#9fdcd5;--s2:#55bdb2;--s3:#0e8a80;--s4:#075e57}
+#wlc.ui .rose progress::-webkit-progress-value,#wlc.ui .sun progress::-webkit-progress-value,#wlc.ui .teal progress::-webkit-progress-value{background:var(--h)}
+#wlc.ui .rose progress::-moz-progress-bar,#wlc.ui .sun progress::-moz-progress-bar,#wlc.ui .teal progress::-moz-progress-bar{background:var(--h)}
+#wlc.ui .goal{background:color-mix(in srgb,var(--h) 10%,var(--card));border:1px solid color-mix(in srgb,var(--h) 45%,transparent);overflow:hidden;margin-bottom:16px}
+#wlc.ui .goal>nav.ghband{background:var(--h);color:#fff;align-items:flex-start;gap:12px;padding:16px}
+#wlc.ui .goal>nav.ghband h6{margin:0 0 4px!important;font-family:var(--serif);font-weight:400;font-size:1.5em}
+#wlc.ui .goal>nav.ghband .small-text{color:rgb(255 255 255 / .85)}
+#wlc.ui .goal>nav.ghband .badge{background:rgb(255 255 255 / .2);color:#fff;border-color:transparent}
+#wlc.ui .goal>nav.ghband .stat{margin-top:10px}
+#wlc.ui .goal>nav.ghband button{color:#fff}
+#wlc.ui .gchip{display:grid;place-items:center;width:36px;height:36px;border-radius:12px;background:rgb(255 255 255 / .2);font-size:1.15em;flex:none}
+#wlc.ui .goal>progress{margin:14px 16px 12px;width:calc(100% - 32px)}
+#wlc.ui .goal .ms{border-top-color:color-mix(in srgb,var(--h) 30%,transparent)}
+#wlc.ui .list li.tagged{box-shadow:inset 4px 0 0 var(--h)}
+#wlc.ui .tasksday{margin:16px 0 8px}
+#wlc.ui .workhint{margin:0 0 18px;line-height:1.6}
+#wlc.ui .small-text i,#wlc.ui .hint i{vertical-align:-2px}

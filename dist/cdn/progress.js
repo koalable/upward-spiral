@@ -59,9 +59,9 @@
     <div class="eover">
       <div class="row"><div><div class="big serif">${u.now}</div><div class="hint">energy points</div></div>
         <span class="delta ${d>0?"up":d<0?"down":"flat"}">${d>0?`\u25B2 ${d}`:d<0?`\u25BC ${-d}`:"="} vs usual</span></div>
-      <div class="quad">${l.map(c=>i`<a href="#eg-${c.id}" class="${c.theme} m${c.t.level}${Qt(c.t.level)?" lt":""}" aria-label="${c.name}: ${c.t.now}, ${ie[c.t.level].toLowerCase()}">
+      <div class="eq4">${l.map(c=>i`<a href="#eg-${c.id}" class="${c.theme} m${c.t.level}${Qt(c.t.level)?" lt":""}" aria-label="${c.name}: ${c.t.now}, ${ie[c.t.level].toLowerCase()}">
         <b>${c.name}</b><span class="serif">${c.t.now}</span><small>${ie[c.t.level]}</small></a>`)}</div>
-      <div class="scale"><span>Slipping</span><span class="sw garden"><i></i><i></i><i></i><i></i><i></i></span><span>Surging</span></div>
+      <div class="escale"><span>Slipping</span><span class="sw garden"><i></i><i></i><i></i><i></i><i></i></span><span>Surging</span></div>
     </div>
     ${l.map(c=>i`<div class="egroup ${c.theme}" id="eg-${c.id}">
       <div class="ghead"><div class="gtitle"><span class="gicon">${C(c.icon)}</span><div><div class="tname">${c.themeName}</div><h3 class="serif">${c.name}</h3></div></div>

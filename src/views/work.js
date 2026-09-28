@@ -1,7 +1,7 @@
 // Work: Today (a few tasks, picked for you) and Goals (goal → milestones → tasks, with progress).
 import { html, shortDate, longDate } from "../util.js";
 import { state } from "../state.js";
-import { normalizeWork, todayState, todayPicks, blocker, progress, countdown } from "../work.js";
+import { normalizeWork, todayState, todayPicks, blocker, progress, countdown, goalTheme } from "../work.js";
 import { pressed, saveStatus, icon } from "./components.js";
 
 export const workData = () => normalizeWork(state.work);
@@ -25,7 +25,7 @@ function check(t, open = true) {
 // ---------- today ----------
 function todayRow(w, t, key, pinned) {
   const g = goalOf(w, t.goal), m = msOf(w, t.ms);
-  return html`<li class="${t.done ? "done" : ""}">${check(t)}
+  return html`<li class="tagged ${goalTheme(w, t.goal)}${t.done ? " done" : ""}">${check(t)}
     <div class="max"><div class="rname">${t.name}</div>
       <div class="small-text">${[g?.name, m?.name].filter(Boolean).join(" › ")}${t.hours ? ` · ${t.hours}h` : ""}${t.due ? " · " : ""}${dueLabel(t, key)}</div></div>
     ${t.done ? "" : html`<button class="circle transparent${pinned ? " on" : ""}" data-act="wPin" data-id="${t.id}" aria-pressed="${pressed(pinned)}" aria-label="${pinned ? "Unpin" : "Pin to today"}: ${t.name}" title="Pin">${icon("pin")}</button>
@@ -50,8 +50,8 @@ export function workTodayView() {
         : html`<p class="padding small-text">Nothing open right now${blocked ? ` (${blocked} waiting on other tasks)` : ""}. Add tasks under Goals.</p>`}
       ${all && open.length > blocked ? html`<nav class="padding"><span class="max">Nice work. That's today handled.</span><button class="border" data-act="wMore">${icon("add")}<span>One more</span></button></nav>` : ""}
     </article>
-    <nav class="wrap"><span class="small-text">Tasks a day:</span>${[3, 4, 5].map((n) => html`<button class="chip ${n === w.perDay ? "fill" : "border"}" data-act="wPerDay" data-n="${n}" aria-pressed="${pressed(n === w.perDay)}">${n}</button>`)}</nav>
-    <p class="small-text">Picked for you: overdue first, then whatever's due soonest. Unfinished tasks carry over. ${icon("pin")} keeps a task on today's list; ${icon("swap")} swaps it for the next one. Tasks waiting on another task stay hidden until that one's done.</p>
+    <nav class="wrap tasksday"><span class="small-text">Tasks a day:</span>${[3, 4, 5].map((n) => html`<button class="chip ${n === w.perDay ? "fill" : "border"}" data-act="wPerDay" data-n="${n}" aria-pressed="${pressed(n === w.perDay)}">${n}</button>`)}</nav>
+    <p class="small-text workhint">Picked for you: overdue first, then whatever's due soonest. Unfinished tasks carry over. ${icon("pin")} keeps a task on today's list; ${icon("swap")} swaps it for the next one. Tasks waiting on another task stay hidden until that one's done.</p>
     ${goalCards(w, key, true)}`;
 }
 
@@ -93,8 +93,8 @@ function goalCards(w, key, compact) {
   return w.goals.map((g) => {
     const tasks = w.tasks.filter((t) => t.goal === g.id), p = progress(tasks, key);
     const ms = w.milestones.filter((m) => m.goal === g.id).sort((a, b) => (a.due || "9999").localeCompare(b.due || "9999"));
-    return html`<article class="round no-padding goal themed ember">
-      <nav class="padding">${icon("target")}<div class="max"><h6>${g.name}</h6>
+    return html`<article class="round no-padding goal ${goalTheme(w, g.id)}">
+      <nav class="padding ghband"><span class="gchip">${icon("target")}</span><div class="max"><h6>${g.name}</h6>
         <div class="small-text">${g.due ? `${shortDate(g.due)} · ${countdown(g.due, key)} · ` : ""}${p.pct}% · ${p.done}/${p.total} tasks${p.hoursLeft ? ` · ${p.hoursLeft}h left` : ""}</div>
         <div class="stat">${status(p, g.due, key)}</div></div>
         ${compact ? "" : html`<button class="circle transparent" data-act="wEdit" data-kind="goal" data-id="${g.id}" aria-label="Edit ${g.name}">${icon("edit")}</button>`}</nav>

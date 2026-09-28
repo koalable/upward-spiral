@@ -76,3 +76,10 @@ export function removeGoal(w, id) {
   w.milestones = w.milestones.filter((m) => m.goal !== id);
   w.goals = w.goals.filter((g) => g.id !== id);
 }
+
+// Each goal gets its own colour, in order, so its tasks are easy to spot everywhere.
+export const GOAL_THEMES = ["tide", "rose", "garden", "sun", "dusk", "teal", "ember"];
+export const goalTheme = (w, goalId) => {
+  const i = w.goals.findIndex((g) => g.id === goalId);
+  return i < 0 ? "ember" : GOAL_THEMES[i % GOAL_THEMES.length];
+};

@@ -61,9 +61,9 @@ export function energyView() {
     <div class="eover">
       <div class="row"><div><div class="big serif">${total.now}</div><div class="hint">energy points</div></div>
         <span class="delta ${diff > 0 ? "up" : diff < 0 ? "down" : "flat"}">${diff > 0 ? `▲ ${diff}` : diff < 0 ? `▼ ${-diff}` : "="} vs usual</span></div>
-      <div class="quad">${groups.map((g) => html`<a href="#eg-${g.id}" class="${g.theme} m${g.t.level}${light(g.t.level) ? " lt" : ""}" aria-label="${g.name}: ${g.t.now}, ${MOMENTUM[g.t.level].toLowerCase()}">
+      <div class="eq4">${groups.map((g) => html`<a href="#eg-${g.id}" class="${g.theme} m${g.t.level}${light(g.t.level) ? " lt" : ""}" aria-label="${g.name}: ${g.t.now}, ${MOMENTUM[g.t.level].toLowerCase()}">
         <b>${g.name}</b><span class="serif">${g.t.now}</span><small>${MOMENTUM[g.t.level]}</small></a>`)}</div>
-      <div class="scale"><span>Slipping</span><span class="sw garden"><i></i><i></i><i></i><i></i><i></i></span><span>Surging</span></div>
+      <div class="escale"><span>Slipping</span><span class="sw garden"><i></i><i></i><i></i><i></i><i></i></span><span>Surging</span></div>
     </div>
     ${groups.map((g) => html`<div class="egroup ${g.theme}" id="eg-${g.id}">
       <div class="ghead"><div class="gtitle"><span class="gicon">${icon(g.icon)}</span><div><div class="tname">${g.themeName}</div><h3 class="serif">${g.name}</h3></div></div>
