@@ -137,8 +137,20 @@ export function readWorkForm(view) {
   const after = val("#w-after"); if (after !== undefined) e.after = after;
 }
 
+function importBox(open) {
+  const msg = state.workImport;
+  return html`<details class="importbox"${open || msg ? " open" : ""}><summary>${icon("playlist_add")} Paste a plan from Claude</summary>
+    <ol class="small-text">
+      <li>Copy this prompt, paste it into Claude, and add your plan (or ask Claude to write one).</li>
+      <li>Paste Claude's answer below and tap Import. You can edit everything afterwards.</li></ol>
+    <p><button class="border small" data-act="wCopyPrompt">${icon("check")}<span>Copy the prompt</span></button></p>
+    <label class="field"><span>Claude's answer</span><textarea id="w-import" rows="8" placeholder="GOAL: Book marketing launch | due 2027-09-30&#10;## Build email list | due 2026-10-31&#10;- Set up Substack welcome email | due 2026-10-05 | 2h"></textarea></label>
+    <nav><button data-act="wImport">Import</button></nav>
+    ${msg ? html`<p class="small-text importmsg">${msg}</p>` : ""}</details>`;
+}
+
 export function workGoalsView() {
   const w = workData(), key = state.date;
-  return html`${workForm(w)}${goalCards(w, key, false)}
+  return html`${workForm(w)}${importBox(!w.goals.length)}${goalCards(w, key, false)}
     <p class="small-text">Private to you. A lock means a task is waiting on another one. Behind = at least one task past its due date. ${saveStatus()}</p>`;
 }

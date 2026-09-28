@@ -5,6 +5,7 @@ import { clone, newId, todayKey } from "../util.js";
 import { ui } from "../render.js";
 import { todayState, removeTask, removeMilestone, removeGoal } from "../work.js";
 import { workTodayView, workGoalsView, workData, readWorkForm } from "../views/work.js";
+import { parsePlan, PLAN_PROMPT } from "../workimport.js";
 
 const LIST = { goal: "goals", ms: "milestones", task: "tasks" };
 
@@ -59,6 +60,19 @@ export default {
     },
     wCancel() { state.editWork = null; },
     wSave: saveItem,
+    wCopyPrompt(el) {
+      navigator.clipboard?.writeText(PLAN_PROMPT).then(() => { el.querySelector("span").textContent = "Copied"; }, () => {});
+      return "none";
+    },
+    wImport() {
+      const text = ui.view.querySelector("#w-import")?.value || "";
+      const p = parsePlan(text, newId);
+      if (!p.goals.length) { state.workImport = "Nothing to import. Each plan needs a line starting with GOAL:"; return; }
+      edit((w) => { w.goals.push(...p.goals); w.milestones.push(...p.milestones); w.tasks.push(...p.tasks); });
+      const n = (k, word) => `${k} ${word}${k === 1 ? "" : "s"}`;
+      state.workImport = `Imported ${n(p.goals.length, "goal")}, ${n(p.milestones.length, "milestone")} and ${n(p.tasks.length, "task")}.`
+        + (p.skipped.length ? ` Skipped ${p.skipped.length} line${p.skipped.length === 1 ? "" : "s"}: ${p.skipped.slice(0, 3).join(" · ")}${p.skipped.length > 3 ? " …" : ""}` : "");
+    },
     wRemove() {
       const e = state.editWork;
       const warn = e.kind === "goal" ? " and all its milestones and tasks" : e.kind === "ms" ? " and its tasks" : "";
