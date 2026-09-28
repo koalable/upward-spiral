@@ -2,4 +2,4 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script>window.WLC_CONFIG={firebase:{"apiKey":"AIzaSyCSXKB82V0RtKBV8f6IM7AA7wp1gsPcwYQ","authDomain":"upward-spiral-of-awesomeness.firebaseapp.com","projectId":"upward-spiral-of-awesomeness","appId":"1:445813281061:web:8982a5466586bce7828acc"},pages:{"checkin":"/challenge","routines":"/challenge-routines","work":"/challenge-work","progress":"/challenge-progress"}};if(!document.getElementById("wlc")){var d=document.createElement("div");d.id="wlc";document.body.appendChild(d)}</script>
-<script src="https://cdn.jsdelivr.net/gh/koalable/upward-spiral@32160005ca323dbaf501d165fb55eb80277f1537/dist/cdn/routines.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/koalable/upward-spiral@1d05f16306d9562b189b5d92886dedb0cef033d6/dist/cdn/routines.js"></script>
