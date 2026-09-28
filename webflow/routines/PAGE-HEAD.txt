@@ -1,0 +1,4 @@
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lucide-static@0.577.0/font/lucide.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/koalable/upward-spiral@b7d331fe2684c0d39e5666a2e8ff951fdb07c528/dist/cdn/app.css">
