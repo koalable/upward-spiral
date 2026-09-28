@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Energy Flow Mockup</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lucide-static@0.577.0/font/lucide.css">
+<style>
+:root{--bg:#0b0b0d;--card:#141417;--fg:#f6f3ec;--muted:#a1a1aa;--border:#27272a;--chip:#1d1d21}
+:root[data-theme="light"]{--bg:#f5f0e6;--card:#fffdf8;--fg:#1b1a17;--muted:#6b6660;--border:#e4ddcf;--chip:#ebe4d6}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:400 16px/1.5 Inter,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+.wrap{max-width:440px;margin:0 auto;padding:20px 16px 60px}
+.serif{font-family:"Instrument Serif",Georgia,serif;font-weight:400;letter-spacing:-.01em}
+.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.top small{color:var(--muted);font-size:.8em;letter-spacing:.08em;text-transform:uppercase}
+.theme{background:var(--chip);color:var(--fg);border:0;border-radius:999px;padding:6px 12px;font:500 .8em Inter;cursor:pointer}
+h1{font-size:3.2em;line-height:1;margin:6px 0 4px}
+h1 em{color:var(--muted)}
+.sub{color:var(--muted);margin:0 0 20px;font-size:.92em}
+
+/* energy meter */
+.meter{background:var(--card);border:1px solid var(--border);border-radius:22px;padding:18px}
+.meter .row{display:flex;align-items:baseline;justify-content:space-between}
+.meter .big{font-size:3.4em;line-height:1}
+.delta{font-size:.85em;font-weight:500;padding:3px 9px;border-radius:999px;background:var(--chip);white-space:nowrap}
+.up{color:#4ade80}.down{color:#f87171}
+.bar{display:flex;height:14px;border-radius:999px;overflow:hidden;margin:14px 0 10px;gap:3px}
+.bar span{display:block}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.8em;color:var(--muted)}
+.legend i.d{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:6px;vertical-align:0}
+
+/* groups */
+.group{margin-top:30px}
+.ghead{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;margin-bottom:4px}
+.ghead h2{font-size:2.1em;line-height:1;margin:0}
+.ghead .sum{text-align:right;font-size:.85em;color:var(--muted);white-space:nowrap}
+.ghead .sum b{color:var(--fg);font-weight:600;font-size:1.15em}
+.gwhy{color:var(--muted);font-size:.88em;margin:0 0 12px}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tile{border-radius:22px;padding:14px 14px 12px;min-height:150px;display:flex;flex-direction:column;justify-content:space-between;color:#15130f;transition:transform .2s}
+.tile.lt{color:#fbf8f1}
+.tile:nth-child(odd){transform:rotate(-1.2deg)}
+.tile:nth-child(even){transform:rotate(1deg)}
+.tile:hover{transform:rotate(0) scale(1.02)}
+.tile .name{font-weight:600;font-size:.95em}
+.tile .ico{font-size:1.5em;width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:rgb(255 255 255 / .55);color:#15130f}
+.tile.lt .ico{background:rgb(255 255 255 / .16);color:#fbf8f1}
+.tile .num{font-size:3em;line-height:.9;margin-top:10px}
+.tile .num small{font-size:.38em;opacity:.7;font-family:Inter;margin-left:3px}
+.tile .was{font-size:.78em;opacity:.8;display:flex;justify-content:space-between;align-items:center}
+.tile .arrow{font-weight:600}
+.tile.wide{grid-column:1/-1;min-height:118px}
+.tile.wide .body{display:flex;justify-content:space-between;align-items:flex-end}
+
+/* palette */
+.lav{background:#b4a7f5}.forest{background:#2e5e2b}.butter{background:#f2de72}
+.rust{background:#c4502a}.sky{background:#6aa8e0}
+.orange{background:#e27b45}.cobalt{background:#3f5bc2}.pink{background:#f2a3cf}
+.navy{background:#23206b}.mint{background:#8fd3b0}
+
+.note{margin-top:34px;padding:14px 16px;border:1px dashed var(--border);border-radius:16px;color:var(--muted);font-size:.85em}
+.note b{color:var(--fg)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top"><small>Progress · mockup</small><button class="theme" onclick="document.documentElement.dataset.theme=document.documentElement.dataset.theme==='light'?'':'light'">Light / dark</button></div>
+  <h1 class="serif">This week <em>vs last</em></h1>
+  <p class="sub">Mon–Thu so far · compared with the same days last week</p>
+
+  <section class="meter" aria-label="Energy this week">
+    <div class="row"><div><div class="big serif">65</div><div class="sub" style="margin:4px 0 0">energy points this week</div></div><span class="delta up">▲ 6 vs last week</span></div>
+    <div class="bar" aria-hidden="true">
+      <span style="flex:21;background:#b4a7f5"></span>
+      <span style="flex:24;background:#c4502a"></span>
+      <span style="flex:16;background:#e27b45"></span>
+      <span style="flex:4;background:#23206b;outline:1px solid #3a3790"></span>
+    </div>
+    <div class="legend"><span><i class="d" style="background:#b4a7f5"></i>Fill up 21</span><span><i class="d" style="background:#c4502a"></i>Protect 24</span><span><i class="d" style="background:#e27b45"></i>Spend well 16</span><span><i class="d" style="background:#23206b;outline:1px solid #3a3790"></i>Show up 4</span></div>
+  </section>
+
+  <section class="group">
+    <div class="ghead"><h2 class="serif">Fill up</h2><div class="sum"><b>21</b> · <span class="up">▲ 3</span></div></div>
+    <p class="gwhy">What puts energy back in the tank.</p>
+    <div class="tiles">
+      <div class="tile lav"><div class="ico"><i class="icon-moon"></i></div><div><div class="name">Sleep</div><div class="num serif">8<small>pts</small></div><div class="was"><span>last week 6</span><span class="arrow">▲ 2</span></div></div></div>
+      <div class="tile forest lt"><div class="ico"><i class="icon-salad"></i></div><div><div class="name">Diet</div><div class="num serif">7<small>pts</small></div><div class="was"><span>last week 7</span><span class="arrow">even</span></div></div></div>
+      <div class="tile butter wide"><div class="ico"><i class="icon-sprout"></i></div><div class="body"><div><div class="name">Healthy practices</div><div class="was" style="gap:10px"><span>last week 5</span><span class="arrow">▲ 1</span></div></div><div class="num serif">6<small>pts</small></div></div></div>
+    </div>
+  </section>
+
+  <section class="group">
+    <div class="ghead"><h2 class="serif">Protect</h2><div class="sum"><b>24</b> · <span class="up">▲ 4</span></div></div>
+    <p class="gwhy">Guarding against the leaks.</p>
+    <div class="tiles">
+      <div class="tile rust lt"><div class="ico"><i class="icon-wine-off"></i></div><div><div class="name">Substances</div><div class="num serif">14<small>pts</small></div><div class="was"><span>last week 12</span><span class="arrow">▲ 2</span></div></div></div>
+      <div class="tile sky"><div class="ico"><i class="icon-smartphone"></i></div><div><div class="name">Screen time</div><div class="num serif">10<small>pts</small></div><div class="was"><span>last week 8</span><span class="arrow">▲ 2</span></div></div></div>
+    </div>
+  </section>
+
+  <section class="group">
+    <div class="ghead"><h2 class="serif">Spend well</h2><div class="sum"><b>16</b> · <span class="down">▼ 1</span></div></div>
+    <p class="gwhy">Where your energy goes on purpose.</p>
+    <div class="tiles">
+      <div class="tile orange"><div class="ico"><i class="icon-footprints"></i></div><div><div class="name">Movement</div><div class="num serif">9<small>pts</small></div><div class="was"><span>last week 8</span><span class="arrow">▲ 1</span></div></div></div>
+      <div class="tile cobalt lt"><div class="ico"><i class="icon-pen-line"></i></div><div><div class="name">Writing</div><div class="num serif">3<small>pts</small></div><div class="was"><span>last week 4</span><span class="arrow">▼ 1</span></div></div></div>
+      <div class="tile pink wide"><div class="ico"><i class="icon-book-open"></i></div><div class="body"><div><div class="name">Reading</div><div class="was" style="gap:10px"><span>last week 5</span><span class="arrow">▼ 1</span></div></div><div class="num serif">4<small>pts</small></div></div></div>
+    </div>
+  </section>
+
+  <section class="group">
+    <div class="ghead"><h2 class="serif">Show up</h2><div class="sum"><b>4</b> · <span class="up">even</span></div></div>
+    <p class="gwhy">The habit that holds the rest together.</p>
+    <div class="tiles">
+      <div class="tile navy lt"><div class="ico"><i class="icon-notebook-pen"></i></div><div><div class="name">Check-ins</div><div class="num serif">4<small>/4 days</small></div><div class="was"><span>last week 4</span><span class="arrow">even</span></div></div></div>
+      <div class="tile mint"><div class="ico"><i class="icon-list-checks"></i></div><div><div class="name">Routines</div><div class="num serif">3<small>/4 days</small></div><div class="was"><span>streak, no points</span><span class="arrow">🔥 3</span></div></div></div>
+    </div>
+  </section>
+
+  <p class="note"><b>How the colours travel:</b> every category keeps its tile colour everywhere (Check-in sections, streak calendars, Work). Group names in the serif; numbers big in the serif; everything else stays in the clean sans. Tap a tile → that category's streak calendar.</p>
+</div>
+</body>
+</html>
