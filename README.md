@@ -41,6 +41,7 @@ The app is three Webflow pages that share the same sign-in and data:
 |---|---|---|
 | Check-in | /challenge | Today, Meds, Journal, My questions, Targets & rules |
 | Routines | /challenge-routines | Routines, Set up routines, To-dos |
+| Work | /challenge-work | Today (3–5 picked tasks), Goals (goals → milestones → tasks, dependencies, progress) |
 | Progress | /challenge-progress | Streaks & badges, My progress, Group |
 
 Each page bundles only its own features (`src/entries/<page>.js`), so each stays well under Webflow's limits.
