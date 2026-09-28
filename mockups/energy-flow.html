@@ -8,119 +8,166 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600&display=swap">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lucide-static@0.577.0/font/lucide.css">
 <style>
-:root{--bg:#0b0b0d;--card:#141417;--fg:#f6f3ec;--muted:#a1a1aa;--border:#27272a;--chip:#1d1d21}
-:root[data-theme="light"]{--bg:#f5f0e6;--card:#fffdf8;--fg:#1b1a17;--muted:#6b6660;--border:#e4ddcf;--chip:#ebe4d6}
+:root{--bg:#0b0b0d;--card:#141417;--fg:#f6f3ec;--muted:#a1a1aa;--border:#27272a;--chip:#1d1d21;--tint:.10}
+:root[data-theme="light"]{--bg:#f5f0e6;--card:#fffdf8;--fg:#1b1a17;--muted:#6b6660;--border:#e4ddcf;--chip:#ebe4d6;--tint:.16}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--fg);font:400 16px/1.5 Inter,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
 .wrap{max-width:440px;margin:0 auto;padding:20px 16px 60px}
 .serif{font-family:"Instrument Serif",Georgia,serif;font-weight:400;letter-spacing:-.01em}
 .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
 .top small{color:var(--muted);font-size:.8em;letter-spacing:.08em;text-transform:uppercase}
-.theme{background:var(--chip);color:var(--fg);border:0;border-radius:999px;padding:6px 12px;font:500 .8em Inter;cursor:pointer}
+.theme{background:var(--chip);color:var(--fg);border:0;border-radius:999px;padding:6px 12px;font:500 .8em/1.2 Inter,sans-serif;cursor:pointer}
 h1{font-size:3.2em;line-height:1;margin:6px 0 4px}
 h1 em{color:var(--muted)}
-.sub{color:var(--muted);margin:0 0 20px;font-size:.92em}
+.sub{color:var(--muted);margin:0 0 18px;font-size:.92em}
 
-/* energy meter */
-.meter{background:var(--card);border:1px solid var(--border);border-radius:22px;padding:18px}
-.meter .row{display:flex;align-items:baseline;justify-content:space-between}
-.meter .big{font-size:3.4em;line-height:1}
+/* the four themes: 5 shades each, pale = slipping → deep = surging */
+.garden{--h:#3f7f3a;--s0:#e3ecd8;--s1:#bcd6a6;--s2:#86b66f;--s3:#3f7f3a;--s4:#1d4a21}
+.tide  {--h:#2f6fc0;--s0:#dde9f5;--s1:#abcdee;--s2:#6aa6de;--s3:#2f6fc0;--s4:#183a80}
+.ember {--h:#d9692f;--s0:#fbe5d5;--s1:#f5c29d;--s2:#ec9860;--s3:#d4612a;--s4:#9c3a17}
+.dusk  {--h:#7658d6;--s0:#ede8fb;--s1:#d0c5f6;--s2:#a894ec;--s3:#7054d2;--s4:#452b98}
+.m0{background:var(--s0)}.m1{background:var(--s1)}.m2{background:var(--s2)}.m3{background:var(--s3)}.m4{background:var(--s4)}
+
+/* momentum overview */
+.overview{background:var(--card);border:1px solid var(--border);border-radius:22px;padding:18px}
+.overview .row{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+.overview .big{font-size:3.4em;line-height:1}
 .delta{font-size:.85em;font-weight:500;padding:3px 9px;border-radius:999px;background:var(--chip);white-space:nowrap}
-.up{color:#4ade80}.down{color:#f87171}
-.bar{display:flex;height:14px;border-radius:999px;overflow:hidden;margin:14px 0 10px;gap:3px}
-.bar span{display:block}
-.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.8em;color:var(--muted)}
-.legend i.d{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:6px;vertical-align:0}
+.up{color:#4ade80}.down{color:#f87171}.flat{color:var(--muted)}
+:root[data-theme="light"] .up{color:#15803d}:root[data-theme="light"] .down{color:#b91c1c}
+.quad{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:16px}
+.quad a{border-radius:16px;padding:10px 8px 8px;text-decoration:none;color:#15130f;display:flex;flex-direction:column;gap:2px;min-height:86px;justify-content:space-between}
+.quad a.lt{color:#fbf8f1}
+.quad b{font-weight:600;font-size:.78em;line-height:1.2}
+.quad .serif{font-size:1.9em;line-height:1}
+.quad small{font-size:.7em;opacity:.85}
+.scale{display:flex;align-items:center;gap:8px;margin-top:14px;font-size:.75em;color:var(--muted)}
+.scale .sw{display:flex;flex:1;height:10px;border-radius:999px;overflow:hidden}
+.scale .sw i{flex:1}
+.scale .sw.garden i:nth-child(1){background:var(--s0)}.scale .sw i:nth-child(1){background:var(--s0)}.scale .sw i:nth-child(2){background:var(--s1)}.scale .sw i:nth-child(3){background:var(--s2)}.scale .sw i:nth-child(4){background:var(--s3)}.scale .sw i:nth-child(5){background:var(--s4)}
 
 /* groups */
-.group{margin-top:30px}
-.ghead{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;margin-bottom:4px}
-.ghead h2{font-size:2.1em;line-height:1;margin:0}
-.ghead .sum{text-align:right;font-size:.85em;color:var(--muted);white-space:nowrap}
-.ghead .sum b{color:var(--fg);font-weight:600;font-size:1.15em}
-.gwhy{color:var(--muted);font-size:.88em;margin:0 0 12px}
+.group{margin-top:26px;border-radius:26px;padding:16px 12px 14px;background:color-mix(in srgb,var(--h) calc(var(--tint)*100%),transparent);border:1px solid color-mix(in srgb,var(--h) 30%,transparent)}
+.ghead{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 4px}
+.gtitle{display:flex;align-items:center;gap:10px}
+.gicon{width:40px;height:40px;border-radius:14px;display:grid;place-items:center;background:var(--h);color:#fff;font-size:1.3em}
+.ghead h2{font-size:2em;line-height:1;margin:0}
+.ghead .theme-name{font-size:.72em;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.ghead .sum{text-align:right;font-size:.85em;white-space:nowrap}
+.ghead .sum b{font-weight:600;font-size:1.2em}
+.gwhy{color:var(--muted);font-size:.88em;margin:6px 4px 12px}
 .tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.tile{border-radius:22px;padding:14px 14px 12px;min-height:150px;display:flex;flex-direction:column;justify-content:space-between;color:#15130f;transition:transform .2s}
+.tile{border-radius:20px;padding:12px 12px 10px;min-height:168px;display:flex;flex-direction:column;justify-content:space-between;color:#15130f}
 .tile.lt{color:#fbf8f1}
-.tile:nth-child(odd){transform:rotate(-1.2deg)}
-.tile:nth-child(even){transform:rotate(1deg)}
-.tile:hover{transform:rotate(0) scale(1.02)}
-.tile .name{font-weight:600;font-size:.95em}
-.tile .ico{font-size:1.5em;width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:rgb(255 255 255 / .55);color:#15130f}
-.tile.lt .ico{background:rgb(255 255 255 / .16);color:#fbf8f1}
-.tile .num{font-size:3em;line-height:.9;margin-top:10px}
-.tile .num small{font-size:.38em;opacity:.7;font-family:Inter;margin-left:3px}
-.tile .was{font-size:.78em;opacity:.8;display:flex;justify-content:space-between;align-items:center}
-.tile .arrow{font-weight:600}
-.tile.wide{grid-column:1/-1;min-height:118px}
-.tile.wide .body{display:flex;justify-content:space-between;align-items:flex-end}
+.tile:nth-child(odd){transform:rotate(-1deg)}
+.tile:nth-child(even){transform:rotate(.8deg)}
+.tile .hd{display:flex;justify-content:space-between;align-items:flex-start}
+.tile .ico{font-size:1.25em;width:36px;height:36px;border-radius:12px;display:grid;place-items:center;background:rgb(255 255 255 / .5)}
+.tile.lt .ico{background:rgb(255 255 255 / .16)}
+.tile .mo{font-size:.7em;font-weight:600;letter-spacing:.04em;text-transform:uppercase;padding:3px 8px;border-radius:999px;background:rgb(0 0 0 / .08)}
+.tile.lt .mo{background:rgb(255 255 255 / .16)}
+.tile .name{font-weight:600;font-size:.92em;margin-top:8px}
+.tile .num{font-size:2.8em;line-height:.9}
+.tile .num small{font-size:.36em;opacity:.7;font-family:Inter;margin-left:3px}
+.tile .foot{display:flex;justify-content:space-between;align-items:flex-end;gap:8px}
+.tile .was{font-size:.74em;opacity:.8;line-height:1.3}
+.spark{display:flex;align-items:flex-end;gap:3px;height:30px}
+.spark i{width:6px;border-radius:3px;background:currentColor;opacity:.35}
+.spark i:last-child{opacity:1}
+.tile.wide{grid-column:1/-1;min-height:120px}
 
-/* palette */
-.lav{background:#b4a7f5}.forest{background:#2e5e2b}.butter{background:#f2de72}
-.rust{background:#c4502a}.sky{background:#6aa8e0}
-.orange{background:#e27b45}.cobalt{background:#3f5bc2}.pink{background:#f2a3cf}
-.navy{background:#23206b}.mint{background:#8fd3b0}
-
-.note{margin-top:34px;padding:14px 16px;border:1px dashed var(--border);border-radius:16px;color:var(--muted);font-size:.85em}
+.note{margin-top:30px;padding:14px 16px;border:1px dashed var(--border);border-radius:16px;color:var(--muted);font-size:.85em}
 .note b{color:var(--fg)}
+.note p{margin:0 0 8px}.note p:last-child{margin:0}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <div class="top"><small>Progress · mockup</small><button class="theme" onclick="document.documentElement.dataset.theme=document.documentElement.dataset.theme==='light'?'':'light'">Light / dark</button></div>
+  <div class="top"><small>Progress · mockup v2</small><button class="theme" onclick="document.documentElement.dataset.theme=document.documentElement.dataset.theme==='light'?'':'light'">Light / dark</button></div>
   <h1 class="serif">This week <em>vs last</em></h1>
-  <p class="sub">Mon–Thu so far · compared with the same days last week</p>
+  <p class="sub">Mon–Thu so far · deeper colour = more momentum</p>
 
-  <section class="meter" aria-label="Energy this week">
-    <div class="row"><div><div class="big serif">65</div><div class="sub" style="margin:4px 0 0">energy points this week</div></div><span class="delta up">▲ 6 vs last week</span></div>
-    <div class="bar" aria-hidden="true">
-      <span style="flex:21;background:#b4a7f5"></span>
-      <span style="flex:24;background:#c4502a"></span>
-      <span style="flex:16;background:#e27b45"></span>
-      <span style="flex:4;background:#23206b;outline:1px solid #3a3790"></span>
+  <section class="overview" aria-label="Momentum overview">
+    <div class="row"><div><div class="big serif">64</div><div class="sub" style="margin:4px 0 0">energy points this week</div></div><span class="delta up">▲ 1 vs last week</span></div>
+    <div class="quad">
+      <a href="#fill" class="garden m3 lt" aria-label="Fill up: rising"><b>Fill up</b><span class="serif">21</span><small>▲ 4 rising</small></a>
+      <a href="#protect" class="tide m2" aria-label="Protect: steady"><b>Protect</b><span class="serif">24</span><small>= steady</small></a>
+      <a href="#spend" class="ember m1" aria-label="Spend well: dipping"><b>Spend well</b><span class="serif">15</span><small>▼ 3 dipping</small></a>
+      <a href="#show" class="dusk m4 lt" aria-label="Show up: surging"><b>Show up</b><span class="serif">4</span><small>🔥 4 days</small></a>
     </div>
-    <div class="legend"><span><i class="d" style="background:#b4a7f5"></i>Fill up 21</span><span><i class="d" style="background:#c4502a"></i>Protect 24</span><span><i class="d" style="background:#e27b45"></i>Spend well 16</span><span><i class="d" style="background:#23206b;outline:1px solid #3a3790"></i>Show up 4</span></div>
+    <div class="scale garden"><span>Slipping</span><span class="sw"><i></i><i></i><i></i><i></i><i></i></span><span>Surging</span></div>
   </section>
 
-  <section class="group">
-    <div class="ghead"><h2 class="serif">Fill up</h2><div class="sum"><b>21</b> · <span class="up">▲ 3</span></div></div>
+  <!-- FILL UP · Garden -->
+  <section class="group garden" id="fill">
+    <div class="ghead"><div class="gtitle"><span class="gicon"><i class="icon-sprout"></i></span><div><div class="theme-name">Garden</div><h2 class="serif">Fill up</h2></div></div>
+      <div class="sum"><b>21</b> <span class="up">▲ 4</span></div></div>
     <p class="gwhy">What puts energy back in the tank.</p>
     <div class="tiles">
-      <div class="tile lav"><div class="ico"><i class="icon-moon"></i></div><div><div class="name">Sleep</div><div class="num serif">8<small>pts</small></div><div class="was"><span>last week 6</span><span class="arrow">▲ 2</span></div></div></div>
-      <div class="tile forest lt"><div class="ico"><i class="icon-salad"></i></div><div><div class="name">Diet</div><div class="num serif">7<small>pts</small></div><div class="was"><span>last week 7</span><span class="arrow">even</span></div></div></div>
-      <div class="tile butter wide"><div class="ico"><i class="icon-sprout"></i></div><div class="body"><div><div class="name">Healthy practices</div><div class="was" style="gap:10px"><span>last week 5</span><span class="arrow">▲ 1</span></div></div><div class="num serif">6<small>pts</small></div></div></div>
+      <div class="tile m4 lt"><div class="hd"><span class="ico"><i class="icon-moon"></i></span><span class="mo">Surging</span></div>
+        <div class="name">Sleep</div><div class="foot"><div><div class="num serif">8<small>pts</small></div><div class="was">last week 5</div></div>
+        <div class="spark" aria-hidden="true"><i style="height:30%"></i><i style="height:40%"></i><i style="height:35%"></i><i style="height:50%"></i><i style="height:60%"></i><i style="height:100%"></i></div></div></div>
+      <div class="tile m2"><div class="hd"><span class="ico"><i class="icon-salad"></i></span><span class="mo">Steady</span></div>
+        <div class="name">Diet</div><div class="foot"><div><div class="num serif">7<small>pts</small></div><div class="was">last week 7</div></div>
+        <div class="spark" aria-hidden="true"><i style="height:70%"></i><i style="height:65%"></i><i style="height:75%"></i><i style="height:70%"></i><i style="height:70%"></i><i style="height:70%"></i></div></div></div>
+      <div class="tile m3 lt wide"><div class="hd"><span class="ico"><i class="icon-leaf"></i></span><span class="mo">Rising</span></div>
+        <div class="name">Healthy practices</div><div class="foot"><div><div class="num serif">6<small>pts</small></div><div class="was">last week 5</div></div>
+        <div class="spark" aria-hidden="true"><i style="height:40%"></i><i style="height:45%"></i><i style="height:50%"></i><i style="height:55%"></i><i style="height:55%"></i><i style="height:67%"></i></div></div></div>
     </div>
   </section>
 
-  <section class="group">
-    <div class="ghead"><h2 class="serif">Protect</h2><div class="sum"><b>24</b> · <span class="up">▲ 4</span></div></div>
+  <!-- PROTECT · Tide -->
+  <section class="group tide" id="protect">
+    <div class="ghead"><div class="gtitle"><span class="gicon"><i class="icon-shield"></i></span><div><div class="theme-name">Tide</div><h2 class="serif">Protect</h2></div></div>
+      <div class="sum"><b>24</b> <span class="flat">= even</span></div></div>
     <p class="gwhy">Guarding against the leaks.</p>
     <div class="tiles">
-      <div class="tile rust lt"><div class="ico"><i class="icon-wine-off"></i></div><div><div class="name">Substances</div><div class="num serif">14<small>pts</small></div><div class="was"><span>last week 12</span><span class="arrow">▲ 2</span></div></div></div>
-      <div class="tile sky"><div class="ico"><i class="icon-smartphone"></i></div><div><div class="name">Screen time</div><div class="num serif">10<small>pts</small></div><div class="was"><span>last week 8</span><span class="arrow">▲ 2</span></div></div></div>
+      <div class="tile m3 lt"><div class="hd"><span class="ico"><i class="icon-wine-off"></i></span><span class="mo">Rising</span></div>
+        <div class="name">Substances</div><div class="foot"><div><div class="num serif">14<small>pts</small></div><div class="was">last week 12</div></div>
+        <div class="spark" aria-hidden="true"><i style="height:55%"></i><i style="height:60%"></i><i style="height:50%"></i><i style="height:65%"></i><i style="height:70%"></i><i style="height:82%"></i></div></div></div>
+      <div class="tile m1"><div class="hd"><span class="ico"><i class="icon-smartphone"></i></span><span class="mo">Dipping</span></div>
+        <div class="name">Screen time</div><div class="foot"><div><div class="num serif">10<small>pts</small></div><div class="was">last week 12</div></div>
+        <div class="spark" aria-hidden="true"><i style="height:80%"></i><i style="height:85%"></i><i style="height:90%"></i><i style="height:85%"></i><i style="height:95%"></i><i style="height:78%"></i></div></div></div>
     </div>
   </section>
 
-  <section class="group">
-    <div class="ghead"><h2 class="serif">Spend well</h2><div class="sum"><b>16</b> · <span class="down">▼ 1</span></div></div>
+  <!-- SPEND WELL · Ember -->
+  <section class="group ember" id="spend">
+    <div class="ghead"><div class="gtitle"><span class="gicon"><i class="icon-flame"></i></span><div><div class="theme-name">Ember</div><h2 class="serif">Spend well</h2></div></div>
+      <div class="sum"><b>15</b> <span class="down">▼ 3</span></div></div>
     <p class="gwhy">Where your energy goes on purpose.</p>
     <div class="tiles">
-      <div class="tile orange"><div class="ico"><i class="icon-footprints"></i></div><div><div class="name">Movement</div><div class="num serif">9<small>pts</small></div><div class="was"><span>last week 8</span><span class="arrow">▲ 1</span></div></div></div>
-      <div class="tile cobalt lt"><div class="ico"><i class="icon-pen-line"></i></div><div><div class="name">Writing</div><div class="num serif">3<small>pts</small></div><div class="was"><span>last week 4</span><span class="arrow">▼ 1</span></div></div></div>
-      <div class="tile pink wide"><div class="ico"><i class="icon-book-open"></i></div><div class="body"><div><div class="name">Reading</div><div class="was" style="gap:10px"><span>last week 5</span><span class="arrow">▼ 1</span></div></div><div class="num serif">4<small>pts</small></div></div></div>
+      <div class="tile m3 lt"><div class="hd"><span class="ico"><i class="icon-footprints"></i></span><span class="mo">Rising</span></div>
+        <div class="name">Movement</div><div class="foot"><div><div class="num serif">9<small>pts</small></div><div class="was">last week 8</div></div>
+        <div class="spark" aria-hidden="true"><i style="height:50%"></i><i style="height:55%"></i><i style="height:60%"></i><i style="height:58%"></i><i style="height:62%"></i><i style="height:70%"></i></div></div></div>
+      <div class="tile m0"><div class="hd"><span class="ico"><i class="icon-pen-line"></i></span><span class="mo">Slipping</span></div>
+        <div class="name">Writing</div><div class="foot"><div><div class="num serif">2<small>pts</small></div><div class="was">last week 5</div></div>
+        <div class="spark" aria-hidden="true"><i style="height:90%"></i><i style="height:100%"></i><i style="height:90%"></i><i style="height:80%"></i><i style="height:100%"></i><i style="height:40%"></i></div></div></div>
+      <div class="tile m1 wide"><div class="hd"><span class="ico"><i class="icon-book-open"></i></span><span class="mo">Dipping</span></div>
+        <div class="name">Reading</div><div class="foot"><div><div class="num serif">4<small>pts</small></div><div class="was">last week 5</div></div>
+        <div class="spark" aria-hidden="true"><i style="height:80%"></i><i style="height:90%"></i><i style="height:100%"></i><i style="height:95%"></i><i style="height:100%"></i><i style="height:80%"></i></div></div></div>
     </div>
   </section>
 
-  <section class="group">
-    <div class="ghead"><h2 class="serif">Show up</h2><div class="sum"><b>4</b> · <span class="up">even</span></div></div>
+  <!-- SHOW UP · Dusk -->
+  <section class="group dusk" id="show">
+    <div class="ghead"><div class="gtitle"><span class="gicon"><i class="icon-sparkles"></i></span><div><div class="theme-name">Dusk</div><h2 class="serif">Show up</h2></div></div>
+      <div class="sum"><b>4</b> <span class="up">🔥 4</span></div></div>
     <p class="gwhy">The habit that holds the rest together.</p>
     <div class="tiles">
-      <div class="tile navy lt"><div class="ico"><i class="icon-notebook-pen"></i></div><div><div class="name">Check-ins</div><div class="num serif">4<small>/4 days</small></div><div class="was"><span>last week 4</span><span class="arrow">even</span></div></div></div>
-      <div class="tile mint"><div class="ico"><i class="icon-list-checks"></i></div><div><div class="name">Routines</div><div class="num serif">3<small>/4 days</small></div><div class="was"><span>streak, no points</span><span class="arrow">🔥 3</span></div></div></div>
+      <div class="tile m4 lt"><div class="hd"><span class="ico"><i class="icon-notebook-pen"></i></span><span class="mo">Surging</span></div>
+        <div class="name">Check-ins</div><div class="foot"><div><div class="num serif">4<small>/4 days</small></div><div class="was">4-day streak</div></div>
+        <div class="spark" aria-hidden="true"><i style="height:70%"></i><i style="height:85%"></i><i style="height:100%"></i><i style="height:85%"></i><i style="height:100%"></i><i style="height:100%"></i></div></div></div>
+      <div class="tile m2"><div class="hd"><span class="ico"><i class="icon-list-checks"></i></span><span class="mo">Steady</span></div>
+        <div class="name">Routines</div><div class="foot"><div><div class="num serif">3<small>/4 days</small></div><div class="was">streak, no points</div></div>
+        <div class="spark" aria-hidden="true"><i style="height:70%"></i><i style="height:75%"></i><i style="height:70%"></i><i style="height:75%"></i><i style="height:70%"></i><i style="height:75%"></i></div></div></div>
     </div>
   </section>
 
-  <p class="note"><b>How the colours travel:</b> every category keeps its tile colour everywhere (Check-in sections, streak calendars, Work). Group names in the serif; numbers big in the serif; everything else stays in the clean sans. Tap a tile → that category's streak calendar.</p>
+  <div class="note">
+    <p><b>How to read it:</b> each group has its own theme colour. The <b>shade</b> of a tile shows momentum: pale = slipping, deep = surging. The label and the little 6-week bars say the same thing, so it never relies on colour alone.</p>
+    <p><b>Momentum rule (proposed):</b> this week against your average of the three weeks before. More than 20% up = surging, 5–20% up = rising, within 5% = steady, 5–20% down = dipping, more than 20% down = slipping. Early in the week it compares the same days.</p>
+  </div>
 </div>
 </body>
 </html>
