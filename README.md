@@ -51,11 +51,11 @@ A feature (`src/features/*.js`) brings its tabs, button actions, and input handl
 
 The app code lives in this GitHub repo and is served free by jsDelivr. Webflow pages only hold a few lines that point at it.
 
-1. Commit your changes and push.
-2. Run `RELEASE=<commit id> node build.mjs` with the id of the pushed commit that contains the new `dist/`.
-3. Paste `webflow/<page>/PAGE-HEAD.txt` and `PAGE-FOOTER.txt` into each page's custom code (or set them through Webflow's API), then publish.
+1. Run `node build.mjs`, then commit and push (including `dist/`).
+2. Clear jsDelivr's cache for each changed file: open `https://purge.jsdelivr.net/gh/koalable/upward-spiral@main/dist/cdn/<file>` (app.css, checkin.js, routines.js, work.js, progress.js).
 
-jsDelivr caches a pinned commit forever, so every release points at a new commit id. The Code Embed (`<div id="wlc"></div>`) is optional; the footer adds it if missing.
+The Webflow pages load `@main`, so a release never touches Webflow. Only re-paste `webflow/<page>/PAGE-*.txt` if the setup itself changes (a new page, fonts, Firebase config). If a purge fails, pages catch up within about 12 hours.
+The Code Embed (`<div id="wlc"></div>`) is optional; the footer adds it if missing.
 Try any page offline: open `dist/preview-<page>.html`.
 
 Design: `src/ui.css` is a shadcn/ui-style look in plain CSS (zinc palette, Inter, Lucide icons). No framework.

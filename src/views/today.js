@@ -138,13 +138,10 @@ export function todayView() {
       ${isToday ? "" : html`<button class="linkbtn" data-act="goToday">Back to today</button>`}
       ${saveStatus()}
     </div>
-    ${seasonBanner()}
-    <div id="live-miss"></div>
+    ${isToday ? html`<div id="live-dash">${dashboardView()}</div>` : ""}
     ${open ? "" : html`<div class="banner">This day is closed for editing. ${EDIT_WINDOW_TEXT}</div>`}
-    <p class="privacy small muted">🔒 Your questions and answers are private. The group sees only your score, streak, and check-in.</p>
     <section class="hero" id="live-hero"></section>
     <div id="live-freeze"></div>
-    ${isToday ? html`<div id="live-dash">${dashboardView()}</div>` : ""}
     ${isToday ? medQuickLog() : ""}
     <fieldset ${open ? "" : "disabled"}>
       ${ladders.map((q) => ladderCard(q, a))}
@@ -159,7 +156,8 @@ export function todayView() {
       <section class="cat">${cardHead("Reflection")}<p class="hint">A line for the day. Saved privately under Journal.</p>
         <textarea class="field" data-answer="reflection" rows="4" placeholder="Today…" aria-label="Reflection">${a.reflection || ""}</textarea></section>
       <div id="live-finish" class="finish"></div>
-    </fieldset>`;
+    </fieldset>
+    <p class="privacy small muted">🔒 Your questions and answers are private. The group sees only your score, streak, and check-in.</p>`;
 }
 
 // ---------- live parts ----------
@@ -171,6 +169,7 @@ function hero(r) {
       const day = state.days[d];
       cls = scoreDay(day, settings()).leadMet ? "on" : day?.a?.freeze ? "frz" : "off";
     }
+    if (d < today && joinedBy(state.uid, d) && !showedUp(state.uid, d) && cls !== "frz") cls = "miss"; // a missed day: red line
     return html`<i class="${cls}${d === state.date ? " today" : ""}" title="${d}"></i>`;
   });
   return html`
@@ -210,7 +209,6 @@ export function patchToday(view) {
   const a = answers(), r = scoreOf(state.date);
   set("live-hero", hero(r));
   set("live-freeze", freezeBanner(r, a));
-  set("live-miss", missBanner());
   set("live-finish", finishBox(a));
   view.querySelectorAll("[data-points]").forEach((el) => {
     const p = r.points[el.dataset.points] || 0;

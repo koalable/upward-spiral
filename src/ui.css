@@ -368,3 +368,5 @@
 #wlc.ui .tasksday{margin:16px 0 8px}
 #wlc.ui .workhint{margin:0 0 18px;line-height:1.6}
 #wlc.ui .small-text i,#wlc.ui .hint i{vertical-align:-2px}
+#wlc.ui .tally i.miss{background:#ef4444;height:32px}
+#wlc.ui #live-dash{margin-bottom:6px}

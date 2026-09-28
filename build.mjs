@@ -3,8 +3,9 @@
 //   webflow/<page>/PAGE-HEAD.txt, PAGE-FOOTER.txt → the few lines each Webflow page needs
 //   dist/preview-<page>.html → try a page offline with pretend data
 //
-// Release: commit and push dist/, then run `RELEASE=<commit sha> node build.mjs` and paste the Webflow boxes.
-// A commit URL is cached forever by jsDelivr, so every release uses its new commit id.
+// Release: `node build.mjs`, commit and push, then clear jsDelivr's cache for dist/cdn/* at
+//   https://purge.jsdelivr.net/gh/koalable/upward-spiral@main/dist/cdn/<file>
+// The Webflow boxes load @main, so they never need editing for a release.
 import * as esbuild from "esbuild";
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 
