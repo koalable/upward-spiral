@@ -51,10 +51,10 @@ A feature (`src/features/*.js`) brings its tabs, button actions, and input handl
 The app code lives in this GitHub repo and is served free by jsDelivr. Webflow pages only hold a few lines that point at it.
 
 1. Commit your changes and push.
-2. Pick the next release tag (v1, v2, …): `RELEASE=v2 node build.mjs`, then commit `dist/`, tag `v2`, and push the tag.
+2. Run `RELEASE=<commit id> node build.mjs` with the id of the pushed commit that contains the new `dist/`.
 3. Paste `webflow/<page>/PAGE-HEAD.txt` and `PAGE-FOOTER.txt` into each page's custom code (or set them through Webflow's API), then publish.
 
-jsDelivr caches a tag forever, so each release needs a new tag. The Code Embed (`<div id="wlc"></div>`) is optional; the footer adds it if missing.
+jsDelivr caches a pinned commit forever, so every release points at a new commit id. The Code Embed (`<div id="wlc"></div>`) is optional; the footer adds it if missing.
 Try any page offline: open `dist/preview-<page>.html`.
 
 Design: `src/ui.css` is a shadcn/ui-style look in plain CSS (zinc palette, Inter, Lucide icons). No framework.
