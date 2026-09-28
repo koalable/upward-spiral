@@ -3,8 +3,8 @@
 //   webflow/<page>/PAGE-HEAD.txt, PAGE-FOOTER.txt → the few lines each Webflow page needs
 //   dist/preview-<page>.html → try a page offline with pretend data
 //
-// Release: commit, tag (e.g. v3), push, then run `RELEASE=v3 node build.mjs` and paste/push the Webflow boxes.
-// A tag is cached forever by jsDelivr, so every release gets a new tag.
+// Release: commit and push dist/, then run `RELEASE=<commit sha> node build.mjs` and paste the Webflow boxes.
+// A commit URL is cached forever by jsDelivr, so every release uses its new commit id.
 import * as esbuild from "esbuild";
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 
@@ -18,6 +18,7 @@ const PAGES = [
   // id, Webflow slug, title
   ["checkin", "/challenge", "Check-in"],
   ["routines", "/challenge-routines", "Routines"],
+  ["work", "/challenge-work", "Work"],
   ["progress", "/challenge-progress", "Progress"],
 ];
 const FIREBASE = {

@@ -50,6 +50,10 @@ function subscribe() {
     everyFeature("data", "routines");
     refreshAfterRemoteChange();
   }, onError);
+  db.watchDoc(paths.work(uid), (doc) => {
+    if (!isPending(paths.work(uid))) state.work = doc;
+    refreshAfterRemoteChange();
+  }, onError);
   db.watchCollection(`users/${uid}/routinelog`, ["date", ">=", state.historyStart], (docs) => {
     state.routinelog = keepUnsaved(`users/${uid}/routinelog/`, docs, state.routinelog);
     refreshAfterRemoteChange();

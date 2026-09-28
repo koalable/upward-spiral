@@ -13,9 +13,9 @@ export const state = {
   // data (shared)
   members: {}, scores: {}, wins: {}, season: null,
   // data (private to this person)
-  settings: null, days: {}, goals: {}, weekly: {}, medlog: {}, routines: null, routinelog: {},
+  settings: null, days: {}, goals: {}, weekly: {}, medlog: {}, routines: null, routinelog: {}, work: null,
   // open forms and transient UI
-  editQuestion: null, editMed: null, editLog: null, editRoutine: null, editRitual: null, run: null, toast: null, timer: null,
+  editQuestion: null, editMed: null, editLog: null, editRoutine: null, editRitual: null, editWork: null, run: null, toast: null, timer: null,
   area: "checkins", calMonth: null,
   loaded: false,
   historyStart: addDays(todayKey(), -HISTORY_DAYS),

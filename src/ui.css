@@ -237,3 +237,18 @@
 #wlc.ui .bico{font-size:1.8em;line-height:1.2;color:#eab308}
 #wlc.ui .bdg b{font-size:.9em}
 @media(max-width:600px){#wlc.ui .hero{grid-template-columns:1fr}#wlc.ui .hero.slim{grid-template-columns:1fr 1fr}#wlc.ui .row .lbl{min-width:100%}#wlc.ui input.field,#wlc.ui textarea{font-size:16px}}
+/* Work */
+#wlc.ui .badge.bad{color:#fca5a5;border-color:#7f1d1d}
+#wlc.ui .badge.good{color:#86efac;border-color:#14532d}
+#wlc.ui.light .badge.bad{color:#b91c1c;border-color:#fecaca}
+#wlc.ui.light .badge.good{color:#15803d;border-color:#bbf7d0}
+#wlc.ui .goal{margin-bottom:16px}
+#wlc.ui .goal>progress{margin:0 16px 8px;width:calc(100% - 32px)}
+#wlc.ui .ms{border-top:1px solid var(--border)}
+#wlc.ui .ms>progress{margin:0 16px 4px;width:calc(100% - 32px);height:4px}
+#wlc.ui .ms>nav.padding{padding-top:12px;padding-bottom:8px}
+#wlc.ui .lockd{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;color:var(--muted);flex:none}
+#wlc.ui button.on{color:#eab308}
+#wlc.ui .list li.done{color:inherit;font-weight:inherit}
+#wlc.ui .stat{margin-top:6px}
+#wlc.ui .addgoal{margin-bottom:16px}
