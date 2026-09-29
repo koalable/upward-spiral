@@ -1,59 +1,70 @@
 # Upward Spiral of Awesomeness: handoff for a new chat
 
-Last updated Sep 28, 2026 (day rings). Read this first, then `README.md` in the repo.
+Last updated Sep 28, 2026 (evening: app moved to app.kstarr.com). Read this first, then `README.md` in the repo.
 
 ## How Karla wants to work
 - Run ideas and details by her **before** building. Keep answers short and plain (non-technical).
-- Don't paste or re-save the Webflow head/footer code on releases.
+- Anything touching permissions, keys, billing or publishing her public site: she clicks it herself; guide her.
 
 ## What it is
-A private habit app for three people (karlastarr@gmail.com, erikjschultz@gmail.com, ssstarr29@gmail.com) on kstarr.com, built with Webflow pages, Firebase Google sign-in and Firestore.
+A private habit app for three people on **app.kstarr.com** (Firebase Hosting), installable on a phone's home screen, with Google sign-in, Firestore and push notifications.
 
-| Page | URL | Tabs |
+People (all on the member list in `firestore.rules`):
+- Karla: karlastarr@gmail.com (main) + hello@kstarr.com (linked)
+- Erik: erikjschultz@gmail.com (main) + mxfenrir@gmail.com (linked)
+- Mom: ssstarr29@gmail.com
+
+| Page | App URL | Tabs |
 |---|---|---|
-| Check-in | /challenge | Today (just that day: progress rings, to-dos + Work tasks, then the check-in), Meds, Journal, Categories, Targets & rules |
-| Habits | /challenge-routines | Rituals (run step by step), Set up habits, To-dos |
-| Work | /challenge-work | Today (3–5 picked tasks), Goals (goals → milestones → tasks, dependencies, progress, "Paste a plan from Claude") |
-| Progress | /challenge-progress | Streaks & badges (check-in streak, 30-day tally, floor day, streak freezes, then per-area calendars), My progress (energy flow), Group |
+| Check-in | / | Today (just that day: progress rings, to-dos + Work tasks, then the check-in), Meds, Journal, Categories, Targets & rules (incl. Linked accounts), Notifications |
+| Habits | /routines | Rituals (run step by step), Set up habits, To-dos |
+| Work | /work | Today (3–5 picked tasks), Goals (goals → milestones → tasks, dependencies, progress, "Paste a plan from Claude") |
+| Progress | /progress | Streaks & badges (check-in streak, 30-day tally, floor day, streak freezes, then per-area calendars), My progress (energy flow), Group |
+
+Old addresses kstarr.com/challenge, /challenge-routines, /challenge-work, /challenge-progress **301-redirect** to the app (set in Webflow Site settings → Publishing). The old Webflow pages were renamed to `challenge-old`, `challenge-routines-old`, `challenge-work-old`, `challenge-progress-old` and kept as backups (still load from jsDelivr; not the main path any more).
 
 Words: **habit** = one recurring action; **ritual** = a saved sequence of habits. Categories = the scored check-in questions.
 
 ## Design (approved)
-- shadcn-style dark UI plus cream light mode; Inter for text, Instrument Serif for headings and big numbers; Lucide icons.
+- shadcn-style dark UI plus cream light mode; Inter for text, Instrument Serif for headings and big numbers; Lucide icons. In the installed app the page switcher is a bottom tab bar.
 - **Energy flow** groups, used the same way on every page:
   - Fill up / Garden (green): sleep, diet, healthy practices
   - Protect / Tide (blue): substances, screen time
   - Spend well / Ember (orange): writing, reading, movement
-  - Show up / Dusk (violet): check-ins, habits, rituals
-- Tile **shade = momentum**. This week is compared with the average of the 3 weeks before, on the same days so far: >20% up is surging, 5–20% up rising, within 5% steady, 5–20% down dipping, >20% down slipping. Tiles keep a slight tilt.
-- Work goals each get their own colour (blue, rose, green, gold, violet, teal, orange). Their tasks carry a matching stripe.
-- Check-in → Today opens with the **day's rings** (`src/rings.js`, `src/views/rings.js`): one ring per energy group, each starting as a labelled tab (icon, name, points) that curls around the centre. Fill up / Protect / Spend well = check-in points in that group. Show up = finishing the check-in + habits due today + today's Work tasks (+ any Show up questions). Centre = average of the rings, with day points underneath. Rings sweep in, update live, turn deep with a check when full; all full shows a celebration. Tapping a tab jumps to that group.
-- Everything streak-related lives on Progress → Streaks & badges (streak count, freezes and the freeze button, red missed-day lines, floor day, never-miss-twice note). Check-in has no streak info and no banners.
+  - Show up / Dusk (violet): check-ins, habits, rituals, Work tasks
+- Tile **shade = momentum**. This week vs the average of the 3 weeks before, same days so far: >20% up surging, 5–20% up rising, within 5% steady, 5–20% down dipping, >20% down slipping.
+- Work goals each get their own colour; their tasks carry a matching stripe.
+- Check-in → Today opens with the **day's rings** (`src/rings.js`, `src/views/rings.js`): one ring per group, each a labelled tab (icon, name, points) curling around the centre. Fill up / Protect / Spend well = check-in points in that group. Show up = finishing the check-in + habits due today + today's Work tasks (+ any Show up questions). Centre = average of the rings, day points underneath. Rings sweep in, update live, deepen with a check when full; all full shows a celebration. Tapping a tab jumps to that group.
+- Everything streak-related lives on Progress → Streaks & badges. Check-in has no streak info and no banners.
+- Substances accept half units: a med can count as 1 or ½ unit per log (Meds → edit item); the stepper moves by ½; up to 1 unit over the limit earns 2.
 
 ## Code and deploy
-- Source: GitHub **koalable/upward-spiral** (public). `src/` holds the code and `node build.mjs` builds `dist/cdn/*`. Run tests with `node --test test/*.test.js`.
-- Webflow pages load `https://cdn.jsdelivr.net/gh/koalable/upward-spiral@main/dist/cdn/<page>.js` plus `app.css`. The setup is in `WEBFLOW-SETUP.md`.
-- **Release:** build → commit and push → open `https://purge.jsdelivr.net/gh/koalable/upward-spiral@main/dist/cdn/<file>` for each changed file (app.css, checkin.js, routines.js, work.js, progress.js). There are no Webflow edits and no republishing.
-- Webflow IDs:
-  - site 6933d4ae2e861d77f0889941
-  - domains 6961cc3839f05b214290ff75 and 6961cc3739f05b214290ff65
-  - pages: checkin 6aadf10cdfca7bb48ab485f5, routines 6ab9cc27b34bf1ccbfbe8156, work 6aba1c3cafaa8c16e9abf6b6, progress 6ab9cc2781d40ecb770f6786
-- Firebase project: upward-spiral-of-awesomeness. Rules are in `firestore.rules`; Karla pastes them into Firebase herself.
+- Source: GitHub **koalable/upward-spiral** (public). `src/` holds the code; `node build.mjs` builds everything; tests: `node --test test/*.test.js`.
+- `build.mjs` writes:
+  - `app/` → the home-screen app (pages, versioned `js/`, `app.css`, manifest, icons from `app-src/`, service worker from `app-src/sw.js`)
+  - `functions/index.js` → the notification server (from `functions/src/index.js`, bundles `src/notify.js`)
+  - `dist/cdn/*` → the old Webflow pages' bundles (backup only)
+- **Release = build, commit, push to main.** `.github/workflows/deploy-app.yml` publishes Hosting (`app/`), Cloud Functions and Firestore rules automatically using the `FIREBASE_SERVICE_ACCOUNT` secret. Check the run under GitHub → Actions → Deploy app.
+- Caching: HTML is served `no-cache` and the service worker revalidates page loads, so a release shows on the next open. (Phones that opened the app before Sep 28 evening may need one close-and-reopen.)
+- Firebase project: upward-spiral-of-awesomeness, **Blaze** plan with a $1 budget alert. Google Cloud APIs for Functions, Scheduler, Artifact Registry, Cloud Build, Run, Eventarc, Pub/Sub, Billing etc. are enabled. The service account `firebase-adminsdk-fbsvc@…` has the deploy roles.
+- Google sign-in: authDomain is the page's own host; redirect URIs for app.kstarr.com and the web.app domain are on the OAuth web client; app.kstarr.com is an Authorized domain in Firebase Auth. DNS: CNAME `app` → `upward-spiral-of-awesomeness.web.app` at Network Solutions.
+- Webflow IDs: site 6933d4ae2e861d77f0889941; old pages checkin 6aadf10cdfca7bb48ab485f5, routines 6ab9cc27b34bf1ccbfbe8156, work 6aba1c3cafaa8c16e9abf6b6, progress 6ab9cc2781d40ecb770f6786.
+
+## Notifications
+- Check-in → Notifications. Each person turns them on per device (installed app only) and picks: check-in reminder (time, skipped once finished), ritual start (at ritual times, if not done), meds (at med times, unless that dose is logged), Work morning list (time, off by default), streak saver (time, only if the streak habit is empty), quiet hours. "Send a test" button.
+- Choices + device tokens in `users/{uid}/notify/settings`. Planner is pure `src/notify.js` (tested in `test/notify.test.js`). Server: `notifyTick` runs every 15 minutes in each person's own time zone; `sendTest` is a callable. Web push key (public) is `VAPID_KEY` in build.mjs.
+
+## Linked accounts
+- `aliases/{email}` = `{uid, at}` lets a second Google account act as someone's main account (same data, streaks, notifications). Linked/unlinked from Check-in → Targets & rules → Linked accounts, by the main account only. Link first, then sign in with the second address (signing in first starts an empty account).
+- Rules: `me(uid)` also accepts an alias; the email must still be on the member list. To add a person or address, edit the list in `firestore.rules` and push.
 
 ## Data (Firestore, private per person under users/{uid})
-- `days/{date}` holds check-in answers.
-- `goals/d<date>|w<week>|m<month>` holds to-dos.
-- `lists/routines` holds habits and rituals.
-- `routinelog/{date}` records which habits were done.
-- `lists/work` holds goals, milestones, tasks, today's pins and swaps, and tasks per day.
-- Shared: members, scores, wins, and config/season.
+- `days/{date}` check-in answers · `goals/d<date>|w<week>|m<month>` to-dos · `lists/routines` habits and rituals · `routinelog/{date}` habits done · `lists/work` goals, milestones, tasks, today's picks · `medlog/{date}` med logs · `notify/settings` notification choices.
+- Shared: members, scores, wins, config/season, aliases.
 
-## Open items / ideas
-- The Check-in dashboard could also show today's rituals with Start buttons (offered, not asked for yet).
-- Sharing "tasks done today" with the group: off, not built. It needs a Firestore rules change.
-- The season week ("Season 1, week 2 of 6") was removed from Check-in. It could go on the Group tab if wanted.
-- **Home-screen app (in progress):** agreed plan = installable web app on Firebase Hosting at **app.kstarr.com** (Karla OK'd the domain, the pay-as-you-go plan with a card, and the app for all three). Built: `app/` output from `build.mjs`, icons (`app-src/`), service worker, bottom tab bar in standalone mode, redirect sign-in, deploy workflow. Setup steps she still has to do: `docs/APP-SETUP.md`.
-- **Notifications (built):** Check-in → Notifications tab. Each person turns them on per device (installed app only) and picks: check-in reminder (time), ritual start (ritual times), meds (med times), Work morning list (time, off by default), streak saver (time), quiet hours. Choices in `users/{uid}/notify/settings`. Planner is pure `src/notify.js` (tested); server `functions/src/index.js` (`notifyTick` every 15 min, `sendTest` callable), bundled to `functions/index.js` by build.mjs and deployed by the same workflow. Web push key (public) is `VAPID_KEY` in build.mjs.
-- Not wanted: sharing tasks with the group; season week on Group; rituals on Check-in (for now).
-- Substances accept half units: a med can count as 1 or ½ unit per log; the stepper moves by ½; up to 1 unit over the limit earns 2.
-- **Linked accounts:** `aliases/{email}` = `{uid, at}` lets a second Google account act as someone's main account (Karla: hello@kstarr.com → karlastarr@gmail.com). Linked/unlinked from Check-in → Targets & rules → Linked accounts (main account only). Rules: `me(uid)` also accepts the alias; the email must still be on the member list. Firestore rules are now deployed from `firestore.rules` by the workflow (no more pasting).
+## Status at hand-off
+- Done and live: rings, streaks on Progress, half units, the app at app.kstarr.com, notifications server, linked accounts, redirects.
+- Waiting on people: Karla installs the app on her iPhone, turns on notifications and sends a test; Karla links hello@kstarr.com; Erik links mxfenrir@gmail.com (both may need to close and reopen the app once).
+
+## Not wanted (for now)
+- Sharing "tasks done today" with the group; season week on Group; rituals on the Check-in page.
