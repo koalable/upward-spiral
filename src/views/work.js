@@ -4,11 +4,12 @@ import { state } from "../state.js";
 import { normalizeWork, todayState, todayPicks, blocker, progress, countdown, goalTheme, milestoneTheme, msIcon, goalIcon, MS_ICONS, saturation, staleTasks, PUSH_WHYS, ARCHIVE_WHYS } from "../work.js";
 import { timerFor, isRunning, isUp, msLeft, minutesLeft, countdownText, durationText } from "../timer.js";
 import { pressed, saveStatus, icon } from "./components.js";
-import { isPaused } from "../breathing.js";
+import { pausedIds } from "../breathing.js";
+import { read } from "../docs.js";
 
-// Goals paused for breathing room this week drop out of today's picks.
-export const withPauses = (w, key = state.date) => ({ ...w, pausedGoals: w.goals.filter((g) => isPaused(state.settings, "goal", g.id, key)).map((g) => g.id) });
-export const workData = () => withPauses(normalizeWork(state.work));
+export const workData = () => read("work");
+// Goals on a breathing-room pause this week: their tasks sit out of today's list.
+export const pausedGoals = (key = state.date) => pausedIds(state.settings, "goal", key);
 const field = (label, input) => html`<label class="field"><span>${label}</span>${input}</label>`;
 const goalOf = (w, id) => w.goals.find((g) => g.id === id);
 const msOf = (w, id) => w.milestones.find((m) => m.id === id);
@@ -104,7 +105,7 @@ export function workTodayView() {
   const g = pageGoal(w);
   if (g) return html`${goalPage(w, g, key)}${taskSheet(w, key)}`;
   const tidy = tidyCard(w, key);
-  const t = todayState(w, key), picks = todayPicks(w, key), pins = t.pins || [];
+  const t = todayState(w, key), picks = todayPicks(w, key, pausedGoals(key)), pins = t.pins || [];
   const done = picks.filter((x) => x.done).length, all = picks.length && done === picks.length;
   const open = w.tasks.filter((x) => !x.done), blocked = open.filter((x) => blocker(x, w.tasks)).length;
   return html`${tidy}<article class="round no-padding ritual themed ember">

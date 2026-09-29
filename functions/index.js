@@ -32,9 +32,16 @@ var import_messaging = require("firebase-admin/messaging");
 // src/util.js
 var toNum = (v) => Number(v) || 0;
 var isSet = (v) => v !== void 0 && v !== null && v !== "";
+var pad = (n) => String(n).padStart(2, "0");
+var dateKey = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 var parseKey = (key) => {
   const [y, m, d] = key.split("-").map(Number);
   return new Date(y, m - 1, d);
+};
+var weekStart = (key) => {
+  const d = parseKey(key);
+  d.setDate(d.getDate() - (d.getDay() + 6) % 7);
+  return dateKey(d);
 };
 var minutesOf = (hhmm) => {
   const [h, m] = hhmm.split(":").map(Number);
@@ -229,10 +236,10 @@ function blocker(t, tasks) {
   return b && !b.done ? b : null;
 }
 var urgency = (a, b) => (a.due || "9999").localeCompare(b.due || "9999") || String(a.created || "").localeCompare(String(b.created || ""));
-function todayPicks(w, key) {
+function todayPicks(w, key, pausedGoals = []) {
   const t = todayState(w, key), size = w.perDay + (t.extra || 0);
   const doneToday = w.tasks.filter((x) => x.done === key);
-  const open = w.tasks.filter((x) => !x.done && !blocker(x, w.tasks) && !(w.pausedGoals || []).includes(x.goal));
+  const open = w.tasks.filter((x) => !x.done && !blocker(x, w.tasks) && !pausedGoals.includes(x.goal));
   const pinned = (t.pins || []).map((id) => open.find((x) => x.id === id)).filter(Boolean);
   const timed = open.filter((x) => x.at && x.due === key && !pinned.includes(x));
   const rest = open.filter((x) => !pinned.includes(x) && !timed.includes(x) && !(t.skips || []).includes(x.id)).sort(urgency);
@@ -243,6 +250,10 @@ function todayPicks(w, key) {
   }
   return picks.map((x, i) => [x, i]).sort(([a, i], [b, j]) => (a.at || "99").localeCompare(b.at || "99") || i - j).map(([x]) => x);
 }
+
+// src/breathing.js
+var pauseFor = (s, date) => (s?.breathing || []).find((b) => b.week === weekStart(date)) || null;
+var pausedIds = (s, kind, date) => (pauseFor(s, date)?.items || []).filter((x) => x.kind === kind).map((x) => x.id);
 
 // src/rings.js
 function habitsDue(items, key, log) {
@@ -351,7 +362,7 @@ function dueNotifications(prefs, data, now, links = {}) {
     }
   }
   if (p.work.on && inWindow(p.work.time, minutes)) {
-    const picks = todayPicks(normalizeWork(data.work), date).filter((t) => !t.done);
+    const picks = todayPicks(normalizeWork(data.work), date, pausedIds(cfg, "goal", date)).filter((t) => !t.done);
     if (picks.length) add("work", `${plural(picks.length, "task")} today`, picks.slice(0, 3).map((t) => t.name).join(" \xB7 "), links.work || home);
   }
   return out;
@@ -412,16 +423,18 @@ async function userData(uid, date) {
 var notifyTick = (0, import_scheduler.onSchedule)({ schedule: "every 1 minutes", timeZone: "UTC", region: "us-central1", memory: "256MiB" }, async () => {
   const snap = await db.collectionGroup("notify").get();
   const settingsOf = new Map(snap.docs.filter((d) => d.id === "settings").map((d) => [d.ref.parent.parent.id, d.data()]));
-  for (const doc of snap.docs) {
-    if (doc.id !== "timer") continue;
-    const tm = doc.data(), msg = timerMessage(tm, Date.now(), LINKS);
-    if (!msg) continue;
-    const tokens = (settingsOf.get(doc.ref.parent.parent.id)?.tokens || []).map((x) => x.t).filter(Boolean);
+  for (const [uid, prefs] of settingsOf) {
+    const tokens = (prefs.tokens || []).map((x) => x.t).filter(Boolean);
+    if (!tokens.length) continue;
     try {
-      if (tokens.length) await push(tokens, [msg]);
-      await doc.ref.update({ sent: tm.end });
+      const ref = db.doc(`users/${uid}/lists/work`), work = (await ref.get()).data();
+      const tm = work?.timer, name = (work?.tasks || []).find((t) => t.id === tm?.id)?.name || "";
+      const msg = timerMessage(tm && { ...tm, name }, Date.now(), LINKS);
+      if (!msg) continue;
+      await push(tokens, [msg]);
+      await ref.update({ "timer.sent": tm.end });
     } catch (err) {
-      console.error(`timer ${doc.ref.path}`, err);
+      console.error(`timer ${uid}`, err);
     }
   }
   if ((/* @__PURE__ */ new Date()).getUTCMinutes() % 15) return;

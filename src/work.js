@@ -61,14 +61,14 @@ export function blocker(t, tasks) {
 // Most urgent first: overdue, then soonest due, then undated, then oldest.
 const urgency = (a, b) => (a.due || "9999").localeCompare(b.due || "9999") || String(a.created || "").localeCompare(String(b.created || ""));
 
-// Goals on a breathing-room pause (w.pausedGoals, set by the app) sit out of today's list.
 // Today's list: pinned tasks and tasks with a start time due today, then the most urgent unblocked open tasks.
 // Tasks finished today stay on the list (checked), so finishing doesn't pull in more until you ask.
 // Anything with a start time goes to the top, earliest first.
-export function todayPicks(w, key) {
+// pausedGoals: goals on a breathing-room pause this week; their tasks sit out.
+export function todayPicks(w, key, pausedGoals = []) {
   const t = todayState(w, key), size = w.perDay + (t.extra || 0);
   const doneToday = w.tasks.filter((x) => x.done === key);
-  const open = w.tasks.filter((x) => !x.done && !blocker(x, w.tasks) && !(w.pausedGoals || []).includes(x.goal));
+  const open = w.tasks.filter((x) => !x.done && !blocker(x, w.tasks) && !pausedGoals.includes(x.goal));
   const pinned = (t.pins || []).map((id) => open.find((x) => x.id === id)).filter(Boolean);
   const timed = open.filter((x) => x.at && x.due === key && !pinned.includes(x));
   const rest = open.filter((x) => !pinned.includes(x) && !timed.includes(x) && !(t.skips || []).includes(x.id)).sort(urgency);

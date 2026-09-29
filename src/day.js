@@ -26,7 +26,7 @@ function stamp(day) {
 }
 
 // Only numbers and flags leave this device; the rules reject anything else.
-export function publishScore(key) {
+function publishScore(key) {
   const day = state.days[key];
   const r = scoreDay(day, settings());
   const doc = { uid: state.uid, date: key, total: r.total, logged: r.logged, showed: r.showedUp, streak: r.streakDay, updated: Date.now() };
@@ -49,7 +49,7 @@ export function commitDay(key = state.date) {
 }
 
 // After question/target edits, today's score should reflect the new setup.
-export function restampToday() {
+function restampToday() {
   const key = todayKey();
   if (state.days[key]?.logged) commitDay(key);
 }

@@ -1,4 +1,5 @@
 // Streaks: the check-in streak (with freezes), then a calendar per area (check-ins, each question category, each routine group), with badges.
+import { read } from "../docs.js";
 import { html, todayKey, dateRange, monthKey, monthDays, monthName, addDays, parseKey, longDate, shortDate } from "../util.js";
 import { POINTS_PER_CATEGORY } from "../constants.js";
 import { scoredQuestions, questionName, scoreDay } from "../scoring.js";
@@ -34,7 +35,7 @@ export function areas() {
       },
     });
   }
-  const { items, rituals } = normalizeRoutines(state.routines), log = state.routinelog;
+  const { items, rituals } = read("routines"), log = state.routinelog;
   if (items.length) {
     list.push({ id: "r-all", name: "All habits", group: "show", ico: "list-checks", about: "Filled: every habit due that day. Ring: some.", status: (d) => dayStatus(items, d, log) });
     for (const { id: g, name } of rituals) {

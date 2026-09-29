@@ -22,6 +22,7 @@ const has = (list, kind, id) => (list || []).some((x) => x.kind === kind && x.id
 // The breathing room covering a date (its week), if any.
 export const pauseFor = (s, date) => (s?.breathing || []).find((b) => b.week === weekStart(date)) || null;
 export const isPaused = (s, kind, id, date) => has(pauseFor(s, date)?.items, kind, id);
+export const pausedIds = (s, kind, date) => (pauseFor(s, date)?.items || []).filter((x) => x.kind === kind).map((x) => x.id);
 export const isTiny = (s, kind, id, date) => has(pauseFor(s, date)?.tiny, kind, id);
 
 // The week after a breathing room: what's restarting after the break.

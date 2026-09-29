@@ -7,6 +7,7 @@ import { minutesOf } from "./util.js";
 import { scoreDay, scoredQuestions } from "./scoring.js";
 import { normalizeRoutines, inRitual } from "./routines.js";
 import { normalizeWork, todayPicks } from "./work.js";
+import { pausedIds } from "./breathing.js";
 import { habitsDue } from "./rings.js";
 import { BUILTINS } from "./constants.js";
 
@@ -119,7 +120,7 @@ export function dueNotifications(prefs, data, now, links = {}) {
 
   // Work: a morning list of today's tasks.
   if (p.work.on && inWindow(p.work.time, minutes)) {
-    const picks = todayPicks(normalizeWork(data.work), date).filter((t) => !t.done);
+    const picks = todayPicks(normalizeWork(data.work), date, pausedIds(cfg, "goal", date)).filter((t) => !t.done);
     if (picks.length) add("work", `${plural(picks.length, "task")} today`, picks.slice(0, 3).map((t) => t.name).join(" · "), links.work || home);
   }
   return out;
@@ -130,8 +131,8 @@ export const markSent = (prefs, date, ids) => ({
   date, ids: [...new Set([...(prefs?.sent?.date === date ? prefs.sent.ids || [] : []), ...ids])],
 });
 
-// Work task timer: users/{uid}/notify/timer = { id, name, end, sent }. Written by the app when a timer
-// starts, resumes or stops; checked every minute. Fires once, even in quiet hours (you started it).
+// Work task timer: the timer in users/{uid}/lists/work ({ id, start, end, sent }) plus the task's name.
+// Checked every minute; fires once (sent = end), even in quiet hours (you started it).
 export function timerMessage(tm, nowMs, links = {}) {
   if (!tm?.end || tm.sent === tm.end || nowMs < tm.end || nowMs - tm.end > CATCH_UP_MIN * 60_000) return null;
   return { id: `timer:${tm.id}`, title: "Time's up", body: tm.name ? `${tm.name}: done, or a bit longer?` : "Done, or a bit longer?", link: links.work || "/" };

@@ -1,11 +1,12 @@
 // To-dos: one list, grouped by date. Each item may have a "do on" date (when you plan to do it)
 // and a "due" date (deadline). Check-in → Today shows today's items plus the rest of this week.
+import { read } from "../docs.js";
 import { html, todayKey } from "../util.js";
 import { state } from "../state.js";
 import { normalizeTodos, buckets, dashboard, isOverdue, dayLabel } from "../todos.js";
 import { icon } from "./components.js";
 
-export const todoData = () => normalizeTodos(state.todos);
+export const todoData = () => read("todos");
 
 function chips(x, today) {
   const out = [];

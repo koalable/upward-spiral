@@ -1,4 +1,5 @@
 // Check-in → Notifications: turn them on for this phone, and choose what gets sent and when.
+import { read } from "../docs.js";
 import { html } from "../util.js";
 import { state, leadName } from "../state.js";
 import { normalizeNotify } from "../notify.js";
@@ -47,7 +48,7 @@ function choice(key, ico, title, about, p, withTime = true) {
 }
 
 export function notifyView() {
-  const p = normalizeNotify(state.notify);
+  const p = read("notify");
   const devices = p.tokens.length;
   return html`${deviceCard()}
     <section class="panel"><h2>What to send me</h2>

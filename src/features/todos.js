@@ -3,17 +3,12 @@ import { state } from "../state.js";
 import { save, paths } from "../store.js";
 import { clone, newId, todayKey } from "../util.js";
 import { ui, render } from "../render.js";
-import { normalizeTodos } from "../todos.js";
+import { edit as docEdit } from "../docs.js";
 import { todosView } from "../views/todos.js";
 
 const $ = (sel) => ui.view.querySelector(sel);
 
-function edit(fn) {
-  const doc = normalizeTodos(state.todos ? clone(state.todos) : null);
-  fn(doc.items);
-  state.todos = { ...(state.todos || {}), items: doc.items };
-  save(paths.todos(state.uid), state.todos, 300);
-}
+const edit = (fn) => { docEdit("todos", (doc) => { fn(doc.items); }); };
 const find = (items, id) => items.find((x) => x.id === id);
 
 function addTodo(form) {

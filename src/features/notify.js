@@ -3,14 +3,12 @@ import { state } from "../state.js";
 import { setPath } from "../util.js";
 import { render } from "../render.js";
 import { notifyView } from "../views/notify.js";
-import { notifyDoc, saveNotify, turnOnHere, turnOffHere, sendTest } from "../pushsetup.js";
+import { editNotify, turnOnHere, turnOffHere, sendTest } from "../pushsetup.js";
 
 const after = (promise, done) => promise.then(done, (err) => { console.error(err); state.pushStatus = "error"; }).finally(render);
 
 function update(el) {
-  const doc = notifyDoc();
-  setPath(doc, el.dataset.notify, el.type === "checkbox" ? el.checked : el.value);
-  saveNotify(doc);
+  editNotify((doc) => setPath(doc, el.dataset.notify, el.type === "checkbox" ? el.checked : el.value));
 }
 
 export default {

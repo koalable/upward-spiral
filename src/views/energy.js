@@ -1,4 +1,5 @@
 // Energy flow: this week against your usual, grouped into four themed groups. Tile shade = momentum.
+import { read } from "../docs.js";
 import { html, todayKey, longDate } from "../util.js";
 import { scoredQuestions, questionName } from "../scoring.js";
 import { state, settings } from "../state.js";
@@ -29,7 +30,7 @@ export function energyView() {
   const w = windows(today, Boolean(state.days[today]?.logged));
   const sums = w.windows.map((dates) => totals(dates));
   const qs = scoredQuestions(cfg);
-  const { items } = normalizeRoutines(state.routines);
+  const { items } = read("routines");
 
   const groups = GROUPS.map((g) => {
     const tiles = qs.filter((q) => groupOf(q).id === g.id).map((q) => {

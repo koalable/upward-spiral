@@ -3,8 +3,7 @@ import { html, shortDate, todayKey } from "../util.js";
 import { state, settings } from "../state.js";
 import { questionName, isScored } from "../scoring.js";
 import { isLadder } from "../ladder.js";
-import { normalizeRoutines } from "../routines.js";
-import { normalizeWork } from "../work.js";
+import { read } from "../docs.js";
 import { LEVELS, WHYS, pauseFor, restartFor, restartDate, isPaused, comingBack, tinyVersion, weekEnds, itemKey } from "../breathing.js";
 import { icon, pressed } from "./components.js";
 
@@ -13,8 +12,8 @@ export const isPausedCat = (id, date) => isPaused(settings(), "cat", id, date);
 // Everything that could take a break, grouped.
 export function pausable() {
   const cats = settings().cats.filter((q) => isScored(q) || isLadder(q));
-  const habits = normalizeRoutines(state.routines).items;
-  const goals = normalizeWork(state.work).goals;
+  const habits = read("routines").items;
+  const goals = read("work").goals;
   return { cats, habits, goals };
 }
 const nameOf = (x, p) => (x.kind === "cat" ? questionName(p.cats.find((q) => q.id === x.id) || { kind: "custom", name: x.id })
@@ -59,7 +58,7 @@ export function breathingSheet() {
   const on = (kind, id) => d.items.some((x) => x.kind === kind && x.id === id);
   const tiny = (x) => d.tiny.some((y) => itemKey(y) === itemKey(x));
   const paused = d.items.filter((x) => !tiny(x));
-  const back = comingBack(paused, { today, goalsById: Object.fromEntries(p.goals.map((g) => [g.id, g])), tasks: normalizeWork(state.work).tasks, moved: d.moved || [] });
+  const back = comingBack(paused, { today, goalsById: Object.fromEntries(p.goals.map((g) => [g.id, g])), tasks: read("work").tasks, moved: d.moved || [] });
   const group = (title, list, kind) => (list.length ? html`<h4 class="brgroup">${title}</h4>${list.map((x) => pick({ kind, id: x.id }, kind === "cat" ? questionName(x) : x.name, on(kind, x.id)))}` : "");
   return html`<div class="sheetbg" data-act="brCancel"></div>
   <section class="bsheet" role="dialog" aria-modal="true" aria-label="Breathing room">

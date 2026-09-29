@@ -4,6 +4,7 @@ import { pageUrl } from "../page.js";
 import { dashboardTodos } from "./todos.js";
 import { workData } from "./work.js";
 import { todayPicks, goalTheme, staleTasks } from "../work.js";
+import { pausedGoals } from "./work.js";
 import { pressed, icon } from "./components.js";
 import { state } from "../state.js";
 import { normalizeLayout, pageLabel, pageIcon, pageHidden, tabHidden } from "../layout.js";
@@ -15,7 +16,7 @@ function workCard() {
   const link = html`<a class="linkbtn" href="${pageUrl("work")}">Open ${name} →</a>`;
   const head = (extra) => html`<h3 class="platehead">${icon(pageIcon(l, "work", "work"))} ${name}${extra}</h3>`;
   if (!w.goals.length) return html`<div class="plateblock">${head("")}<p class="hint">No goals yet. ${link}</p></div>`;
-  const picks = todayPicks(w, key), done = picks.filter((t) => t.done).length;
+  const picks = todayPicks(w, key, pausedGoals(key)), done = picks.filter((t) => t.done).length;
   const goal = (t) => w.goals.find((g) => g.id === t.goal)?.name || "";
   return html`<div class="plateblock">${head(html` <span class="pts">${done}/${picks.length}</span>`)}
     ${picks.length ? html`<ul class="list dash">${picks.map((t) => html`<li class="tagged ${goalTheme(w, t.goal)}${t.done ? " done" : ""}">

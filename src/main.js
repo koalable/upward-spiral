@@ -11,73 +11,60 @@ import { signInView } from "./views/join.js";
 import { fromGoals } from "./todos.js";
 import { bindEvents } from "./events.js";
 
+// What this app keeps in sync, as one table. Each entry lands in state[name]; "needed" ones must arrive before
+// the first draw. Collections keep any copies we haven't finished saving (keepUnsaved); docs skip a snapshot
+// while our own save of that doc is pending.
 function subscribe() {
   const db = store(), uid = state.uid;
-  const needed = new Set(["members", "scores", "season", "settings", "days"]);
-  const arrived = (name) => {
-    needed.delete(name);
-    if (!needed.size && !state.loaded) { state.loaded = true; everyFeature("data", "loaded"); render(); }
-    else { everyFeature("data", name); refreshAfterRemoteChange(); }
-  };
   const onError = (err) => setBanner(err?.code === "permission-denied"
     ? `This Google account (${state.email}) isn't on the challenge list. Ask the organizer to add it, then reload.`
     : "Lost connection to the group data. Reload the page to reconnect.", "bad");
-
-  db.watchCollection("members", null, (docs) => {
-    const mine = state.members[uid];
-    state.members = keepUnsaved("members/", docs, { [uid]: mine });
-    arrived("members");
-  }, onError);
-  db.watchCollection("scores", ["date", ">=", state.historyStart], (docs) => { state.scores = keepUnsaved("scores/", docs, state.scores); arrived("scores"); }, onError);
-  db.watchDoc(paths.season(), (doc) => { state.season = doc; arrived("season"); }, onError);
-  db.watchDoc(paths.settings(uid), (doc) => {
-    if (doc && !isPending(paths.settings(uid))) state.settings = doc;
-    else if (!doc) save(paths.settings(uid), settings(), 0); // first visit: start from the defaults
-    arrived("settings");
-  }, onError);
-  db.watchCollection(`users/${uid}/days`, ["date", ">=", state.historyStart], (docs) => {
-    state.days = keepUnsaved(`users/${uid}/days/`, docs, state.days);
-    arrived("days");
-  }, onError);
-  // To-dos: one list (lists/todos). The first time, carry over the old day/week/month lists (goals/*).
-  let goalsIn = false, todosIn = false;
-  const migrateTodos = () => {
-    if (!goalsIn || !todosIn || state.todos) return;
-    state.todos = fromGoals(state.goals);
-    save(paths.todos(uid), state.todos, 0);
+  const needed = new Set(["members", "scores", "season", "settings", "days"]);
+  const arrived = (name) => {
+    everyFeature("data", name);
+    needed.delete(name);
+    if (!state.loaded && !needed.size) { state.loaded = true; everyFeature("data", "loaded"); render(); }
+    else if (state.loaded) refreshAfterRemoteChange();
   };
-  db.watchCollection(`users/${uid}/goals`, null, (docs) => {
-    state.goals = keepUnsaved(`users/${uid}/goals/`, docs, state.goals);
-    goalsIn = true; migrateTodos(); refreshAfterRemoteChange();
-  }, onError);
-  db.watchDoc(paths.todos(uid), (doc) => {
-    if (!isPending(paths.todos(uid))) state.todos = doc;
-    todosIn = true; migrateTodos(); refreshAfterRemoteChange();
-  }, onError);
-  db.watchCollection(`users/${uid}/weekly`, null, (docs) => { state.weekly = keepUnsaved(`users/${uid}/weekly/`, docs, state.weekly); refreshAfterRemoteChange(); }, onError);
-  db.watchCollection(`users/${uid}/medlog`, ["date", ">=", addDays(todayKey(), -MEDLOG_DAYS)], (docs) => {
-    state.medlog = keepUnsaved(`users/${uid}/medlog/`, docs, state.medlog);
-    everyFeature("data", "medlog");
+  const historyFrom = ["date", ">=", state.historyStart];
+  const COLLECTIONS = [
+    ["members", "members", null],
+    ["scores", "scores", historyFrom],
+    ["days", `users/${uid}/days`, historyFrom],
+    ["medlog", `users/${uid}/medlog`, ["date", ">=", addDays(todayKey(), -MEDLOG_DAYS)]],
+    ["routinelog", `users/${uid}/routinelog`, historyFrom],
+    ["weekly", `users/${uid}/weekly`, null],
+    ["wins", "wins", ["week", ">=", addDays(weekStart(todayKey()), -7)]],
+  ];
+  const DOCS = [
+    ["season", paths.season()], ["settings", paths.settings(uid)],
+    ["work", paths.work(uid)], ["routines", paths.routines(uid)], ["todos", paths.todos(uid)], ["notify", paths.notify(uid)],
+  ];
+  for (const [name, path, where] of COLLECTIONS) {
+    db.watchCollection(path, where, (docs) => { state[name] = keepUnsaved(`${path}/`, docs, state[name] || {}); arrived(name); }, onError);
+  }
+  for (const [name, path] of DOCS) {
+    db.watchDoc(path, (doc) => {
+      if (!isPending(path)) state[name] = doc;
+      if (name === "settings" && !doc) save(path, settings(), 0); // first visit: start from the defaults
+      if (name === "todos" && !doc) carryOverTodos(db, uid);
+      arrived(name);
+    }, onError);
+  }
+}
+
+// To-dos used to be three lists under users/{uid}/goals. The first time there's no to-do list, read those once
+// and carry them over; after that they're never loaded again.
+let carried = false;
+function carryOverTodos(db, uid) {
+  if (carried) return;
+  carried = true;
+  db.find(`users/${uid}/goals`).then((goals) => {
+    if (state.todos) return;
+    state.todos = fromGoals(goals);
+    save(paths.todos(uid), state.todos, 0);
     refreshAfterRemoteChange();
-  }, onError);
-  db.watchDoc(paths.routines(uid), (doc) => {
-    if (!isPending(paths.routines(uid))) state.routines = doc;
-    everyFeature("data", "routines");
-    refreshAfterRemoteChange();
-  }, onError);
-  db.watchDoc(paths.work(uid), (doc) => {
-    if (!isPending(paths.work(uid))) state.work = doc;
-    refreshAfterRemoteChange();
-  }, onError);
-  db.watchDoc(paths.notify(uid), (doc) => {
-    if (!isPending(paths.notify(uid))) state.notify = doc;
-    refreshAfterRemoteChange();
-  }, onError);
-  db.watchCollection(`users/${uid}/routinelog`, ["date", ">=", state.historyStart], (docs) => {
-    state.routinelog = keepUnsaved(`users/${uid}/routinelog/`, docs, state.routinelog);
-    refreshAfterRemoteChange();
-  }, onError);
-  db.watchCollection("wins", ["week", ">=", addDays(weekStart(todayKey()), -7)], (docs) => { state.wins = docs; refreshAfterRemoteChange(); }, onError);
+  }, () => {});
 }
 
 // Every 30 seconds: countdowns tick. At midnight: move to the new day and re-arm alerts.

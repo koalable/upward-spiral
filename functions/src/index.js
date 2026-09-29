@@ -1,4 +1,4 @@
-// Server side of notifications. Every minute: Work task timers that just ran out.
+// Server side of notifications. Every minute: Work task timers that just ran out (read from lists/work).
 // Every 15 minutes: for each person who turned notifications on, work out what's due in their own
 // time zone (src/notify.js) and push it to their devices.
 // Built into functions/index.js by build.mjs; deployed by .github/workflows/deploy-app.yml.
@@ -49,17 +49,19 @@ export const notifyTick = onSchedule({ schedule: "every 1 minutes", timeZone: "U
   const snap = await db.collectionGroup("notify").get();
   const settingsOf = new Map(snap.docs.filter((d) => d.id === "settings").map((d) => [d.ref.parent.parent.id, d.data()]));
 
-  // Timers: every run.
-  for (const doc of snap.docs) {
-    if (doc.id !== "timer") continue;
-    const tm = doc.data(), msg = timerMessage(tm, Date.now(), LINKS);
-    if (!msg) continue;
-    const tokens = (settingsOf.get(doc.ref.parent.parent.id)?.tokens || []).map((x) => x.t).filter(Boolean);
+  // Timers, every run: the running timer lives in each person's Work doc (lists/work → timer).
+  for (const [uid, prefs] of settingsOf) {
+    const tokens = (prefs.tokens || []).map((x) => x.t).filter(Boolean);
+    if (!tokens.length) continue;
     try {
-      if (tokens.length) await push(tokens, [msg]);
-      await doc.ref.update({ sent: tm.end });
+      const ref = db.doc(`users/${uid}/lists/work`), work = (await ref.get()).data();
+      const tm = work?.timer, name = (work?.tasks || []).find((t) => t.id === tm?.id)?.name || "";
+      const msg = timerMessage(tm && { ...tm, name }, Date.now(), LINKS);
+      if (!msg) continue;
+      await push(tokens, [msg]);
+      await ref.update({ "timer.sent": tm.end });
     } catch (err) {
-      console.error(`timer ${doc.ref.path}`, err);
+      console.error(`timer ${uid}`, err);
     }
   }
 

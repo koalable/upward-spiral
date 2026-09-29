@@ -12,7 +12,7 @@ import { reflectView, filterJournal } from "../views/journal.js";
 import { customizeView, accountView } from "../views/settings.js";
 import { normalizeLayout, applyPreset, toggleIn } from "../layout.js";
 import { suggest, newBreathing, pauseFor, itemKey, moveDueTasks } from "../breathing.js";
-import { normalizeWork } from "../work.js";
+import { edit as docEdit } from "../docs.js";
 import { pausable } from "../views/breathing.js";
 import { weekStart } from "../util.js";
 import { questionsView, readQuestionForm } from "../views/questions.js";
@@ -111,8 +111,7 @@ const actions = {
     // Late goals you chose to move: their tasks due this week go to the same day next week (once).
     const toMove = b.moved.filter((id) => !before.includes(id));
     if (toMove.length) {
-      state.work = moveDueTasks(clone(normalizeWork(state.work)), toMove, todayKey());
-      save(paths.work(state.uid), state.work, 0);
+      docEdit("work", (w) => moveDueTasks(w, toMove, todayKey()), 0);
     }
     state.breath = null;
     saveSettings();

@@ -1,4 +1,5 @@
 // Routines: today's rituals, the step-by-step ritual runner, and setting routines up. (Beer CSS markup)
+import { read } from "../docs.js";
 import { html, todayKey, addDays, longDate, atTime, clock } from "../util.js";
 import { APP_NAME } from "../constants.js";
 import { state, isEditable } from "../state.js";
@@ -9,7 +10,7 @@ import {
 import { dailyReminderLink } from "../calendar.js";
 import { pressed, saveStatus, icon } from "./components.js";
 
-export const routineData = () => normalizeRoutines(state.routines);
+export const routineData = () => read("routines");
 export const findRitual = (id) => routineData().rituals.find((r) => r.id === id);
 const clock12 = (hhmm) => new Date(atTime(todayKey(), hhmm)).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
 export const mmss = (ms) => { const s = Math.max(0, Math.ceil(ms / 1000)); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`; };

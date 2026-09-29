@@ -1,6 +1,7 @@
 // Routines: check off recurring tasks, run timers, and set routines up.
 import { state, isEditable } from "../state.js";
 import { save, paths } from "../store.js";
+import { edit as docEdit } from "../docs.js";
 import { clone, newId, todayKey } from "../util.js";
 import { ui, render } from "../render.js";
 import { doneCount, target, EVERY_DAY, WEEKDAYS } from "../routines.js";
@@ -9,11 +10,7 @@ import { openIcs } from "../calendar.js";
 
 const $ = (sel) => ui.view.querySelector(sel);
 
-function saveRoutines(data) {
-  state.routines = data;
-  save(paths.routines(state.uid), data, 400);
-}
-const editList = (fn) => { const data = clone(routineData()); fn(data.items, data); saveRoutines(data); };
+const editList = (fn) => { docEdit("routines", (data) => { fn(data.items, data); }); };
 
 function setCount(id, key, n) {
   if (!isEditable(key)) return "none";

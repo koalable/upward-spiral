@@ -6,25 +6,13 @@ import { ui, render, refreshAfterRemoteChange } from "../render.js";
 import { todayState, removeTask, removeMilestone, removeGoal, resolveStale } from "../work.js";
 import { startTimer, pauseTimer, stopTimer, addTime, isUp, msLeft, countdownText } from "../timer.js";
 import { workTodayView, workGoalsView, workData, readWorkForm } from "../views/work.js";
+import { edit as docEdit } from "../docs.js";
 import { parsePlan, PLAN_PROMPT } from "../workimport.js";
 
 const LIST = { goal: "goals", ms: "milestones", task: "tasks" };
 
-function edit(fn) {
-  const before = workData().timer;
-  const w = clone(workData());
-  delete w.pausedGoals; // worked out fresh each time, never saved
-  fn(w);
-  state.work = w;
-  save(paths.work(state.uid), w, 400);
-  if (JSON.stringify(before) !== JSON.stringify(w.timer)) tellServer(w);
-}
-
-// The server pushes "Time's up" to your phone, so it needs to know when the running timer ends.
-function tellServer(w) {
-  const tm = w.timer, t = tm && w.tasks.find((x) => x.id === tm.id);
-  save(paths.timer(state.uid), tm?.end ? { id: tm.id, name: t?.name || "", end: tm.end } : { id: "", end: 0 }, 0);
-}
+// The running timer lives in this same doc; the notification server reads it from here.
+const edit = (fn) => { docEdit("work", (w) => { fn(w); }); };
 
 // Every second: the countdown on screen ticks, and the strip switches to "Time's up" when it runs out.
 let rang = null;

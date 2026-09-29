@@ -13,7 +13,7 @@ export const state = {
   // data (shared)
   members: {}, scores: {}, wins: {}, season: null,
   // data (private to this person)
-  settings: null, days: {}, goals: {}, weekly: {}, medlog: {}, routines: null, routinelog: {}, work: null, notify: null, todos: null,
+  settings: null, days: {}, weekly: {}, medlog: {}, routines: null, routinelog: {}, work: null, notify: null, todos: null,
   // open forms and transient UI
   editQuestion: null, editMed: null, editLog: null, editRoutine: null, editRitual: null, editWork: null, workImport: "", run: null, toast: null, timer: null,
   area: "checkins", calMonth: null, pushStatus: "", editTodo: null,

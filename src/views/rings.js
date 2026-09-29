@@ -3,12 +3,12 @@
 import { html, todayKey } from "../util.js";
 import { MAX_DAILY } from "../constants.js";
 import { state, settings, scoreOf } from "../state.js";
-import { normalizeRoutines } from "../routines.js";
-import { normalizeWork, todayPicks } from "../work.js";
+import { todayPicks } from "../work.js";
 import { dayRings, habitsDue } from "../rings.js";
 import { icon } from "./components.js";
 import { isPaused } from "../breathing.js";
-import { withPauses } from "./work.js";
+import { pausedGoals } from "./work.js";
+import { read } from "../docs.js";
 
 const W = 400, H = 236, CX = 292, CY = 120, STROKE = 18, LEFT = 10;
 const RADII = [104, 82, 60, 38];
@@ -18,9 +18,9 @@ const circ = (r) => 2 * Math.PI * r;
 
 export function ringModel(key = state.date) {
   // Paused habits and goals (breathing room) don't count as due.
-  const items = normalizeRoutines(state.routines).items.filter((r) => !isPaused(settings(), "habit", r.id, key));
-  const w = withPauses(normalizeWork(state.work), key);
-  const picks = key === todayKey() ? todayPicks(w, key) : w.tasks.filter((t) => t.done === key);
+  const items = read("routines").items.filter((r) => !isPaused(settings(), "habit", r.id, key));
+  const w = read("work");
+  const picks = key === todayKey() ? todayPicks(w, key, pausedGoals(key)) : w.tasks.filter((t) => t.done === key);
   // Categories on a breathing-room pause come out of the rings too, so they don't read as missed.
   const cfg = { ...settings(), cats: settings().cats.filter((q) => !isPaused(settings(), "cat", q.id, key)) };
   return dayRings({
