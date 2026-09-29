@@ -427,3 +427,5 @@
 #wlc.ui .hint.bad{color:var(--bad)}
 #wlc.ui .ntime{display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap}
 #wlc.ui .nrow{align-items:flex-start}#wlc.ui .nrow .switch,#wlc.ui .nrow .nico{margin-top:2px}
+/* Older phones (iOS 14 and earlier) don't know aspect-ratio: give the rings box its height another way. */
+@supports not (aspect-ratio:1){#wlc.ui .rings{height:0;padding-top:59%}}
