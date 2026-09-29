@@ -243,6 +243,8 @@
 #wlc.ui .badge.good{color:#86efac;border-color:#14532d}
 #wlc.ui.light .badge.bad{color:#b91c1c;border-color:#fecaca}
 #wlc.ui.light .badge.good{color:#15803d;border-color:#bbf7d0}
+#wlc.ui .ink .badge.bad{color:#a61b1b;border-color:#d99a9a}
+#wlc.ui .ink .badge.good{color:#166534;border-color:#7fb592}
 #wlc.ui .goal{margin-bottom:16px}
 #wlc.ui .goal>progress{margin:0 16px 8px;width:calc(100% - 32px)}
 #wlc.ui .ms{border-top:1px solid var(--border)}
@@ -365,31 +367,61 @@
 #wlc.ui .gchip{display:grid;place-items:center;width:36px;height:36px;border-radius:12px;background:rgb(255 255 255 / .2);font-size:1.15em;flex:none}
 #wlc.ui .goal>progress{margin:14px 16px 12px;width:calc(100% - 32px)}
 #wlc.ui .goal .ms{border-top-color:color-mix(in srgb,var(--h) 30%,transparent)}
-/* Goal card: big title, a stats row, then milestone tiles; the picked tile's tasks open underneath. */
-#wlc.ui .goal>.gbody .gtop{display:flex;align-items:center;gap:8px;margin:-4px -8px 0 0}
-#wlc.ui .goal>.gbody .gname{margin:6px 0 12px;font:400 2.1em/1.05 var(--serif);color:#fff;overflow-wrap:anywhere}
-#wlc.ui .goal>.gbody .gstats{display:flex;flex-wrap:wrap;align-items:center;gap:10px 0;border-top:1px solid rgb(255 255 255 / .35);padding-top:12px}
-#wlc.ui .gstat{display:flex;flex-direction:column;padding:0 14px;border-left:1px solid rgb(255 255 255 / .35)}
-#wlc.ui .gstat:first-child{padding-left:0;border-left:0}
-#wlc.ui .gstat b{font:400 1.55em/1.1 var(--serif);font-variant-numeric:tabular-nums}
-#wlc.ui .gstat small{font-size:.66em;letter-spacing:.12em;text-transform:uppercase;opacity:.92;margin-top:2px}
-#wlc.ui .gpill .badge{white-space:nowrap}
-#wlc.ui .gextra{margin-top:10px;font-size:.85em}
-#wlc.ui .mtiles{display:flex;gap:8px;overflow-x:auto;padding:4px 16px 12px;scroll-snap-type:x proximity;scroll-padding-inline:16px;-webkit-overflow-scrolling:touch}
-#wlc.ui .mtiles .mtile{flex:1 0 80px;height:auto;min-height:0;white-space:normal;justify-content:flex-start;margin:0;max-width:150px;scroll-snap-align:start;display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 8px 12px;border-radius:14px;border:1px solid color-mix(in srgb,var(--h) 35%,transparent);background:color-mix(in srgb,var(--h) 12%,var(--card));color:var(--fg);font:inherit;cursor:pointer;text-align:center;transition:transform .15s,background .15s}
-#wlc.ui .mtile .mi{font-size:1.5em;line-height:1}
-#wlc.ui .mtile .mrule{width:1px;height:14px;background:currentColor;opacity:.5}
-#wlc.ui .mtile b{font:400 1.15em/1.15 var(--serif);overflow-wrap:anywhere}
-#wlc.ui .mtile small{font-size:.8em;letter-spacing:.08em;font-variant-numeric:tabular-nums;display:flex;align-items:center;gap:3px}
-#wlc.ui .mtile .late{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--bad)}
-#wlc.ui .mtiles .mtile.on{background:var(--s4);border-color:var(--s4);color:#fff;transform:translateY(3px)}
-#wlc.ui .mtile.all:not(.on){opacity:.75}
-#wlc.ui .mtile:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
-#wlc.ui .mpanel{margin:0 16px 12px;border-radius:14px;border:1px solid color-mix(in srgb,var(--h) 35%,transparent);background:var(--card);overflow:hidden}
-#wlc.ui .mpanel>nav.padding{padding:12px 12px 8px 16px}
-#wlc.ui .mpanel .list li{padding-left:12px;padding-right:8px}
-#wlc.ui .mhint{margin:0}
-@media(prefers-reduced-motion:reduce){#wlc.ui .mtile{transition:none}#wlc.ui .mtiles .mtile.on{transform:none}}
+/* ---------- Work goals: pastel rows (Karla's mockup), a goal page, milestone bars ---------- */
+/* Pastel (--p) with dark ink; --pd = deep accent; --h = stripe colour on task lists (both themes). */
+#wlc.ui .p-salmon{--p:#f2b09a;--pd:#a8432b;--h:#c2543a}
+#wlc.ui .p-cream{--p:#f3ebdd;--pd:#24504f;--h:#2e6b69}
+#wlc.ui .p-sage{--p:#a9c2ae;--pd:#2f5a4a;--h:#3f7a63}
+#wlc.ui .p-mustard{--p:#ebc66e;--pd:#1f1b16;--h:#b07f0e}
+#wlc.ui .p-lavender{--p:#c9c1ea;--pd:#44488a;--h:#6464b8}
+#wlc.ui .p-sky{--p:#afcbe3;--pd:#2c5a82;--h:#3b76a6}
+#wlc.ui .p-rose{--p:#edb6c3;--pd:#8a3150;--h:#b04a6c}
+/* On a pastel, text and controls use the light theme's ink whatever the app theme. */
+#wlc.ui .ink{--fg:#1b1a17;--muted:#4f4a44;--card:#fffaf2;--border:rgb(27 26 23 / .14);--control:#6f675b;--accent:rgb(27 26 23 / .07);--primary:#1b1a17;--on-primary:#fffaf2;--good:#15803d;--bad:#a61b1b;color:var(--fg)}
+#wlc.ui .gsection{font:400 1.9em/1 var(--serif);margin:24px 0 12px}
+#wlc.ui .prows{display:flex;flex-direction:column;gap:10px;margin-bottom:16px}
+#wlc.ui .prow{background:var(--p);border-radius:22px;box-shadow:0 1px 0 rgb(0 0 0 / .06),0 6px 16px -10px rgb(0 0 0 / .35);overflow:hidden}
+#wlc.ui .phead{display:flex;align-items:center;gap:14px;padding:16px 14px 14px 16px;cursor:pointer}
+#wlc.ui .pico{flex:none;width:56px;display:grid;place-items:center;font-size:2.5em;color:var(--pd)}
+#wlc.ui .pname{margin:0;font:400 1.75em/1.05 var(--serif);overflow-wrap:anywhere}
+#wlc.ui .pmeta{font-size:.88em;margin:4px 0 8px}
+#wlc.ui .pbad{color:var(--bad);font-weight:600}
+#wlc.ui .pbar{display:flex;align-items:center;gap:10px;font-size:.85em;font-variant-numeric:tabular-nums}
+#wlc.ui .ptrack{flex:1;height:8px;border-radius:99px;background:rgb(27 26 23 / .13);overflow:hidden}
+#wlc.ui .ptrack i{display:block;height:100%;border-radius:inherit;background:var(--pd);transition:width .4s}
+#wlc.ui .phead .pchev{flex:none;width:40px;height:40px;padding:0;border-radius:50%;background:rgb(27 26 23 / .09);color:var(--fg);border:0;font-size:1.1em}
+#wlc.ui .pbody{padding:0 12px 12px}
+#wlc.ui .gbtns{gap:8px;margin:12px 0 4px}
+#wlc.ui .openmode{gap:8px;margin:4px 0 16px}
+/* Milestone bars */
+#wlc.ui .mbars{display:flex;flex-direction:column;gap:8px}
+#wlc.ui .mbar{background:var(--p);border-radius:18px;overflow:hidden;box-shadow:0 4px 12px -10px rgb(0 0 0 / .4)}
+#wlc.ui .prow .mbar{box-shadow:0 0 0 1px rgb(27 26 23 / .08)}
+#wlc.ui .mbars .mhead{display:flex;width:100%;height:auto;align-items:center;gap:14px;padding:14px 16px;margin:0;border:0;border-radius:0;background:none;color:var(--fg);font:inherit;text-align:left;white-space:normal;justify-content:flex-start}
+#wlc.ui .mhead .mbi{font-size:1.7em;width:34px;display:grid;place-items:center;color:var(--pd)}
+#wlc.ui .mhead b{font:400 1.2em/1.1 var(--serif);text-transform:uppercase;letter-spacing:.05em}
+#wlc.ui .mhead small{font-size:.85em;font-variant-numeric:tabular-nums;display:flex;align-items:center;gap:6px}
+#wlc.ui .mhead .late{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--bad)}
+#wlc.ui .mopen{display:flex;align-items:stretch;padding:0 8px 8px}
+#wlc.ui .mstrip{flex:none;width:64px;display:flex;justify-content:center;padding-top:18px;background:var(--pd);color:#fff;font-size:1.8em;border-radius:14px 0 0 14px}
+#wlc.ui .mcard{flex:1;min-width:0;background:var(--card);border-radius:0 14px 14px 0;padding:6px 0 4px}
+#wlc.ui .mmeta{display:flex;align-items:center;gap:6px;padding:4px 4px 2px 14px}
+#wlc.ui .mmeta .badge{margin-left:4px}
+#wlc.ui .mcard .list li{padding:10px 6px 10px 12px}
+#wlc.ui .mcard .addtask{margin:2px 0 4px 6px;color:var(--fg)}
+#wlc.ui .mhint{margin:4px 0}
+/* A goal's own page */
+#wlc.ui .gpage{margin-bottom:16px}
+#wlc.ui .gpnav{margin:0 0 4px -8px}
+#wlc.ui .gptop{display:flex;align-items:flex-end;gap:12px;margin-bottom:12px}
+#wlc.ui .gsun{flex:none;width:104px;height:104px;border-radius:50%;display:grid;place-items:center;background:var(--p);color:var(--pd);font-size:3.1em;box-shadow:0 10px 30px -18px rgb(0 0 0 / .6)}
+#wlc.ui .gptitle{flex:1;min-width:0;font:400 3em/.95 var(--serif);margin:0;overflow-wrap:anywhere}
+#wlc.ui .gpmeta{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-bottom:14px}
+#wlc.ui .gpage .gpprog{margin-bottom:18px}
+#wlc.ui .gpage .ptrack{background:color-mix(in srgb,var(--fg) 14%,transparent)}
+#wlc.ui .gpage .gpprog .ptrack i{background:var(--h)}
+#wlc.ui .gprow{display:flex;justify-content:space-between;gap:12px;font-size:.9em;margin-top:6px;color:var(--muted)}
+@media(prefers-reduced-motion:reduce){#wlc.ui .ptrack i{transition:none}}
 #wlc.ui .list li.tagged{box-shadow:inset 4px 0 0 var(--h)}
 #wlc.ui .tasksday{margin:16px 0 8px}
 #wlc.ui .workhint{margin:0 0 18px;line-height:1.6}

@@ -32,11 +32,13 @@ export function seedPreview(db) {
   db.docs["users/preview/lists/routines"] = { items };
   const at = (n) => addDays(today, n);
   db.docs["users/preview/lists/work"] = {
-    goals: [{ id: "g0", name: "Pack for Japan", due: at(6) }, { id: "g1", name: "Book marketing launch", due: at(300) }],
+    goals: [{ id: "g0", name: "Pack for Japan", due: at(6) }, { id: "g1", name: "Book marketing launch", due: at(300) }, { id: "g2", name: "Get strong", due: "" }, { id: "g3", name: "House stuff", due: "" }, { id: "g4", name: "Daisy time", due: "" }],
     milestones: ["Packing", "Docs", "Meds", "Tech", "Toiletries"].map((name, i) => ({ id: `j${i}`, goal: "g0", name, due: at(5) })).concat([{ id: "m1", goal: "g1", name: "Build email list", due: at(20) }, { id: "m2", goal: "g1", name: "Pitch podcasts", due: at(50) }]),
     tasks: [
       ...["Carry-on bag", "Passport + JR pass", "Refill prescriptions", "Chargers + adapter", "Travel-size kit"].map((name, i) => ({ id: `jt${i}`, goal: "g0", ms: `j${i}`, name, due: at(4), hours: 0.5, done: "", created: 10 + i })),
       { id: "jt5", goal: "g0", ms: "j0", name: "Shoes for walking", due: at(4), hours: 0.25, done: at(-1), created: 20 },
+      ...[["g2", "Book a trainer", ""], ["g2", "Buy dumbbells", at(-2)], ["g3", "Fix the gutter", ""], ["g4", "Long walk at the coast", at(-4)], ["g4", "Vet check-up", ""]]
+        .map(([goal, name, done], i) => ({ id: `x${i}`, goal, ms: "", name, due: "", hours: 1, done, created: 30 + i })),
       { id: "t1", goal: "g1", ms: "m1", name: "Set up Substack welcome email", due: at(-2), hours: 2, done: at(-3), created: 1 },
       { id: "t2", goal: "g1", ms: "m1", name: "Write lead magnet", due: at(-1), hours: 4, spent: 70, after: "t1", done: "", created: 2 },
       { id: "t3", goal: "g1", ms: "m1", name: "Add signup form to kstarr.com", due: at(3), hours: 1, after: "t2", done: "", created: 3 },

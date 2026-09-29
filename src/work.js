@@ -83,11 +83,16 @@ export function removeGoal(w, id) {
   w.goals = w.goals.filter((g) => g.id !== id);
 }
 
-// Each goal gets its own colour, in order, so its tasks are easy to spot everywhere.
-export const GOAL_THEMES = ["tide", "rose", "garden", "sun", "dusk", "teal", "ember"];
+// Each goal gets its own pastel, in order, so its tasks are easy to spot everywhere (classes p-* in ui.css).
+export const GOAL_THEMES = ["p-salmon", "p-cream", "p-sage", "p-mustard", "p-lavender", "p-sky", "p-rose"];
 export const goalTheme = (w, goalId) => {
   const i = w.goals.findIndex((g) => g.id === goalId);
-  return i < 0 ? "ember" : GOAL_THEMES[i % GOAL_THEMES.length];
+  return i < 0 ? GOAL_THEMES[0] : GOAL_THEMES[i % GOAL_THEMES.length];
+};
+// A goal's milestones take the next pastels along, so neighbouring bars differ.
+export const milestoneTheme = (w, goalId, n) => {
+  const i = Math.max(0, w.goals.findIndex((g) => g.id === goalId));
+  return GOAL_THEMES[(i + 1 + n) % GOAL_THEMES.length];
 };
 
 // Milestone tile icons (Lucide names). A milestone can pick one; otherwise it's guessed from its name.
@@ -97,19 +102,22 @@ export const MS_ICONS = [
   ["mic", "Speaking"], ["presentation", "Workshop"], ["megaphone", "Promotion"], ["globe", "Website"], ["code", "Code"],
   ["wallet", "Money"], ["palette", "Design"], ["camera", "Photos"], ["users", "People"], ["phone", "Calls"],
   ["house", "Home"], ["utensils", "Food"], ["shopping-cart", "Shopping"], ["dumbbell", "Fitness"], ["heart", "Health"],
-  ["calendar", "Planning"], ["rocket", "Launch"], ["gift", "Gifts"], ["sparkles", "Ideas"], ["flag", "Milestone"],
+  ["calendar", "Planning"], ["rocket", "Launch"], ["gift", "Gifts"], ["sparkles", "Ideas"], ["notebook-pen", "Notebook"],
+  ["briefcase", "Work"], ["dog", "Dog"], ["cat", "Cat"], ["leaf", "Garden"], ["music", "Music"], ["graduation-cap", "School"],
+  ["flag", "Milestone"],
 ];
 const GUESS = [
   [/pack|luggage|suitcase|bag/, "luggage"], [/doc|passport|visa|paper|form|ticket|id\b/, "id-card"],
   [/med|pill|pharm|prescri/, "pill"], [/tech|laptop|computer|charger|phone case|gadget|electronic/, "laptop"],
   [/toilet|bath|shower|skincare|makeup/, "bath"], [/cloth|outfit|wear|shoe|wardrobe/, "shirt"],
   [/travel|flight|trip|hotel|airport/, "plane"], [/email|newsletter|substack|mail|inbox/, "mail"],
-  [/writ|draft|chapter|essay|book|manuscript|edit/, "pen-line"], [/read|research|study|learn/, "book-open"],
+  [/dog|puppy|daisy|walkies/, "dog"], [/cat|kitten/, "cat"], [/book|proposal|novel|manuscript/, "notebook-pen"],
+  [/writ|draft|chapter|essay|edit/, "pen-line"], [/read|research|study|learn/, "book-open"],
   [/podcast|pitch|speak|talk|interview|keynote/, "mic"], [/workshop|class|teach|training|course|slides/, "presentation"],
   [/market|promo|social|launch|announce|post/, "megaphone"], [/web|site|seo|domain/, "globe"], [/app|code|build|dev/, "code"],
   [/money|budget|financ|pay|invoice|tax|bank/, "wallet"], [/design|art|brand|logo/, "palette"], [/photo|video|film/, "camera"],
   [/people|team|client|network|friend|family/, "users"], [/call|phone/, "phone"], [/house|home|clean|tenant|reno|repair/, "house"],
-  [/food|meal|cook|grocer|snack/, "utensils"], [/shop|buy|order/, "shopping-cart"], [/gym|fitness|exercise|run|workout/, "dumbbell"],
+  [/food|meal|cook|grocer|snack/, "utensils"], [/shop|buy|order/, "shopping-cart"], [/gym|fitness|exercise|run|workout|strong|lift|weights/, "dumbbell"],
   [/health|doctor|dentist|therap/, "heart"], [/plan|schedule|calendar/, "calendar"], [/gift|present/, "gift"], [/idea|brainstorm/, "sparkles"],
 ];
 export function guessIcon(name) {
@@ -117,3 +125,5 @@ export function guessIcon(name) {
   return GUESS.find(([re]) => re.test(n))?.[1] || "flag";
 }
 export const msIcon = (m) => m?.icon || guessIcon(m?.name);
+// Goals: same list; a goal with nothing to go on gets a target.
+export const goalIcon = (g) => g?.icon || (guessIcon(g?.name) === "flag" ? "target" : guessIcon(g?.name));

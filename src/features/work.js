@@ -5,7 +5,8 @@ import { clone, newId, todayKey } from "../util.js";
 import { ui, refreshAfterRemoteChange } from "../render.js";
 import { todayState, removeTask, removeMilestone, removeGoal } from "../work.js";
 import { startTimer, pauseTimer, stopTimer, addTime, isUp, msLeft, countdownText } from "../timer.js";
-import { workTodayView, workGoalsView, workData, readWorkForm } from "../views/work.js";
+import { workTodayView, workGoalsView, workData, readWorkForm, openMode } from "../views/work.js";
+import { setPref } from "../prefs.js";
 import { parsePlan, PLAN_PROMPT } from "../workimport.js";
 
 const LIST = { goal: "goals", ms: "milestones", task: "tasks" };
@@ -48,7 +49,7 @@ function saveItem() {
   if (!e.name) return ui.view.querySelector("#w-name").focus(), "none";
   const item = { id: e.id || newId(e.kind === "ms" ? "m" : e.kind[0]), name: e.name, due: e.due || "" };
   if (e.kind !== "goal") item.goal = e.goal;
-  if (e.kind === "ms") item.icon = e.icon || "";
+  if (e.kind !== "task") item.icon = e.icon || "";
   if (e.kind === "task") Object.assign(item, { ms: e.ms || "", at: e.at || "", hours: e.hours || "", spent: e.spent || 0, after: e.after || "", done: e.done || "", created: e.created || Date.now() });
   edit((w) => {
     const list = w[LIST[e.kind]], at = list.findIndex((x) => x.id === item.id);
@@ -100,8 +101,11 @@ export default {
     },
     wOpen(el) {
       const id = el.dataset.id, open = state.openGoals || [];
+      if (openMode() === "page") { state.goalPage = id; setTimeout(() => window.scrollTo({ top: 0 }), 0); return; }
       state.openGoals = open.includes(id) ? open.filter((x) => x !== id) : [...open, id];
     },
+    wClose() { state.goalPage = null; state.editWork = null; },
+    wMode(el) { setPref("workOpen", el.dataset.mode); state.goalPage = null; },
     wMs(el) {
       const { goal, ms } = el.dataset;
       state.openMs = { ...(state.openMs || {}), [goal]: state.openMs?.[goal] === ms ? "" : ms };

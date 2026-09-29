@@ -1,7 +1,8 @@
 // Work: Today (a few tasks, picked for you) and Goals (goal → milestones → tasks, with progress).
 import { html, shortDate, longDate, clock, atTime } from "../util.js";
 import { state } from "../state.js";
-import { normalizeWork, todayState, todayPicks, blocker, progress, countdown, goalTheme, msIcon, MS_ICONS } from "../work.js";
+import { normalizeWork, todayState, todayPicks, blocker, progress, countdown, goalTheme, milestoneTheme, msIcon, goalIcon, MS_ICONS } from "../work.js";
+import { getPref } from "../prefs.js";
 import { timerFor, isRunning, isUp, msLeft, minutesLeft, countdownText, durationText } from "../timer.js";
 import { pressed, saveStatus, icon } from "./components.js";
 
@@ -72,6 +73,8 @@ export function workTodayView() {
       <p>Add a goal with a deadline, break it into monthly milestones, then into small tasks. Each day this page picks a few tasks for you, most urgent first, so there's nothing to decide.</p>
       <nav><button data-act="wNew" data-kind="goal">${icon("add")}<span>Add a goal</span></button></nav></article>`;
   }
+  const g = pageGoal(w);
+  if (g) return goalPage(w, g, key);
   const t = todayState(w, key), picks = todayPicks(w, key), pins = t.pins || [];
   const done = picks.filter((x) => x.done).length, all = picks.length && done === picks.length;
   const open = w.tasks.filter((x) => !x.done), blocked = open.filter((x) => blocker(x, w.tasks)).length;
@@ -85,7 +88,8 @@ export function workTodayView() {
     </article>
     <nav class="wrap tasksday"><span class="small-text">Tasks a day:</span>${[3, 4, 5].map((n) => html`<button class="chip ${n === w.perDay ? "fill" : "border"}" data-act="wPerDay" data-n="${n}" aria-pressed="${pressed(n === w.perDay)}">${n}</button>`)}</nav>
     <p class="small-text workhint">Picked for you: overdue first, then whatever's due soonest. Unfinished tasks carry over. ${icon("pin")} keeps a task on today's list; ${icon("swap")} swaps it for the next one. Tasks waiting on another task stay hidden until that one's done. Tasks with a start time go to the top. ${icon("play_arrow")} starts a timer for what's left of the estimate (25 minutes if there isn't one).</p>
-    ${goalCards(w, key, true)}`;
+    <h3 class="gsection">Goals</h3>
+    ${goalRows(w, key)}`;
 }
 
 // ---------- goals ----------
@@ -94,10 +98,6 @@ function status(p, due, key) {
   if (due && due < key) return html`<span class="badge bad">Past deadline</span>`;
   if (p.overdue) return html`<span class="badge bad">Behind · ${p.overdue} overdue</span>`;
   return html`<span class="badge good">On track</span>`;
-}
-
-function bar(p) {
-  return html`<progress value="${p.pct}" max="100" aria-label="${p.done} of ${p.total} tasks done"></progress>`;
 }
 
 function taskRow(w, t, key) {
@@ -110,68 +110,84 @@ function taskRow(w, t, key) {
     ${timerStrip(w, t)}</li>`;
 }
 
-// A goal's milestones as tiles; tasks without a milestone get an "Other" tile.
-function tilesFor(w, g) {
+// A goal's milestones; tasks without a milestone go under "Other".
+function sectionsFor(w, g) {
   const tasks = w.tasks.filter((t) => t.goal === g.id);
   const ms = w.milestones.filter((m) => m.goal === g.id).sort((a, b) => (a.due || "9999").localeCompare(b.due || "9999"));
-  const tiles = ms.map((m) => ({ id: m.id, m, name: m.name, icon: msIcon(m), tasks: tasks.filter((t) => t.ms === m.id) }));
+  const out = ms.map((m) => ({ id: m.id, m, name: m.name, icon: msIcon(m), tasks: tasks.filter((t) => t.ms === m.id) }));
   const loose = tasks.filter((t) => !t.ms || !ms.some((m) => m.id === t.ms));
-  if (loose.length) tiles.push({ id: "_", m: null, name: "Other", icon: "list", tasks: loose });
-  return tiles;
+  if (loose.length) out.push({ id: "_", m: null, name: "Other", icon: "list", tasks: loose });
+  return out;
 }
 
-function tile(g, x, on, key) {
-  const done = x.tasks.filter((t) => t.done).length, all = x.tasks.length && done === x.tasks.length;
-  const late = x.tasks.some((t) => !t.done && t.due && t.due < key);
-  return html`<button class="mtile${on ? " on" : ""}${all ? " all" : ""}" data-act="wMs" data-goal="${g.id}" data-ms="${x.id}" aria-expanded="${on ? "true" : "false"}"
-    aria-label="${x.name}: ${done} of ${x.tasks.length} done${late ? ", something overdue" : ""}">
-    <span class="mi">${icon(x.icon)}</span><span class="mrule"></span><b>${x.name}</b>
-    <small>${all ? icon("check") : ""}${done} / ${x.tasks.length}${late ? html` <i class="late" aria-hidden="true"></i>` : ""}</small></button>`;
+// Milestones as coloured bars. Tapping one opens its tasks: a strip with its icon, then a card with the list.
+function milestoneBars(w, g, key) {
+  const secs = sectionsFor(w, g), pick = state.openMs?.[g.id];
+  if (!secs.length) return html`<p class="small-text mhint">No milestones or tasks yet.</p>`;
+  return html`<div class="mbars">${secs.map((x, n) => {
+    const on = secs.length === 1 || x.id === pick, p = progress(x.tasks, key), m = x.m;
+    const late = x.tasks.some((t) => !t.done && t.due && t.due < key);
+    const tasks = [...x.tasks].sort((a, b) => Boolean(a.done) - Boolean(b.done) || (a.due || "9999").localeCompare(b.due || "9999"));
+    return html`<div class="mbar ink ${milestoneTheme(w, g.id, n)}${on ? " on" : ""}">
+      <button class="mhead" data-act="wMs" data-goal="${g.id}" data-ms="${x.id}" aria-expanded="${on ? "true" : "false"}">
+        <span class="mbi">${icon(x.icon)}</span><b class="max">${x.name}</b>
+        <small>${late ? html`<i class="late" title="Something's overdue"></i>` : ""}${p.done}/${p.total}</small>${icon(on ? "expand_less" : "expand_more")}</button>
+      ${on ? html`<div class="mopen"><div class="mstrip" aria-hidden="true">${icon(x.icon)}</div><div class="mcard">
+        <div class="mmeta small-text"><span class="max">${m?.due ? `${shortDate(m.due)} · ${countdown(m.due, key)} · ` : ""}${p.done}/${p.total} done${p.spent ? ` · ${durationText(p.spent)} spent` : ""}
+          ${m && p.total ? html` ${status(p, m.due, key)}` : ""}</span>
+          ${m ? html`<button class="circle transparent" data-act="wEdit" data-kind="ms" data-id="${m.id}" aria-label="Edit ${m.name}">${icon("edit")}</button>` : ""}</div>
+        ${tasks.length ? html`<ul class="list">${tasks.map((t) => taskRow(w, t, key))}</ul>` : ""}
+        <button class="transparent addtask" data-act="wNew" data-kind="task" data-goal="${g.id}" data-ms="${m?.id || ""}">${icon("add")}<span>Add task</span></button>
+      </div></div>` : ""}</div>`;
+  })}</div>`;
 }
 
-// The open milestone: its deadline and status, then its tasks.
-function tilePanel(w, g, x, key) {
-  const p = progress(x.tasks, key), m = x.m;
-  const tasks = [...x.tasks].sort((a, b) => Boolean(a.done) - Boolean(b.done) || (a.due || "9999").localeCompare(b.due || "9999"));
-  return html`<div class="mpanel">
-    <nav class="padding"><div class="max"><b>${x.name}</b>
-      <div class="small-text">${m?.due ? `${shortDate(m.due)} · ${countdown(m.due, key)} · ` : ""}${p.done}/${p.total} done${p.spent ? ` · ${durationText(p.spent)} spent` : ""}</div>
-      ${m ? html`<div class="stat">${status(p, m.due, key)}</div>` : ""}</div>
-      ${m ? html`<button class="circle transparent" data-act="wEdit" data-kind="ms" data-id="${m.id}" aria-label="Edit ${m.name}">${icon("edit")}</button>` : ""}</nav>
-    ${tasks.length ? html`<ul class="list">${tasks.map((t) => taskRow(w, t, key))}</ul>` : html`<p class="padding small-text">No tasks yet.</p>`}
-    <nav class="padding"><button class="border small" data-act="wNew" data-kind="task" data-goal="${g.id}" data-ms="${m?.id || ""}">${icon("add")}<span>Task</span></button></nav></div>`;
+const goalButtons = (g) => html`<nav class="wrap gbtns"><button class="border small" data-act="wNew" data-kind="ms" data-goal="${g.id}">${icon("flag")}<span>Milestone</span></button>
+  <button class="border small" data-act="wNew" data-kind="task" data-goal="${g.id}">${icon("add")}<span>Task</span></button>
+  <button class="border small" data-act="wEdit" data-kind="goal" data-id="${g.id}">${icon("edit")}<span>Edit goal</span></button></nav>`;
+
+// Tapping a goal either opens its own page or opens it in place (switch on the Goals tab).
+export const openMode = () => (getPref("workOpen") === "inplace" ? "inplace" : "page");
+
+function pbar(p) {
+  return html`<div class="pbar"><span class="ptrack" role="progressbar" aria-label="${p.done} of ${p.total} tasks done" aria-valuenow="${p.pct}" aria-valuemax="100"><i style="width:${p.pct}%"></i></span><span>${p.pct}%</span></div>`;
 }
 
-function stat(value, label) {
-  return html`<div class="gstat"><b>${value}</b><small>${label}</small></div>`;
-}
-
-// Today: cards start closed; tap one to see its milestone tiles. Goals: tiles always showing, plus edit buttons.
-function goalCards(w, key, compact) {
-  return w.goals.map((g) => {
-    const tasks = w.tasks.filter((t) => t.goal === g.id), p = progress(tasks, key);
-    const open = !compact || state.openGoals?.includes(g.id);
-    const tiles = tilesFor(w, g);
-    const pick = state.openMs?.[g.id], sel = tiles.length === 1 ? tiles[0] : tiles.find((x) => x.id === pick);
-    const extra = [p.hoursLeft ? `${p.hoursLeft}h left` : "", p.spent ? `${durationText(p.spent)} spent` : ""].filter(Boolean).join(" · ");
-    return html`<article class="round no-padding goal ${goalTheme(w, g.id)}${compact ? " fold" : ""}${open ? " open" : ""}">
-      <div class="gbody"${compact ? html` data-act="wOpen" data-id="${g.id}"` : ""}>
-        <div class="gtop"><span class="gchip">${icon("target")}</span><span class="max"></span><span class="gpill">${status(p, g.due, key)}</span>
-          ${compact ? html`<button class="circle transparent" data-act="wOpen" data-id="${g.id}" aria-expanded="${open ? "true" : "false"}" aria-label="${open ? "Hide" : "Show"} milestones: ${g.name}">${icon(open ? "expand_less" : "expand_more")}</button>`
-            : html`<button class="circle transparent" data-act="wEdit" data-kind="goal" data-id="${g.id}" aria-label="Edit ${g.name}">${icon("edit")}</button>`}</div>
-        <h3 class="gname">${g.name}</h3>
-        <div class="gstats">${stat(g.due ? shortDate(g.due) : "—", g.due ? countdown(g.due, key) : "Due date")}${stat(`${p.pct}%`, "Progress")}${stat(`${p.done}/${p.total}`, "Tasks")}</div>
-        ${extra ? html`<div class="gextra">${extra}</div>` : ""}
-      </div>
-      ${bar(p)}
-      ${!open ? "" : html`
-        ${tiles.length > 1 ? html`<div class="mtiles" role="group" aria-label="Milestones">${tiles.map((x) => tile(g, x, x === sel, key))}</div>` : ""}
-        ${sel ? tilePanel(w, g, sel, key) : tiles.length ? html`<p class="padding small-text mhint">Tap a milestone to see its tasks.</p>` : html`<p class="padding small-text mhint">No tasks yet.</p>`}
-        ${compact ? "" : html`<nav class="padding wrap"><button class="border small" data-act="wNew" data-kind="ms" data-goal="${g.id}">${icon("flag")}<span>Milestone</span></button>
-          <button class="border small" data-act="wNew" data-kind="task" data-goal="${g.id}">${icon("add")}<span>Task</span></button></nav>`}`}
+// The list: one pastel row per goal.
+function goalRows(w, key) {
+  const mode = openMode();
+  return html`<div class="prows">${w.goals.map((g) => {
+    const p = progress(w.tasks.filter((t) => t.goal === g.id), key);
+    const open = mode === "inplace" && state.openGoals?.includes(g.id);
+    const when = g.due ? countdown(g.due, key) : "Ongoing";
+    return html`<article class="prow ink ${goalTheme(w, g.id)}${open ? " open" : ""}">
+      <div class="phead" data-act="wOpen" data-id="${g.id}">
+        <span class="pico" aria-hidden="true">${icon(goalIcon(g))}</span>
+        <div class="max"><h3 class="pname">${g.name}</h3>
+          <div class="pmeta">${p.done}/${p.total} · ${when}${p.overdue ? html` · <b class="pbad">${p.overdue} overdue</b>` : ""}</div>
+          ${pbar(p)}</div>
+        <button class="pchev" data-act="wOpen" data-id="${g.id}" ${mode === "inplace" ? html`aria-expanded="${open ? "true" : "false"}"` : ""} aria-label="${mode === "page" ? "Open" : open ? "Close" : "Open"} ${g.name}">
+          ${icon(mode === "page" ? "chevron_right" : open ? "expand_less" : "expand_more")}</button></div>
+      ${open ? html`<div class="pbody">${milestoneBars(w, g, key)}${goalButtons(g)}</div>` : ""}
     </article>`;
-  });
+  })}</div>`;
 }
+
+// A goal's own page: big icon, name, deadline and progress, then its milestones.
+function goalPage(w, g, key) {
+  const p = progress(w.tasks.filter((t) => t.goal === g.id), key);
+  const extra = [p.hoursLeft ? `${p.hoursLeft}h left` : "", p.spent ? `${durationText(p.spent)} spent` : ""].filter(Boolean).join(" · ");
+  return html`<section class="gpage ${goalTheme(w, g.id)}">
+    <nav class="gpnav"><button class="transparent" data-act="wClose">${icon("arrow_back")}<span>All goals</span></button></nav>
+    <div class="gptop"><h2 class="gptitle">${g.name}</h2><span class="gsun" aria-hidden="true">${icon(goalIcon(g))}</span></div>
+    <div class="gpmeta">${g.due ? `${shortDate(g.due)} · ${countdown(g.due, key)}` : "Ongoing"} ${p.total ? status(p, g.due, key) : ""}</div>
+    <div class="gpprog">${pbar(p)}<div class="gprow"><span>${p.done}/${p.total} tasks</span>${extra ? html`<span>${extra}</span>` : ""}</div></div>
+    ${milestoneBars(w, g, key)}
+    ${goalButtons(g)}
+  </section>`;
+}
+
+const pageGoal = (w) => (openMode() === "page" && state.goalPage ? w.goals.find((g) => g.id === state.goalPage) : null);
 
 const KIND = { goal: "goal", ms: "milestone", task: "task" };
 
@@ -184,8 +200,8 @@ function workForm(w) {
     <div class="grid">
       <div class="s12 m8">${field("Name", html`<input placeholder=" " id="w-name" maxlength="120" value="${e.name || ""}">`)}</div>
       <div class="s6 m4">${field(e.kind === "task" ? "Due" : "Deadline", html`<input id="w-due" type="date" value="${e.due || ""}">`)}</div>
-      ${e.kind === "ms" ? html`
-        <div class="s12 m4">${field("Icon", html`<select id="w-icon"><option value="">Automatic (${MS_ICONS.find(([k]) => k === msIcon({ name: e.name }))?.[1] || "Milestone"})</option>
+      ${e.kind !== "task" ? html`
+        <div class="s12 m4">${field("Icon", html`<select id="w-icon"><option value="">Automatic (${MS_ICONS.find(([k]) => k === (e.kind === "goal" ? goalIcon : msIcon)({ name: e.name }))?.[1] || "Target"})</option>
           ${MS_ICONS.map(([k, label]) => html`<option value="${k}" ${k === e.icon ? "selected" : ""}>${label}</option>`)}</select>`)}</div>` : ""}
       ${e.kind === "task" ? html`
         <div class="s6 m4">${field("Start time (optional)", html`<input id="w-at" type="time" value="${e.at || ""}">`)}</div>
@@ -223,7 +239,11 @@ function importBox(open) {
 }
 
 export function workGoalsView() {
-  const w = workData(), key = state.date;
-  return html`${workForm(w)}${importBox(!w.goals.length)}${goalCards(w, key, false)}
+  const w = workData(), key = state.date, g = pageGoal(w);
+  if (g) return html`${workForm(w)}${goalPage(w, g, key)}<p class="small-text">${saveStatus()}</p>`;
+  const mode = openMode();
+  return html`${workForm(w)}${importBox(!w.goals.length)}${goalRows(w, key)}
+    <nav class="wrap openmode"><span class="small-text">Tapping a goal:</span>${[["page", "Opens its own page"], ["inplace", "Opens in place"]].map(([k, label]) =>
+      html`<button class="chip ${k === mode ? "fill" : "border"}" data-act="wMode" data-mode="${k}" aria-pressed="${pressed(k === mode)}">${label}</button>`)}</nav>
     <p class="small-text">Private to you. A lock means a task is waiting on another one. Behind = at least one task past its due date. ${saveStatus()}</p>`;
 }
