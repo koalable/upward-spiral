@@ -1,6 +1,6 @@
 # Upward Spiral of Awesomeness
 
-The habit-tracking challenge at kstarr.com/challenge. Firebase handles sign-in and data; Webflow hosts the page.
+The habit-tracking challenge at **app.kstarr.com** (installable on a phone's home screen). Firebase handles sign-in, data, hosting and push notifications. The old kstarr.com/challenge pages redirect here.
 
 ## Layout
 
@@ -35,37 +35,24 @@ npm run build      build dist/ and webflow/
 
 ## Pages
 
-The app is three Webflow pages that share the same sign-in and data:
-
-| Page | URL | Tabs |
+| Page | App URL | Tabs |
 |---|---|---|
-| Check-in | /challenge | Today, Meds, Journal, My questions, Targets & rules |
-| Routines | /challenge-routines | Routines, Set up routines, To-dos |
-| Work | /challenge-work | Today (3–5 picked tasks), Goals (goals → milestones → tasks, dependencies, progress) |
-| Progress | /challenge-progress | Streaks & badges, My progress, Group |
+| Check-in | / | Today, Meds, Journal, Categories, Targets & rules, Notifications |
+| Habits | /routines | Rituals, Set up habits, To-dos |
+| Work | /work | Today (3–5 picked tasks), Goals (goals → milestones → tasks, dependencies, progress) |
+| Progress | /progress | Streaks & badges, My progress, Group |
 
-Each page bundles only its own features (`src/entries/<page>.js`), so each stays well under Webflow's limits.
+Each page bundles only its own features (`src/entries/<page>.js`).
 A feature (`src/features/*.js`) brings its tabs, button actions, and input handlers; `src/page.js` explains the shape.
+Other parts: `src/notify.js` (which reminders are due; tested), `functions/src/index.js` (the notification server), `app-src/` (icons, service worker).
 
 ## Deploying
 
-The app code lives in this GitHub repo and is served free by jsDelivr. Webflow pages only hold a few lines that point at it.
+Run `node build.mjs`, then commit and push to main. `.github/workflows/deploy-app.yml` publishes the app
+(Firebase Hosting, from `app/`), the notification server (Cloud Functions, from `functions/`) and the
+database rules (`firestore.rules`). Nothing to paste anywhere. Watch the run under GitHub → Actions.
 
-1. Run `node build.mjs`, then commit and push (including `dist/`).
-2. Clear jsDelivr's cache for each changed file: open `https://purge.jsdelivr.net/gh/koalable/upward-spiral@main/dist/cdn/<file>` (app.css, checkin.js, routines.js, work.js, progress.js).
+One-time setup (already done) is in `docs/APP-SETUP.md`. Try any page offline: open `dist/preview-<page>.html`.
 
-The Webflow pages load `@main`, so a release never touches Webflow. Only re-paste `webflow/<page>/PAGE-*.txt` if the setup itself changes (a new page, fonts, Firebase config). If a purge fails, pages catch up within about 12 hours.
-The Code Embed (`<div id="wlc"></div>`) is optional; the footer adds it if missing.
-Try any page offline: open `dist/preview-<page>.html`.
-
-Design: `src/ui.css` is a shadcn/ui-style look in plain CSS (zinc palette, Inter, Lucide icons). No framework.
-
-**Rules.** Paste `firestore.rules` into Firebase → Firestore → Rules and publish.
-
-
-## Principles
-
-- Private data lives under `users/{uid}/…` (including routines and the routine log); only the owner can read it.
-- Shared data (`members`, `scores`, `wins`, `config/season`) is limited by the rules to specific fields.
-- A day stores the questions it was scored with, so editing questions never rewrites history.
-- Scores are computed on each player's device (trust-based among friends).
+The old Webflow pages (`webflow/`, `dist/cdn/`, served by jsDelivr) are kept only as a backup at
+kstarr.com/challenge-old etc.

@@ -1,4 +1,6 @@
-# Home-screen app: one-time setup
+# Home-screen app: one-time setup (done Sep 28, 2026)
+
+All of this is done; kept for reference. Also done since: Blaze plan, Cloud APIs enabled, extra service-account roles, OAuth redirect URIs for app.kstarr.com and the web.app domain, 301 redirects from kstarr.com/challenge*.
 
 The app is the same code as the Webflow pages, published to Firebase Hosting so it can be installed
 on a phone and (next) send notifications. `node build.mjs` writes it to `app/`; pushing to main
