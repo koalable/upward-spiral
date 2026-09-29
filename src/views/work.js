@@ -126,13 +126,16 @@ function goalCards(w, key, compact) {
   return w.goals.map((g) => {
     const tasks = w.tasks.filter((t) => t.goal === g.id), p = progress(tasks, key);
     const ms = w.milestones.filter((m) => m.goal === g.id).sort((a, b) => (a.due || "9999").localeCompare(b.due || "9999"));
-    return html`<article class="round no-padding goal ${goalTheme(w, g.id)}">
-      <nav class="padding ghband"><span class="gchip">${icon("target")}</span><div class="max"><h6>${g.name}</h6>
+    // On Today the cards are collapsed; tapping one opens its milestones and tasks underneath.
+    const open = !compact || state.openGoals?.includes(g.id);
+    return html`<article class="round no-padding goal ${goalTheme(w, g.id)}${compact ? " fold" : ""}">
+      <nav class="padding ghband"${compact ? html` data-act="wOpen" data-id="${g.id}"` : ""}><span class="gchip">${icon("target")}</span><div class="max"><h6>${g.name}</h6>
         <div class="small-text">${g.due ? `${shortDate(g.due)} · ${countdown(g.due, key)} · ` : ""}${p.pct}% · ${p.done}/${p.total} tasks${p.hoursLeft ? ` · ${p.hoursLeft}h left` : ""}${p.spent ? ` · ${durationText(p.spent)} spent` : ""}</div>
         <div class="stat">${status(p, g.due, key)}</div></div>
-        ${compact ? "" : html`<button class="circle transparent" data-act="wEdit" data-kind="goal" data-id="${g.id}" aria-label="Edit ${g.name}">${icon("edit")}</button>`}</nav>
+        ${compact ? html`<button class="circle transparent" data-act="wOpen" data-id="${g.id}" aria-expanded="${open ? "true" : "false"}" aria-label="${open ? "Hide" : "Show"} tasks: ${g.name}">${icon(open ? "expand_less" : "expand_more")}</button>`
+          : html`<button class="circle transparent" data-act="wEdit" data-kind="goal" data-id="${g.id}" aria-label="Edit ${g.name}">${icon("edit")}</button>`}</nav>
       ${bar(p)}
-      ${compact ? "" : html`${ms.map((m) => milestoneBlock(w, g, m, key))}${milestoneBlock(w, g, null, key)}
+      ${!open ? "" : html`${ms.map((m) => milestoneBlock(w, g, m, key))}${milestoneBlock(w, g, null, key)}
         <nav class="padding wrap"><button class="border small" data-act="wNew" data-kind="ms" data-goal="${g.id}">${icon("flag")}<span>Milestone</span></button>
           <button class="border small" data-act="wNew" data-kind="task" data-goal="${g.id}">${icon("add")}<span>Task</span></button></nav>`}
     </article>`;

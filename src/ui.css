@@ -361,6 +361,7 @@
 #wlc.ui .goal>nav.ghband .badge{background:rgb(255 255 255 / .2);color:#fff;border-color:transparent}
 #wlc.ui .goal>nav.ghband .stat{margin-top:10px}
 #wlc.ui .goal>nav.ghband button{color:#fff}
+#wlc.ui .goal.fold>nav.ghband{cursor:pointer}
 #wlc.ui .gchip{display:grid;place-items:center;width:36px;height:36px;border-radius:12px;background:rgb(255 255 255 / .2);font-size:1.15em;flex:none}
 #wlc.ui .goal>progress{margin:14px 16px 12px;width:calc(100% - 32px)}
 #wlc.ui .goal .ms{border-top-color:color-mix(in srgb,var(--h) 30%,transparent)}

@@ -94,7 +94,12 @@ export default {
     wEdit(el) {
       const { kind, id } = el.dataset;
       state.editWork = { kind, ...clone(workData()[LIST[kind]].find((x) => x.id === id)) };
+      state.tab = "wgoals";
       setTimeout(() => ui.view.querySelector("#wform")?.scrollIntoView({ behavior: "smooth", block: "start" }), 0);
+    },
+    wOpen(el) {
+      const id = el.dataset.id, open = state.openGoals || [];
+      state.openGoals = open.includes(id) ? open.filter((x) => x !== id) : [...open, id];
     },
     wCancel() { state.editWork = null; },
     wSave: saveItem,

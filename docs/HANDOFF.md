@@ -18,7 +18,7 @@ People (all on the member list in `firestore.rules`):
 |---|---|---|
 | Check-in | / | Today (just that day: progress rings, to-dos planned or due today + overdue, "N more this week", Work tasks, then the check-in), Meds, Journal, Categories, Targets & rules (incl. Linked accounts), Notifications |
 | Habits | /routines | Rituals (run step by step), Set up habits, To-dos (one list grouped Today / This week / Later this month / Later / Someday / Done by date) |
-| Work | /work | Today (3–5 picked tasks, timed ones on top, task timers), Goals (goals → milestones → tasks, dependencies, progress, "Paste a plan from Claude") |
+| Work | /work | Today (3–5 picked tasks, timed ones on top, task timers; goal cards below open on tap to show their milestones and tasks), Goals (goals → milestones → tasks, dependencies, progress, "Paste a plan from Claude") |
 | Progress | /progress | Streaks & badges (check-in streak, 30-day tally, floor day, streak freezes, then per-area calendars), My progress (energy flow), Group |
 
 Old addresses kstarr.com/challenge, /challenge-routines, /challenge-work, /challenge-progress **301-redirect** to the app (set in Webflow Site settings → Publishing). The old Webflow pages were renamed to `challenge-old`, `challenge-routines-old`, `challenge-work-old`, `challenge-progress-old` and kept as backups (still load from jsDelivr; not the main path any more).

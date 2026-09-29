@@ -47,6 +47,6 @@ const LUCIDE = {
   arrow_downward: "arrow-down", delete: "trash-2", lock: "lock", chevron_left: "chevron-left", chevron_right: "chevron-right",
   wb_sunny: "sunrise", light_mode: "sun", bedtime: "moon", all_inclusive: "infinity", checklist: "list-checks",
   done_all: "check-check", dark_mode: "moon", edit_note: "notebook-pen", insights: "chart-line", work: "briefcase", circle: "circle",
-  pin: "pin", swap: "shuffle", flag: "flag", target: "target", pause: "pause", alarm: "alarm-clock",
+  pin: "pin", swap: "shuffle", flag: "flag", target: "target", pause: "pause", alarm: "alarm-clock", expand_more: "chevron-down", expand_less: "chevron-up",
 };
 export const icon = (name) => html`<i class="icon-${LUCIDE[name] || name}" aria-hidden="true"></i>`;
