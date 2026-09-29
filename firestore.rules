@@ -11,6 +11,7 @@ service cloud.firestore {
           'karlastarr@gmail.com',
           'hello@kstarr.com',
           'erikjschultz@gmail.com',
+          'mxfenrir@gmail.com',
           'ssstarr29@gmail.com'
         ];
     }
