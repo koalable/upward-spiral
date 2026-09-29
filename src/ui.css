@@ -368,26 +368,45 @@
 #wlc.ui .goal>progress{margin:14px 16px 12px;width:calc(100% - 32px)}
 #wlc.ui .goal .ms{border-top-color:color-mix(in srgb,var(--h) 30%,transparent)}
 /* ---------- Work goals: pastel rows (Karla's mockup), a goal page, milestone bars ---------- */
-/* Pastel (--p) with dark ink; --pd = deep accent; --h = stripe colour on task lists (both themes). */
-#wlc.ui .p-salmon{--p:#f2b09a;--pd:#a8432b;--h:#c2543a}
-#wlc.ui .p-cream{--p:#f3ebdd;--pd:#24504f;--h:#2e6b69}
-#wlc.ui .p-sage{--p:#a9c2ae;--pd:#2f5a4a;--h:#3f7a63}
-#wlc.ui .p-mustard{--p:#ebc66e;--pd:#1f1b16;--h:#b07f0e}
-#wlc.ui .p-lavender{--p:#c9c1ea;--pd:#44488a;--h:#6464b8}
-#wlc.ui .p-sky{--p:#afcbe3;--pd:#2c5a82;--h:#3b76a6}
-#wlc.ui .p-rose{--p:#edb6c3;--pd:#8a3150;--h:#b04a6c}
-/* On a pastel, text and controls use the light theme's ink whatever the app theme. */
-#wlc.ui .ink{--fg:#1b1a17;--muted:#4f4a44;--card:#fffaf2;--border:rgb(27 26 23 / .14);--control:#6f675b;--accent:rgb(27 26 23 / .07);--primary:#1b1a17;--on-primary:#fffaf2;--good:#15803d;--bad:#a61b1b;color:var(--fg)}
+/* Goal colours: --p card, --on text on it, --pd accent (icons, progress). Dark mode = jewel tones, light = earthy. */
+#wlc.ui .gc1{--p:#1f5f55;--on:#eafaf5;--pd:#8fe0c9}
+#wlc.ui .gc2{--p:#27407a;--on:#eef2ff;--pd:#a9bcff}
+#wlc.ui .gc3{--p:#7a2437;--on:#fff0f3;--pd:#ffadc0}
+#wlc.ui .gc4{--p:#8a5a12;--on:#fff7e8;--pd:#ffd27a}
+#wlc.ui .gc5{--p:#4d2f78;--on:#f5efff;--pd:#cdb4ff}
+#wlc.ui .gc6{--p:#155e6e;--on:#e9f9fc;--pd:#8fdcec}
+#wlc.ui .gc7{--p:#7a2f5c;--on:#ffeef7;--pd:#ffb3dc}
+#wlc.ui.light .gc1{--p:#ad5238;--on:#fff8f0;--pd:#ffe3d6}
+#wlc.ui.light .gc2{--p:#5f6d40;--on:#fbf6ea;--pd:#e4ecc9}
+#wlc.ui.light .gc3{--p:#d3a13a;--on:#23190c;--pd:#3a2a0f}
+#wlc.ui.light .gc4{--p:#3f5a72;--on:#f4f1ea;--pd:#cfe0f0}
+#wlc.ui.light .gc5{--p:#74435a;--on:#fbf1f3;--pd:#f3c9d8}
+#wlc.ui.light .gc6{--p:#2f6663;--on:#eef7f5;--pd:#bfe6df}
+#wlc.ui.light .gc7{--p:#9a4545;--on:#fff4f2;--pd:#f5cccc}
+#wlc.ui .gc1,#wlc.ui .gc2,#wlc.ui .gc3,#wlc.ui .gc4,#wlc.ui .gc5,#wlc.ui .gc6,#wlc.ui .gc7{--h:var(--p)}
+/* On a goal colour, text and controls take the colour's own ink. */
+#wlc.ui .ink{--fg:var(--on);--muted:color-mix(in srgb,var(--on) 84%,transparent);--border:color-mix(in srgb,var(--on) 24%,transparent);--control:color-mix(in srgb,var(--on) 62%,transparent);--accent:color-mix(in srgb,var(--on) 14%,transparent);--primary:var(--on);--on-primary:var(--p);color:var(--fg)}
+#wlc.ui .ink .badge,#wlc.ui .ink .badge.good,#wlc.ui .ink .badge.bad,#wlc.ui .ink .badge.on{color:var(--fg);border-color:color-mix(in srgb,var(--fg) 55%,transparent);background:none}
+/* Panels inside a coloured card (task lists, task details) go back to the app's own colours. */
+#wlc.ui .plain{--bg:#09090b;--card:#141417;--fg:#fafafa;--muted:#a1a1aa;--border:#27272a;--input:#27272a;--primary:#fafafa;--on-primary:#18181b;--accent:#27272a;--control:#71717a;--good:#22c55e;--bad:#ef4444;background:var(--card);color:var(--fg)}
+#wlc.ui.light .plain{--bg:#f5f0e6;--card:#fffdf8;--fg:#1b1a17;--muted:#5f5a54;--border:#e4ddcf;--input:#ddd5c5;--primary:#1b1a17;--on-primary:#fffdf8;--accent:#ebe4d6;--control:#8c8372;--good:#15803d;--bad:#b91c1c}
+#wlc.ui .ink .plain .badge{background:none}
+#wlc.ui .ink .plain .badge.bad{color:#fca5a5;border-color:#7f1d1d}#wlc.ui .ink .plain .badge.good{color:#86efac;border-color:#14532d}#wlc.ui .ink .plain .badge.on{color:var(--fg);border-color:var(--fg)}
+#wlc.ui.light .ink .plain .badge.bad{color:#b91c1c;border-color:#fecaca}#wlc.ui.light .ink .plain .badge.good{color:#15803d;border-color:#bbf7d0}
+/* Colour deepens as the goal (or milestone) gets done: --sat runs from .35 at 0% to 1 at 100%. */
+#wlc.ui .satbg{background:none!important;isolation:isolate}
+#wlc.ui .satbg:not(.tsheet){position:relative}
+#wlc.ui .satbg::before{content:"";position:absolute;inset:0;z-index:-1;border-radius:inherit;background:var(--p);filter:saturate(var(--sat,1)) brightness(var(--bri,1));transition:filter .4s}
 #wlc.ui .gsection{font:400 1.9em/1 var(--serif);margin:24px 0 12px}
 #wlc.ui .phead{display:flex;align-items:center;gap:14px;padding:16px 14px 14px 16px;cursor:pointer}
 #wlc.ui .pico{flex:none;width:56px;display:grid;place-items:center;font-size:2.5em;color:var(--pd)}
 #wlc.ui .pname{margin:0;font:400 1.75em/1.05 var(--serif);overflow-wrap:anywhere}
 #wlc.ui .pmeta{font-size:.88em;margin:4px 0 8px}
-#wlc.ui .pbad{color:var(--bad);font-weight:600}
+#wlc.ui .pbad{background:var(--on);color:var(--p);font-weight:600;padding:0 7px;border-radius:99px;white-space:nowrap;display:inline-block}
 #wlc.ui .pbar{display:flex;align-items:center;gap:10px;font-size:.85em;font-variant-numeric:tabular-nums}
-#wlc.ui .ptrack{flex:1;height:8px;border-radius:99px;background:rgb(27 26 23 / .13);overflow:hidden}
+#wlc.ui .ptrack{flex:1;height:8px;border-radius:99px;background:color-mix(in srgb,var(--fg) 20%,transparent);overflow:hidden}
 #wlc.ui .ptrack i{display:block;height:100%;border-radius:inherit;background:var(--pd);transition:width .4s}
-#wlc.ui .phead .pchev{flex:none;width:40px;height:40px;padding:0;border-radius:50%;background:rgb(27 26 23 / .09);color:var(--fg);border:0;font-size:1.1em}
+#wlc.ui .phead .pchev{flex:none;width:40px;height:40px;padding:0;border-radius:50%;background:color-mix(in srgb,var(--fg) 14%,transparent);color:var(--fg);border:0;font-size:1.1em}
 #wlc.ui .gbtns{gap:8px;margin:12px 0 4px}
 #wlc.ui .mcard{flex:1;min-width:0;background:var(--card);border-radius:0 14px 14px 0;padding:6px 0 4px}
 #wlc.ui .mmeta{display:flex;align-items:center;gap:6px;padding:4px 4px 2px 14px}
@@ -407,11 +426,11 @@
 #wlc.ui .folder{margin:4px 0 8px}
 #wlc.ui .ftabs{display:flex;align-items:flex-end;gap:4px;overflow-x:auto;padding:0 10px;scroll-padding-inline:10px;scrollbar-width:none}
 #wlc.ui .ftabs::-webkit-scrollbar{display:none}
-#wlc.ui .ftabs .ftab{flex:none;height:auto;display:flex;align-items:center;gap:7px;margin:0;padding:9px 12px 10px;border:0;border-radius:14px 14px 0 0;background:var(--p);color:var(--fg);font:inherit;white-space:nowrap;filter:saturate(.85) brightness(.96);box-shadow:inset 0 -6px 8px -6px rgb(0 0 0 / .25)}
+#wlc.ui .ftabs .ftab{flex:none;height:auto;display:flex;align-items:center;gap:7px;margin:0;padding:9px 12px 10px;border:0;border-radius:14px 14px 0 0;background:var(--p);color:var(--fg);font:inherit;white-space:nowrap;--bri:.85;box-shadow:inset 0 -6px 8px -6px rgb(0 0 0 / .3)}
 #wlc.ui .ftabs .ftab span{font:400 1.02em/1 var(--serif);text-transform:uppercase;letter-spacing:.05em}
 #wlc.ui .ftabs .ftab small{font-size:.78em;font-variant-numeric:tabular-nums;display:flex;align-items:center;gap:4px;opacity:.85}
 #wlc.ui .ftabs .ftab i{color:var(--pd)}
-#wlc.ui .ftabs .ftab.on{padding-top:13px;padding-bottom:12px;filter:none;box-shadow:none;position:relative;z-index:1}
+#wlc.ui .ftabs .ftab.on{padding-top:13px;padding-bottom:12px;--bri:1;box-shadow:none;position:relative;z-index:1}
 #wlc.ui .ftab .late,#wlc.ui .fcard .late{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--bad)}
 #wlc.ui .fcard{background:var(--p);border-radius:20px;padding:14px 10px 10px;box-shadow:0 12px 24px -16px rgb(0 0 0 / .5);animation:wlc-front .22s ease-out}
 #wlc.ui .fhead{display:flex;align-items:flex-start;gap:12px;padding:0 4px 12px 6px}
@@ -419,25 +438,26 @@
 #wlc.ui .fhead h3{margin:0 0 2px;font:400 1.5em/1.05 var(--serif);text-transform:uppercase;letter-spacing:.04em}
 #wlc.ui .fhead .stat{margin-top:6px}
 #wlc.ui .fcard .mcard{border-radius:14px}
+#wlc.ui .gsun{color:var(--pd)}
 @keyframes wlc-front{from{transform:translateY(8px);opacity:.6}to{transform:none;opacity:1}}
 /* One task: a card that slides up from the bottom. */
 #wlc.ui .tname{all:unset;cursor:pointer;display:block;overflow-wrap:anywhere}
 #wlc.ui .tname:focus-visible{outline:2px solid var(--fg);outline-offset:2px;border-radius:4px}
 #wlc.ui .sheetbg{position:fixed;inset:0;z-index:30;background:rgb(0 0 0 / .45);animation:wlc-fade .2s}
 #wlc.ui .tsheet{position:fixed;left:0;right:0;bottom:0;z-index:31;max-width:640px;margin:0 auto;max-height:88vh;overflow-y:auto;background:var(--p);border-radius:26px 26px 0 0;padding:8px 20px calc(env(safe-area-inset-bottom) + 20px);box-shadow:0 -12px 30px -10px rgb(0 0 0 / .5);animation:wlc-up .25s ease-out}
-#wlc.ui .tgrip{width:44px;height:5px;border-radius:99px;background:rgb(27 26 23 / .25);margin:4px auto 6px}
+#wlc.ui .tgrip{width:44px;height:5px;border-radius:99px;background:color-mix(in srgb,var(--fg) 35%,transparent);margin:4px auto 6px}
 #wlc.ui .ttop{display:flex;align-items:center;gap:8px}
 #wlc.ui .tbig{font:400 2.3em/1 var(--serif);margin:4px 0 12px;overflow-wrap:anywhere}
 #wlc.ui .tbig.done{text-decoration:line-through;opacity:.7}
 #wlc.ui .tpills{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
-#wlc.ui .tpill{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:99px;background:rgb(27 26 23 / .08);font-size:.9em}
+#wlc.ui .tpill{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:99px;background:color-mix(in srgb,var(--fg) 14%,transparent);font-size:.9em}
 #wlc.ui .tblock{background:var(--card);border-radius:16px;padding:12px 14px;margin-bottom:10px}
 #wlc.ui .tblock p{margin:4px 0;display:flex;gap:8px;align-items:center}
 #wlc.ui .tlabel{font-size:.7em;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
 #wlc.ui .ttime{display:flex;align-items:baseline;gap:8px;margin-bottom:8px}
 #wlc.ui .ttime b{font:400 1.9em/1 var(--serif);font-variant-numeric:tabular-nums}
 #wlc.ui .tblock .ptrack{display:block;margin-bottom:10px}
-#wlc.ui .tblock .ptrack i{background:var(--pd)}
+#wlc.ui .tblock .ptrack i{background:var(--p)}
 #wlc.ui .tblock .wtimer{margin:4px 0 0}
 #wlc.ui .tstart{width:100%;height:44px;margin-top:2px}
 #wlc.ui .tacts{gap:8px;margin-top:6px}

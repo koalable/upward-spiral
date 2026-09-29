@@ -1,7 +1,7 @@
 // Work: Today (a few tasks, picked for you) and Goals (goal → milestones → tasks, with progress).
 import { html, shortDate, longDate, clock, atTime } from "../util.js";
 import { state } from "../state.js";
-import { normalizeWork, todayState, todayPicks, blocker, progress, countdown, goalTheme, milestoneTheme, msIcon, goalIcon, MS_ICONS } from "../work.js";
+import { normalizeWork, todayState, todayPicks, blocker, progress, countdown, goalTheme, milestoneTheme, msIcon, goalIcon, MS_ICONS, saturation } from "../work.js";
 import { timerFor, isRunning, isUp, msLeft, minutesLeft, countdownText, durationText } from "../timer.js";
 import { pressed, saveStatus, icon } from "./components.js";
 
@@ -131,16 +131,16 @@ function milestoneTabs(w, g, key) {
   return html`<div class="folder">
     <div class="ftabs" role="group" aria-label="Milestones">${themed.map((y) => {
       const on = y === x, d = y.tasks.filter((t) => t.done).length, late = y.tasks.some((t) => !t.done && t.due && t.due < key);
-      return html`<button class="ftab ink ${y.theme}${on ? " on" : ""}" aria-pressed="${on ? "true" : "false"}" data-act="wMs" data-goal="${g.id}" data-ms="${y.id}">
+      return html`<button class="ftab ink satbg ${y.theme}${on ? " on" : ""}" style="--sat:${saturation(progress(y.tasks, key).pct)}" aria-pressed="${on ? "true" : "false"}" data-act="wMs" data-goal="${g.id}" data-ms="${y.id}">
         ${icon(y.icon)}<span>${y.name}</span><small>${late ? html`<i class="late" title="Something's overdue"></i>` : ""}${d}/${y.tasks.length}</small></button>`;
     })}</div>
-    <div class="fcard ink ${x.theme}" role="region" aria-label="${x.name}">
+    <div class="fcard ink satbg ${x.theme}" style="--sat:${saturation(p.pct)}" role="region" aria-label="${x.name}">
       <div class="fhead"><span class="fico" aria-hidden="true">${icon(x.icon)}</span>
         <div class="max"><h3>${x.name}</h3>
           <div class="small-text">${m?.due ? `${shortDate(m.due)} · ${countdown(m.due, key)} · ` : ""}${p.done}/${p.total} done${p.spent ? ` · ${durationText(p.spent)} spent` : ""}</div>
           ${m && p.total ? html`<div class="stat">${status(p, m.due, key)}</div>` : ""}</div>
         ${m ? html`<button class="circle transparent" data-act="wEdit" data-kind="ms" data-id="${m.id}" aria-label="Edit ${m.name}">${icon("edit")}</button>` : ""}</div>
-      <div class="mcard">
+      <div class="mcard plain">
         ${tasks.length ? html`<ul class="list">${tasks.map((t) => taskRow(w, t, key))}</ul>` : ""}
         <button class="transparent addtask" data-act="wNew" data-kind="task" data-goal="${g.id}" data-ms="${m?.id || ""}">${icon("add")}<span>Add task</span></button>
       </div></div></div>`;
@@ -159,7 +159,7 @@ function goalDeck(w, key) {
   return html`<div class="deck">${w.goals.map((g) => {
     const p = progress(w.tasks.filter((t) => t.goal === g.id), key);
     const when = g.due ? countdown(g.due, key) : "Ongoing";
-    return html`<article class="dcard ink ${goalTheme(w, g.id)}">
+    return html`<article class="dcard ink satbg ${goalTheme(w, g.id)}" style="--sat:${saturation(p.pct)}">
       <div class="phead" data-act="wOpen" data-id="${g.id}">
         <span class="pico" aria-hidden="true">${icon(goalIcon(g))}</span>
         <div class="max"><h3 class="pname">${g.name}</h3>
@@ -176,7 +176,7 @@ function goalPage(w, g, key) {
   const extra = [p.hoursLeft ? `${p.hoursLeft}h left` : "", p.spent ? `${durationText(p.spent)} spent` : ""].filter(Boolean).join(" · ");
   return html`<section class="gpage ${goalTheme(w, g.id)}">
     <nav class="gpnav"><button class="transparent" data-act="wClose">${icon("arrow_back")}<span>All goals</span></button></nav>
-    <div class="gptop"><h2 class="gptitle">${g.name}</h2><span class="gsun" aria-hidden="true">${icon(goalIcon(g))}</span></div>
+    <div class="gptop"><h2 class="gptitle">${g.name}</h2><span class="gsun satbg" style="--sat:${saturation(p.pct)}" aria-hidden="true">${icon(goalIcon(g))}</span></div>
     <div class="gpmeta">${g.due ? `${shortDate(g.due)} · ${countdown(g.due, key)}` : "Ongoing"} ${p.total ? status(p, g.due, key) : ""}</div>
     <div class="gpprog">${pbar(p)}<div class="gprow"><span>${p.done}/${p.total} tasks</span>${extra ? html`<span>${extra}</span>` : ""}</div></div>
     ${milestoneTabs(w, g, key)}
@@ -195,18 +195,18 @@ function taskSheet(w, key) {
   const est = (Number(t.hours) || 0) * 60, spent = Number(t.spent) || 0;
   const when = [t.at ? html`<span class="tpill">${icon("timer")}${startAt(t)}</span>` : "", t.due ? html`<span class="tpill">${icon("event")}${dueLabel(t, key)}</span>` : ""];
   return html`<div class="sheetbg" data-act="wTaskClose"></div>
-  <section class="tsheet ink ${m ? milestoneTheme(w, t.goal, sectionsFor(w, g || {}).findIndex((x) => x.id === t.ms)) : goalTheme(w, t.goal)}" role="dialog" aria-modal="true" aria-label="${t.name}">
+  <section class="tsheet ink satbg ${m ? milestoneTheme(w, t.goal, sectionsFor(w, g || {}).findIndex((x) => x.id === t.ms)) : goalTheme(w, t.goal)}" style="--sat:${saturation(progress(w.tasks.filter((x) => (m ? x.ms === m.id : x.goal === t.goal)), key).pct)}" role="dialog" aria-modal="true" aria-label="${t.name}">
     <div class="tgrip" aria-hidden="true"></div>
     <nav class="ttop"><span class="tpath small-text max">${[g?.name, m?.name].filter(Boolean).join(" › ")}</span>
       <button class="circle transparent" data-act="wTaskClose" aria-label="Close">${icon("close")}</button></nav>
     <h2 class="tbig${t.done ? " done" : ""}">${t.name}</h2>
     ${when.some(Boolean) ? html`<div class="tpills">${when}</div>` : ""}
-    <div class="tblock"><div class="tlabel">Time</div>
+    <div class="tblock plain"><div class="tlabel">Time</div>
       <div class="ttime"><b>${spent ? durationText(spent) : "0m"}</b><span>${est ? `of ${durationText(est)} estimated` : "spent (no estimate)"}</span></div>
       ${est ? html`<span class="ptrack"><i style="width:${Math.min(100, Math.round((100 * spent) / est))}%"></i></span>` : ""}
       ${t.done || b ? "" : tm ? timerStrip(w, t)
         : html`<button class="tstart" data-act="wTimerStart" data-id="${t.id}">${icon("play_arrow")}<span>Start a ${durationText(minutesLeft(t))} timer</span></button>`}</div>
-    ${b || next.length ? html`<div class="tblock"><div class="tlabel">Order</div>
+    ${b || next.length ? html`<div class="tblock plain"><div class="tlabel">Order</div>
       ${b ? html`<p>${icon("lock")} Waiting on <b>${b.name}</b></p>` : ""}
       ${next.length ? html`<p>${icon("arrow_downward")} Unlocks ${next.map((x) => x.name).join(", ")}</p>` : ""}</div>` : ""}
     <nav class="wrap tacts">${b ? "" : html`<button data-act="wToggle" data-id="${t.id}">${icon(t.done ? "close" : "check")}<span>${t.done ? "Not done" : "Mark done"}</span></button>`}

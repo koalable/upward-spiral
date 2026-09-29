@@ -83,8 +83,11 @@ export function removeGoal(w, id) {
   w.goals = w.goals.filter((g) => g.id !== id);
 }
 
-// Each goal gets its own pastel, in order, so its tasks are easy to spot everywhere (classes p-* in ui.css).
-export const GOAL_THEMES = ["p-salmon", "p-cream", "p-sage", "p-mustard", "p-lavender", "p-sky", "p-rose"];
+// Each goal gets its own colour, in order, so its tasks are easy to spot everywhere (classes gc1–gc7 in ui.css:
+// jewel tones in dark mode, earthy in light mode).
+export const GOAL_THEMES = ["gc1", "gc2", "gc3", "gc4", "gc5", "gc6", "gc7"];
+// Colours start greyed and deepen as work gets done: 35% saturation at 0%, full at 100%.
+export const saturation = (pct) => (0.35 + (0.65 * Math.max(0, Math.min(100, pct || 0))) / 100).toFixed(2);
 export const goalTheme = (w, goalId) => {
   const i = w.goals.findIndex((g) => g.id === goalId);
   return i < 0 ? GOAL_THEMES[0] : GOAL_THEMES[i % GOAL_THEMES.length];
