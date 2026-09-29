@@ -141,7 +141,7 @@ export function todayView() {
       ${saveStatus()}
     </div>
     ${isToday && !sectionHidden(l, "breathing") ? breathingBanner() : ""}
-    ${sectionHidden(l, "rings") ? "" : html`<div id="live-rings">${ringsView()}</div>`}
+    ${sectionHidden(l, "rings") ? "" : html`<div id="live-rings" data-live>${ringsView()}</div>`}
     ${isToday && !sectionHidden(l, "plate") ? html`<div id="live-dash">${dashboardView()}</div>` : ""}
     ${open ? "" : html`<div class="banner">This day is closed for editing. ${EDIT_WINDOW_TEXT}</div>`}
     ${isToday && !sectionHidden(l, "medlog") ? medQuickLog() : ""}

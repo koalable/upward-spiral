@@ -68,11 +68,12 @@ writeFileSync("webflow/CODE-EMBED.txt", `<div id="wlc"></div>\n`);
 const APP_PAGES = { checkin: "/", routines: "/routines", work: "/work", progress: "/progress" };
 rmSync("app", { recursive: true, force: true });
 mkdirSync("app/js", { recursive: true });
-const appJs = {};
-for (const [id] of PAGES) appJs[id] = readFileSync(`dist/cdn/${id}.js`, "utf8");
-const version = createHash("sha1").update(css + Object.values(appJs).join("")).digest("hex").slice(0, 10);
+// One bundle for all four pages (src/entries/app.js): switching pages happens in place, no reload.
+const appJs = await bundle("src/entries/app.js");
+report["app.js"] = appJs.length;
+const version = createHash("sha1").update(css + appJs).digest("hex").slice(0, 10);
 writeFileSync("app/app.css", css);
-for (const [id, js] of Object.entries(appJs)) writeFileSync(`app/js/${id}.js`, js);
+writeFileSync("app/js/app.js", appJs);
 for (const f of ["icon-180.png", "icon-192.png", "icon-512.png", "icon-maskable-512.png"]) copyFileSync(`app-src/${f}`, `app/${f}`);
 writeFileSync("app/sw.js", readFileSync("app-src/sw.js", "utf8").replaceAll("__VERSION__", version).replace("__FIREBASE__", JSON.stringify(FIREBASE)));
 writeFileSync("app/manifest.webmanifest", JSON.stringify({
@@ -100,7 +101,7 @@ for (const [id, , title] of PAGES) {
 ${["app", "auth", "firestore", "messaging", "functions"].map((m) => `<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-${m}-compat.js"></script>`).join("\n")}
 <script>window.WLC_CONFIG={firebase:Object.assign(${JSON.stringify(FIREBASE)},{authDomain:location.hostname}),pages:${JSON.stringify(APP_PAGES)},app:true,vapidKey:${JSON.stringify(VAPID_KEY)}};
 if("serviceWorker" in navigator)navigator.serviceWorker.register("/sw.js").catch(function(){});</script>
-<script src="/js/${id}.js?v=${version}"></script></body></html>
+<script>window.WLC_PAGE=${JSON.stringify(id)};</script><script src="/js/app.js?v=${version}"></script></body></html>
 `);
 }
 report.app = version;

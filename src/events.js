@@ -1,7 +1,7 @@
 // Wiring: clicks go to the page's actions; typing and changes go to whichever feature claims them.
 import { state } from "./state.js";
-import { page, findAction, anyFeature, everyFeature } from "./page.js";
-import { ui, render, patch } from "./render.js";
+import { page, findAction, anyFeature, hasPage } from "./page.js";
+import { ui, render, patch, goPage } from "./render.js";
 
 function run(result) {
   if (result === "none") return;
@@ -15,6 +15,12 @@ export function switchTab(tab) {
 }
 
 function onClick(event) {
+  // A link to another page this app has (page switcher, "Open Work →"): switch in place, no reload.
+  const link = event.target.closest("a[data-page]");
+  if (link && hasPage(link.dataset.page) && !event.metaKey && !event.ctrlKey) {
+    event.preventDefault();
+    return goPage(link.dataset.page);
+  }
   const tab = event.target.closest("[role=tab]");
   if (tab) return switchTab(tab.dataset.tab);
   const el = event.target.closest("[data-act]");

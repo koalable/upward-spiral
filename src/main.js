@@ -1,7 +1,7 @@
 // Startup: sign in, subscribe to data, and keep the clock-driven bits fresh.
 import { state, settings } from "./state.js";
 import { firestoreAdapter, memoryAdapter, useStore, store, keepUnsaved, isPending, save, paths } from "./store.js";
-import { definePage, page, everyFeature } from "./page.js";
+import { definePages, setPage, pageOfTab, page, everyFeature } from "./page.js";
 import core from "./features/core.js";
 import { auth } from "./auth.js";
 import { addDays, todayKey, weekStart, html } from "./util.js";
@@ -144,13 +144,15 @@ function keepTabBarDown() {
   });
 }
 
-export function start({ page: id, features, order, seed }) {
+// pages: { pageId: [features] } (the app), or features: [...] for a one-page bundle.
+export function start({ page: id, pages, features, order, seed }) {
   const root = document.getElementById("wlc");
   if (!root) return;
-  definePage(id, [core, ...features], order);
-  // Start where the address says (a tab on this page), or on the first tab.
-  const r = parseRoute(location.hash);
-  state.route = page.tabs.some(([t]) => t === r.tab) ? r : { tab: page.tabs[0][0] };
+  definePages(id, pages || { [id]: features }, [core], order);
+  // Start where the address says (a tab on any page this bundle has), or on this page's first tab.
+  const r = parseRoute(location.hash), home = pageOfTab(r.tab);
+  if (home) setPage(home);
+  state.route = home ? r : { tab: page.tabs[0][0] };
   followAddress();
   mountShell(root);
   bindEvents(root);

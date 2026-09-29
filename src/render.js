@@ -5,9 +5,10 @@ import { APP_NAME, TEXT_SIZES } from "./constants.js";
 import { state, formOpen } from "./state.js";
 import { getPref, setPref } from "./prefs.js";
 import { icon } from "./views/components.js";
-import { page, PAGES, pageUrl, everyFeature, anyFeature, SETTINGS_TABS } from "./page.js";
+import { page, PAGES, pageUrl, everyFeature, anyFeature, SETTINGS_TABS, setPage, pageOfTab } from "./page.js";
 import { normalizeLayout, pageLabel, pageIcon, pageHidden, tabHidden, PAGE_ICONS } from "./layout.js";
 import { parseRoute, formatRoute } from "./route.js";
+import morphdom from "morphdom";
 import { joinView } from "./views/join.js";
 
 export const ui = { root: null, view: null };
@@ -23,8 +24,7 @@ export function mountShell(root) {
     </nav><div class="small-text who" id="who"></div></header>
     <nav class="pages wrap" aria-label="Pages">${PAGES.map(([id, label]) => html`<a class="chip ${id === page.id ? "fill" : ""}" data-page="${id}" href="${pageUrl(id)}"${id === page.id ? html` aria-current="page"` : ""}>${icon(PAGE_ICONS[id] || "circle")}<span>${label}</span></a>`)}</nav>
     <div class="setbar" id="setbar" hidden><button class="transparent" data-act="closeSettings">${icon("arrow_back")}<span>Done</span></button><h2>Settings</h2></div>
-    <div class="tabs left-align" role="tablist" aria-label="Sections" id="tabs" hidden>
-      ${page.tabs.map(([id, label]) => html`<a role="tab" id="tab-${id}" data-tab="${id}" aria-controls="wlc-panel">${label}</a>`)}</div>
+    <div class="tabs left-align" role="tablist" aria-label="Sections" id="tabs" hidden></div>
     <div id="banner" role="status" aria-live="polite"></div>
     <main id="wlc-panel" role="tabpanel"><p class="small-text">Loading…</p></main></div>`);
   ui.view = root.querySelector("#wlc-panel");
@@ -69,7 +69,29 @@ export function setBanner(message, tone = "") {
 export function setWho(content) { ui.root.querySelector("#who").innerHTML = String(content); }
 export function setStatus(text) { const el = ui.root.querySelector("#saved"); if (el) el.textContent = text; }
 export function showTabs(visible) { ui.root.querySelector("#tabs").hidden = !visible; }
-export function showScreen(content) { ui.view.innerHTML = String(content); }
+// Drawing: a new screen (another tab, goal or page) replaces what's there; a redraw of the same screen only
+// changes what's different, so nothing jumps, flashes or replays its animation. Things you've folded open stay
+// open, the field you're typing in is left alone, and areas marked data-live (updated in place, like the rings)
+// are left to their own updater.
+let shown = "";
+export function showScreen(content, key = "") {
+  if (key !== shown || !ui.view.firstElementChild) {
+    shown = key;
+    ui.view.innerHTML = String(content);
+    return;
+  }
+  const next = document.createElement("main");
+  next.innerHTML = String(content);
+  morphdom(ui.view, next, {
+    childrenOnly: true,
+    onBeforeElUpdated(from, to) {
+      if (from === document.activeElement && /^(INPUT|TEXTAREA|SELECT)$/.test(from.tagName)) return false;
+      if (from.tagName === "DETAILS") to.open = from.open || to.hasAttribute("open");
+      return !from.isEqualNode(to);
+    },
+    onBeforeElChildrenUpdated: (from) => !("live" in from.dataset),
+  });
+}
 
 // Which tabs show: the page's own tabs, or the Settings tabs, minus anything hidden under Customize.
 export const layoutNow = () => normalizeLayout(state.settings?.layout);
@@ -91,7 +113,30 @@ function applyLayout() {
 }
 const ICON_CLASS = (name) => String(icon(name)).match(/icon-([\w-]+)/)[1];
 
+// The page follows the tab (every tab belongs to one page). Moving to another page redraws the tabs row,
+// the page switcher and the title, and remembers where you'd scrolled to on the page you left.
+const tabsFor = () => String(html`${page.tabs.map(([id, label]) => html`<a role="tab" id="tab-${id}" data-tab="${id}" aria-controls="wlc-panel">${label}</a>`)}`);
+const scrolled = {};
+let chromeFor = "";
+function syncPage() {
+  const home = pageOfTab(state.tab);
+  if (home && home !== page.id) { scrolled[page.id] = window.scrollY; setPage(home); }
+  if (chromeFor === page.id) return false;
+  const first = !chromeFor;
+  chromeFor = page.id;
+  ui.root.querySelector("#tabs").innerHTML = tabsFor();
+  for (const a of ui.root.querySelectorAll("nav.pages [data-page]")) {
+    const on = a.dataset.page === page.id;
+    a.classList.toggle("fill", on);
+    if (on) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current");
+  }
+  const title = PAGES.find(([p]) => p === page.id)?.[1];
+  if (title && !first) document.title = `${pageLabel(layoutNow(), page.id, title)} · Spiral`;
+  return !first;
+}
+
 function syncTabs() {
+  const moved = syncPage();
   applyLayout();
   if (!tabShown(state.tab)) state.tab = page.tabs.map(([id]) => id).find(tabShown) || page.tabs[0][0];
   for (const tab of ui.root.querySelectorAll("[role=tab]")) {
@@ -102,29 +147,43 @@ function syncTabs() {
     tab.tabIndex = on ? 0 : -1;
   }
   ui.view.setAttribute("aria-labelledby", `tab-${state.tab}`);
+  return moved;
 }
 
 // ---------- rendering ----------
 // The address bar follows the route, so the back gesture steps back through screens.
 let drawn = false;
 function syncAddress() {
-  const hash = formatRoute(state.route);
-  if (location.hash === hash) return;
-  if (drawn) history.pushState(null, "", hash); else history.replaceState(null, "", hash);
+  // In the installed app the path names the page too (/work#wgoals), so a reload opens the same screen.
+  const path = window.WLC_CONFIG?.app && location.protocol.startsWith("http") ? pageUrl(page.id) : location.pathname;
+  const want = path + formatRoute(state.route);
+  if (location.pathname + location.hash === want) return;
+  if (drawn) history.pushState(null, "", want); else history.replaceState(null, "", want);
 }
 export function followAddress() {
   window.addEventListener("popstate", () => { state.route = parseRoute(location.hash); state.sheet = null; render(); });
 }
 
 export function render() {
-  syncTabs();
+  const moved = syncTabs();
   syncAddress();
   drawn = true;
   if (!state.loaded) return showScreen(`<p class="muted">${escapeText("Loading…")}</p>`);
   if (!state.members[state.uid] && state.tab !== "group") return showScreen(joinView());
   const view = (page.tabs.find(([id]) => id === state.tab) || page.tabs[0])[2];
-  showScreen(view());
+  // Same tab and goal = same screen (switching milestone tabs just updates it).
+  showScreen(view(), `${page.id}|${state.route.tab}|${state.route.goal || ""}`);
+  if (moved) window.scrollTo(0, scrolled[page.id] || 0);
   patch();
+}
+
+// The page switcher: go to another page where you left it (same tab, same goal), without reloading.
+const lastRoute = {};
+export function goPage(id) {
+  lastRoute[page.id] = state.route;
+  state.sheet = null;
+  state.route = lastRoute[id] || { tab: page.pages[id][0][0] };
+  render();
 }
 
 export function patch() {

@@ -19,15 +19,20 @@ export const CHECKIN_TABS = ["today", "meds", "reflect", "customize", "setup", "
 // These show only in Settings (the gear), not as Check-in tabs.
 export const SETTINGS_TABS = ["customize", "setup", "targets", "notify", "account"];
 
-export const page = { id: "checkin", features: [], tabs: [] };
+// The pages this bundle can show, and which one is on screen. The home-screen app has all four in one bundle,
+// so moving between them doesn't reload anything; the old Webflow bundles have one page each.
+export const page = { id: "checkin", features: [], tabs: [], pages: {} };
 
-// order (optional): tab ids in the order they should appear.
-export function definePage(id, features, order = []) {
-  page.id = id;
-  page.features = features;
+// pages: { pageId: [features] }; always: features on every page (core). order: tab ids in display order.
+export function definePages(current, pages, always = [], order = []) {
   const rank = (tab) => (order.includes(tab[0]) ? order.indexOf(tab[0]) : order.length);
-  page.tabs = features.flatMap((f) => f.tabs || []).sort((a, b) => rank(a) - rank(b));
+  page.features = [...new Set([...always, ...Object.values(pages).flat()])];
+  page.pages = Object.fromEntries(Object.entries(pages).map(([id, fs]) => [id, fs.flatMap((f) => f.tabs || []).sort((a, b) => rank(a) - rank(b))]));
+  setPage(current in pages ? current : Object.keys(pages)[0]);
 }
+export const setPage = (id) => { page.id = id; page.tabs = page.pages[id]; };
+export const hasPage = (id) => id in page.pages;
+export const pageOfTab = (tab) => Object.keys(page.pages).find((id) => page.pages[id].some(([t]) => t === tab));
 
 export const pageUrl = (id) => window.WLC_CONFIG?.pages?.[id] || PAGES.find(([p]) => p === id)[2];
 

@@ -1,17 +1,7 @@
-// Preview build: every page in one bundle, with pretend data. The page comes from window.WLC_PAGE.
+// Preview build: the whole app with pretend data (you with Ada and Bea, or Rosa the beta tester).
 import { start } from "../main.js";
 import { CHECKIN_TABS } from "../page.js";
+import { ALL_PAGES } from "../allpages.js";
 import { seedPreview, seedRosa } from "../preview.js";
-import checkin from "../features/checkin.js";
-import meds from "../features/meds.js";
-import routines from "../features/routines.js";
-import todos from "../features/todos.js";
-import progress from "../features/progress.js";
-import group from "../features/group.js";
-import work from "../features/work.js";
-import dashboard from "../features/dashboard.js";
-import notify from "../features/notify.js";
 
-const PAGES = { checkin: [checkin, meds, dashboard, notify], routines: [routines, todos], progress: [progress, group], work: [work] };
-const id = window.WLC_PAGE in PAGES ? window.WLC_PAGE : "checkin";
-start({ page: id, features: PAGES[id], order: CHECKIN_TABS, seed: window.WLC_PERSONA === "rosa" ? seedRosa : seedPreview });
+start({ page: window.WLC_PAGE || "checkin", pages: ALL_PAGES, order: CHECKIN_TABS, seed: window.WLC_PERSONA === "rosa" ? seedRosa : seedPreview });

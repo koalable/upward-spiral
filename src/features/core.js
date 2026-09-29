@@ -5,8 +5,8 @@ import { render } from "../render.js";
 import { saveMember } from "../day.js";
 import { save, paths } from "../store.js";
 import { todayKey, addDays } from "../util.js";
-import { toggleTheme, stepTextSize } from "../render.js";
-import { page, pageUrl } from "../page.js";
+import { toggleTheme, stepTextSize, settingsOpen } from "../render.js";
+import { hasPage, pageUrl } from "../page.js";
 import { auth } from "../auth.js";
 
 // data-draft="key" (or "times.1"): typing goes straight into the open draft. data-num: store a number ("" if blank).
@@ -40,12 +40,15 @@ export default {
     openTab: (el) => { state.tab = el.dataset.tab; window.scrollTo({ top: 0 }); },
     // Settings live on the Check-in page; from anywhere else the gear goes there.
     openSettings() {
-      if (page.id !== "checkin") { location.href = `${pageUrl("checkin")}#customize`; return "none"; }
+      // Settings live with Check-in; a one-page bundle without it goes there.
+      if (!hasPage("checkin")) { location.href = `${pageUrl("checkin")}#customize`; return "none"; }
+      if (!settingsOpen()) state.beforeSettings = state.route;
       state.tab = "customize";
       window.scrollTo({ top: 0 });
     },
     closeSettings() {
-      state.tab = "today";
+      state.route = state.beforeSettings || { tab: "today" };
+      state.beforeSettings = null;
     },
     shiftDay(el) { const d = addDays(state.date, Number(el.dataset.by)); if (d <= todayKey()) state.date = d; },
     goToday() { state.date = todayKey(); },
