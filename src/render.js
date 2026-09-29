@@ -5,7 +5,8 @@ import { APP_NAME, TEXT_SIZES } from "./constants.js";
 import { state } from "./state.js";
 import { getPref, setPref } from "./prefs.js";
 import { icon } from "./views/components.js";
-import { page, PAGES, pageUrl, everyFeature, anyFeature } from "./page.js";
+import { page, PAGES, pageUrl, everyFeature, anyFeature, SETTINGS_TABS } from "./page.js";
+import { normalizeLayout, pageLabel, pageIcon, pageHidden, tabHidden } from "./layout.js";
 import { joinView } from "./views/join.js";
 
 export const ui = { root: null, view: null };
@@ -18,11 +19,10 @@ export function mountShell(root) {
   root.innerHTML = String(html`<div class="shell">
     <header class="top"><nav>
       <h6 class="max title">${APP_NAME}</h6>
-      <button class="circle transparent" data-act="textSmaller" aria-label="Smaller text">A−</button>
-      <button class="circle transparent" data-act="textLarger" aria-label="Larger text">A+</button>
-      <button class="circle transparent" data-act="theme" aria-label="Toggle light or dark" id="theme-btn"></button>
+      <button class="circle transparent" data-act="openSettings" aria-label="Settings" id="gear">${icon("settings")}</button>
     </nav><div class="small-text who" id="who"></div></header>
-    <nav class="pages wrap" aria-label="Challenge pages">${PAGES.map(([id, label]) => html`<a class="chip ${id === page.id ? "fill" : ""}" href="${pageUrl(id)}"${id === page.id ? html` aria-current="page"` : ""}>${icon(PAGE_ICONS[id] || "circle")}<span>${label}</span></a>`)}</nav>
+    <nav class="pages wrap" aria-label="Pages">${PAGES.map(([id, label]) => html`<a class="chip ${id === page.id ? "fill" : ""}" data-page="${id}" href="${pageUrl(id)}"${id === page.id ? html` aria-current="page"` : ""}>${icon(PAGE_ICONS[id] || "circle")}<span>${label}</span></a>`)}</nav>
+    <div class="setbar" id="setbar" hidden><button class="transparent" data-act="closeSettings">${icon("arrow_back")}<span>Done</span></button><h2>Settings</h2></div>
     <div class="tabs left-align" role="tablist" aria-label="Sections" id="tabs" hidden>
       ${page.tabs.map(([id, label]) => html`<a role="tab" id="tab-${id}" data-tab="${id}" aria-controls="wlc-panel">${label}</a>`)}</div>
     <div id="banner" role="status" aria-live="polite"></div>
@@ -39,7 +39,8 @@ export function applyTheme(theme) {
   const dark = theme !== "light";
   ui.root.classList.toggle("dark", dark);
   ui.root.classList.toggle("light", !dark);
-  ui.root.querySelector("#theme-btn").innerHTML = String(icon(dark ? "light_mode" : "dark_mode"));
+  const btn = ui.root.querySelector("#theme-btn");
+  if (btn) btn.innerHTML = String(icon(dark ? "light_mode" : "dark_mode"));
 }
 export function toggleTheme() {
   const next = isDark() ? "light" : "dark";
@@ -49,8 +50,9 @@ export function toggleTheme() {
 export function applyTextSize(px) {
   const size = TEXT_SIZES.includes(px) ? px : TEXT_SIZES[0];
   ui.root.style.setProperty("--size", `${size}px`);
-  ui.root.querySelector('[data-act="textSmaller"]').disabled = size === TEXT_SIZES[0];
-  ui.root.querySelector('[data-act="textLarger"]').disabled = size === TEXT_SIZES[TEXT_SIZES.length - 1];
+  const less = ui.root.querySelector('[data-act="textSmaller"]'), more = ui.root.querySelector('[data-act="textLarger"]');
+  if (less) less.disabled = size === TEXT_SIZES[0];
+  if (more) more.disabled = size === TEXT_SIZES[TEXT_SIZES.length - 1];
   return size;
 }
 export function stepTextSize(dir) {
@@ -69,9 +71,31 @@ export function setStatus(text) { const el = ui.root.querySelector("#saved"); if
 export function showTabs(visible) { ui.root.querySelector("#tabs").hidden = !visible; }
 export function showScreen(content) { ui.view.innerHTML = String(content); }
 
+// Which tabs show: the page's own tabs, or the Settings tabs, minus anything hidden under Customize.
+export const layoutNow = () => normalizeLayout(state.settings?.layout);
+const inSettings = (id) => SETTINGS_TABS.includes(id);
+export const tabShown = (id) => (state.settingsMode ? inSettings(id) : !inSettings(id)) && !tabHidden(layoutNow(), id);
+
+// Names, icons and hidden pages from Customize, on the page switcher.
+function applyLayout() {
+  const l = layoutNow();
+  for (const a of ui.root.querySelectorAll("nav.pages [data-page]")) {
+    const id = a.dataset.page, label = PAGES.find(([p]) => p === id)[1];
+    a.hidden = pageHidden(l, id);
+    a.querySelector("span").textContent = pageLabel(l, id, label);
+    a.querySelector("i").className = `icon-${ICON_CLASS(pageIcon(l, id, PAGE_ICONS[id]))}`;
+  }
+  ui.root.querySelector("#setbar").hidden = !state.settingsMode;
+  ui.root.classList.toggle("settings-mode", Boolean(state.settingsMode));
+}
+const ICON_CLASS = (name) => String(icon(name)).match(/icon-([\w-]+)/)[1];
+
 function syncTabs() {
+  applyLayout();
+  if (!tabShown(state.tab)) state.tab = page.tabs.map(([id]) => id).find(tabShown) || page.tabs[0][0];
   for (const tab of ui.root.querySelectorAll("[role=tab]")) {
     const on = tab.dataset.tab === state.tab;
+    tab.hidden = !tabShown(tab.dataset.tab);
     tab.setAttribute("aria-selected", String(on));
     tab.classList.toggle("active", on);
     tab.tabIndex = on ? 0 : -1;

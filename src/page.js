@@ -15,7 +15,9 @@ export const PAGES = [
   ["progress", "Progress", "/challenge-progress"],
 ];
 
-export const CHECKIN_TABS = ["today", "meds", "journal", "setup", "targets", "notify"];
+export const CHECKIN_TABS = ["today", "meds", "reflect", "customize", "setup", "targets", "notify", "account"];
+// These show only in Settings (the gear), not as Check-in tabs.
+export const SETTINGS_TABS = ["customize", "setup", "targets", "notify", "account"];
 
 export const page = { id: "checkin", features: [], tabs: [] };
 

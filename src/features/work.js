@@ -13,6 +13,7 @@ const LIST = { goal: "goals", ms: "milestones", task: "tasks" };
 function edit(fn) {
   const before = workData().timer;
   const w = clone(workData());
+  delete w.pausedGoals; // worked out fresh each time, never saved
   fn(w);
   state.work = w;
   save(paths.work(state.uid), w, 400);

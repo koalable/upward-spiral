@@ -129,11 +129,11 @@ function startFirebase(config) {
 
 function startPreview(seed) {
   const db = memoryAdapter();
-  seed?.(db);
+  const who = seed?.(db);
   useStore(db, { preview: true, status: setStatus });
-  Object.assign(state, { uid: "preview", userName: "You", preview: true });
-  setBanner(seed ? "Preview mode. Nothing is saved or shared. Ada and Bea are pretend players so you can see the group view." : "Preview mode. Nothing is saved or shared.");
-  setWho("Preview");
+  Object.assign(state, { uid: "preview", userName: who?.name || "You", preview: true });
+  setBanner(who?.name ? `Preview as ${who.name}, a pretend beta tester. Nothing is saved.` : seed ? "Preview mode. Nothing is saved or shared. Ada and Bea are pretend players so you can see the group view." : "Preview mode. Nothing is saved or shared.");
+  setWho(who?.name ? `Preview · ${who.name}` : "Preview");
   showTabs(true);
   subscribe();
 }
@@ -161,6 +161,7 @@ export function start({ page: id, features, order, seed }) {
   if (!root) return;
   definePage(id, [core, ...features], order);
   state.tab = page.tabs[0][0];
+  if (id === "checkin" && location.hash === "#settings") Object.assign(state, { settingsMode: true, tab: "customize" });
   mountShell(root);
   bindEvents(root);
   keepTabBarDown();

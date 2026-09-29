@@ -8,7 +8,12 @@ import { store, paths } from "../store.js";
 import { isLadder, ladderStatus, levelOf } from "../ladder.js";
 import { LADDER_TEMPLATES, DEFAULT_WEEKS_TO_LEVEL } from "../constants.js";
 import { todayView, patchToday } from "../views/today.js";
-import { journalView, filterJournal } from "../views/journal.js";
+import { reflectView, filterJournal } from "../views/journal.js";
+import { customizeView, accountView } from "../views/settings.js";
+import { normalizeLayout, applyPreset, toggleIn } from "../layout.js";
+import { suggest, newBreathing, pauseFor, itemKey } from "../breathing.js";
+import { pausable } from "../views/breathing.js";
+import { weekStart } from "../util.js";
 import { questionsView, readQuestionForm } from "../views/questions.js";
 import { targetsView, reminderLink, reminderOpts } from "../views/targets.js";
 import { openIcs } from "../calendar.js";
@@ -73,7 +78,44 @@ async function loadAliases() {
   render();
 }
 
+// Customize: presets and on/off switches. Names and icons are saved as you type (see input/change below).
+const editLayout = (fn) => { settings().layout = fn(normalizeLayout(settings().layout)); saveSettings(); };
+
+// Breathing room: a draft while the sheet is open, saved into settings.breathing.
+const draft = () => state.breath;
+const toggleItem = (list, x) => (list.some((y) => itemKey(y) === itemKey(x)) ? list.filter((y) => itemKey(y) !== itemKey(x)) : [...list, x]);
+
 const actions = {
+  brOpen() {
+    const b = pauseFor(settings(), todayKey());
+    state.breath = b ? { level: "", items: [...b.items, ...b.tiny], tiny: [...b.tiny], why: b.why, note: b.note, makeUp: b.makeUp }
+      : { level: "", items: [], tiny: [], why: "", note: "", makeUp: 3 };
+  },
+  brCancel() { state.breath = null; },
+  brLevel(el) { Object.assign(draft(), { level: el.dataset.level, items: suggest(el.dataset.level, pausable()), tiny: [] }); },
+  brItem(el) {
+    const x = { kind: el.dataset.kind, id: el.dataset.id };
+    draft().items = toggleItem(draft().items, x);
+    draft().tiny = draft().tiny.filter((y) => draft().items.some((z) => itemKey(z) === itemKey(y)));
+  },
+  brTiny(el) { draft().tiny = toggleItem(draft().tiny, { kind: el.dataset.kind, id: el.dataset.id }); },
+  brWhy(el) { draft().why = draft().why === el.dataset.why ? "" : el.dataset.why; },
+  brMakeUp(el) { draft().makeUp = Number(el.dataset.n); },
+  brSave() {
+    const s = settings(), week = weekStart(todayKey());
+    s.breathing = [...(s.breathing || []).filter((b) => b.week !== week), newBreathing(draft(), todayKey(), `br${Date.now().toString(36)}`)];
+    state.breath = null;
+    saveSettings();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  },
+  brEnd() {
+    if (!confirm("End this week's breathing room? Everything comes back today.")) return "none";
+    const s = settings(), week = weekStart(todayKey());
+    s.breathing = (s.breathing || []).filter((b) => b.week !== week);
+    saveSettings();
+  },
+  layoutPreset: (el) => editLayout((l) => applyPreset(l, el.dataset.preset)),
+  layoutToggle: (el) => editLayout((l) => toggleIn(l, el.dataset.key, el.dataset.id)),
   linkAccount() {
     const email = ($("#link-email")?.value || "").trim().toLowerCase();
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email) || email === (state.email || "").toLowerCase()) return $("#link-email")?.focus(), "none";
@@ -184,9 +226,11 @@ const actions = {
 export default {
   tabs: [
     ["today", "Today", todayView],
-    ["journal", "Journal", journalView],
+    ["reflect", "Reflect", reflectView],
+    ["customize", "Customize", customizeView],
     ["setup", "Categories", questionsView],
-    ["targets", "Targets & rules", targetsView],
+    ["targets", "Targets & scoring", targetsView],
+    ["account", "Account", accountView],
   ],
   actions,
   liveTab: (tab) => tab === "today",
@@ -198,6 +242,15 @@ export default {
   input(el) {
     const d = el.dataset;
     if ("search" in d) return filterJournal(ui.view, el.value), true;
+    if ("brNote" in d) { if (state.breath) state.breath.note = el.value; return true; }
+    if (d.layoutName) {
+      const l = normalizeLayout(settings().layout);
+      l.names[d.layoutName] = el.value.slice(0, 16);
+      settings().layout = l; saveSettings();
+      const chip = document.querySelector(`nav.pages [data-page="${d.layoutName}"] span`);
+      if (chip) chip.textContent = el.value.trim() || "Work";
+      return true;
+    }
     if (d.answer) {
       if (!isEditable(state.date)) return true;
       const value = el.value === "" ? undefined : el.type === "number" ? Math.max(0, Number(el.value)) : el.value;
@@ -222,6 +275,7 @@ export default {
 
   change(el) {
     const d = el.dataset;
+    if (d.layoutIcon) return editLayout((l) => ({ ...l, icons: { ...l.icons, [d.layoutIcon]: el.value } })), render(), true;
     if (el.id === "q-kind" || el.id === "q-mode") return readQuestionForm(ui.view), render(), true;
     if (el.id === "q-lead") return (settings().lead = el.value || null), saveSettings(), render(), true;
     if (d.floor) {

@@ -230,7 +230,7 @@ var urgency = (a, b) => (a.due || "9999").localeCompare(b.due || "9999") || Stri
 function todayPicks(w, key) {
   const t = todayState(w, key), size = w.perDay + (t.extra || 0);
   const doneToday = w.tasks.filter((x) => x.done === key);
-  const open = w.tasks.filter((x) => !x.done && !blocker(x, w.tasks));
+  const open = w.tasks.filter((x) => !x.done && !blocker(x, w.tasks) && !(w.pausedGoals || []).includes(x.goal));
   const pinned = (t.pins || []).map((id) => open.find((x) => x.id === id)).filter(Boolean);
   const timed = open.filter((x) => x.at && x.due === key && !pinned.includes(x));
   const rest = open.filter((x) => !pinned.includes(x) && !timed.includes(x) && !(t.skips || []).includes(x.id)).sort(urgency);

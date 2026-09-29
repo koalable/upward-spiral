@@ -12,6 +12,8 @@ import { medQuickLog, patchMedStatus } from "./meds.js";
 import { isLadder, ladderStatus, levelLabel, levelOf } from "../ladder.js";
 import { WEEK_GOAL_BONUS, LEVEL_UP_BONUS, EDIT_WINDOW_TEXT } from "../constants.js";
 import { weekOf, weekday } from "../util.js";
+import { normalizeLayout, sectionHidden, tabHidden } from "../layout.js";
+import { breathingBanner, pausedNote, isPausedCat, breathingSheet } from "./breathing.js";
 
 const fieldValue = (v) => v ?? "";
 
@@ -113,12 +115,23 @@ function ladderProgress(q) {
   return html`<div class="weekdots" aria-label="This week">${dots}</div> ${week}${milestone}`;
 }
 
+// An energy group folds up once every category in it has some points; its header shows the group's total.
+function groupBlock(g, qs, a, t, lead, r) {
+  const got = qs.reduce((n, q) => n + (r.points[q.id] || 0), 0), max = qs.length * 4;
+  const filled = qs.every((q) => (r.points[q.id] || 0) > 0);
+  return html`<details class="egroup" id="grp-${g.id}" ${filled ? "" : "open"}>
+    <summary class="egrouphead ${g.theme}"><span class="gicon">${icon(g.icon)}</span><div class="max"><div class="tname">${g.themeName}</div><h3>${g.name}</h3></div>
+      <span class="gpts" id="live-grp-${g.id}">${got} / ${max}</span><span class="gfold" aria-hidden="true">${icon("expand_more")}</span></summary>
+    ${qs.map((q) => questionCard(q, a, t, q.id === lead, true))}</details>`;
+}
+
 export function todayView() {
-  const s = settings(), a = answers(), t = s.targets;
+  const s = settings(), a = answers(), t = s.targets, l = normalizeLayout(s.layout);
   const today = todayKey(), isToday = state.date === today, open = isEditable(state.date);
   const label = isToday ? "Today, " : state.date === addDays(today, -1) ? "Yesterday, " : "";
-  const ladders = s.cats.filter(isLadder);
+  const ladders = s.cats.filter(isLadder), r = scoreOf(state.date);
   const scored = s.cats.filter(isScored), extras = s.cats.filter((q) => !isScored(q) && !isLadder(q));
+  const reflectShown = !tabHidden(l, "reflect");
   return html`
     <div class="daybar">
       <button class="iconbtn" data-act="shiftDay" data-by="-1" aria-label="Previous day">‹</button>
@@ -127,25 +140,27 @@ export function todayView() {
       ${isToday ? "" : html`<button class="linkbtn" data-act="goToday">Back to today</button>`}
       ${saveStatus()}
     </div>
-    <div id="live-rings">${ringsView()}</div>
-    ${isToday ? html`<div id="live-dash">${dashboardView()}</div>` : ""}
+    ${isToday && !sectionHidden(l, "breathing") ? breathingBanner() : ""}
+    ${sectionHidden(l, "rings") ? "" : html`<div id="live-rings">${ringsView()}</div>`}
+    ${isToday && !sectionHidden(l, "plate") ? html`<div id="live-dash">${dashboardView()}</div>` : ""}
     ${open ? "" : html`<div class="banner">This day is closed for editing. ${EDIT_WINDOW_TEXT}</div>`}
-    ${isToday ? medQuickLog() : ""}
+    ${isToday && !sectionHidden(l, "medlog") ? medQuickLog() : ""}
     <fieldset ${open ? "" : "disabled"}>
       ${ladders.map((q) => ladderCard(q, a))}
       ${GROUPS.map((g) => {
-        const mine = scored.filter((q) => groupOf(q).id === g.id);
-        return mine.length ? html`<div class="egrouphead ${g.theme}" id="grp-${g.id}"><span class="gicon">${icon(g.icon)}</span><div><div class="tname">${g.themeName}</div><h3>${g.name}</h3></div></div>
-          ${mine.map((q) => questionCard(q, a, t, q.id === s.lead, true))}` : "";
+        const mine = scored.filter((q) => groupOf(q).id === g.id && !isPausedCat(q.id, state.date));
+        return mine.length ? groupBlock(g, mine, a, t, s.lead, r) : "";
       })}
+      ${pausedNote()}
       ${extras.length ? html`<h3 class="also">Also tracking <span class="muted small">(not scored)</span></h3>${extras.map((q) => questionCard(q, a, t, false))}` : ""}
-      <section class="cat">${cardHead("Rest day")}<div class="row">${toggle("dayOff", "Intentional day off", a.dayOff)}</div>
-        <p class="hint">A planned day off keeps your streak and counts as showing up.</p></section>
-      <section class="cat">${cardHead("Reflection")}<p class="hint">A line for the day. Saved privately under Journal.</p>
-        <textarea class="field" data-answer="reflection" rows="4" placeholder="Today…" aria-label="Reflection">${a.reflection || ""}</textarea></section>
-      <div id="live-finish" class="finish"></div>
+      <section class="panel closeday"><h2>Close the day</h2>
+        <div class="row">${toggle("dayOff", "Intentional rest day", a.dayOff)}</div>
+        <p class="hint">A planned rest day keeps your streak and counts as showing up.</p>
+        ${reflectShown ? html`<button class="reflectlink" data-act="openTab" data-tab="reflect">${icon("edit_note")}<span class="max">${a.reflection ? html`<b>Reflection</b><span class="small-text">${String(a.reflection).slice(0, 80)}${String(a.reflection).length > 80 ? "…" : ""}</span>` : html`<b>Reflect on today</b><span class="small-text">A line or two, private.</span>`}</span>${icon("chevron_right")}</button>` : ""}
+        <div id="live-finish" class="finish"></div></section>
     </fieldset>
-    <p class="privacy small muted">🔒 Your questions and answers are private. The group sees only your score, streak, and check-in.</p>`;
+    <p class="privacy small muted">🔒 Your questions and answers are private. The group sees only your score, streak, and check-in.</p>
+    ${breathingSheet()}`;
 }
 
 // ---------- live parts ----------
@@ -173,6 +188,12 @@ export function patchToday(view) {
   text("live-walk", `${r.detail.walk} / 2`);
   text("live-workout", `${r.detail.workout} / 2`);
   text("live-workout-min", `${workoutMinutes(a)} min`);
+  for (const g of GROUPS) {
+    const el = view.querySelector(`#live-grp-${g.id}`);
+    if (!el) continue;
+    const qs = [...view.querySelectorAll(`#grp-${g.id} [data-points]`)].map((x) => x.dataset.points);
+    el.textContent = `${qs.reduce((n, id) => n + (r.points[id] || 0), 0)} / ${qs.length * 4}`;
+  }
   for (const q of settings().cats.filter(isLadder)) set(`live-ladder-${q.id}`, ladderProgress(q));
   patchMedStatus(view);
 }

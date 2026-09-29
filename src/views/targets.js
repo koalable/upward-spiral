@@ -1,4 +1,4 @@
-// Targets & rules: my display name, private targets, linked accounts, and how scoring works.
+// Settings → Targets & scoring: my display name, private targets, and how scoring works (folded away).
 import { html } from "../util.js";
 import { APP_NAME } from "../constants.js";
 import { scoredQuestions, questionName, questionRule } from "../scoring.js";
@@ -11,7 +11,7 @@ export const reminderOpts = (t) => ({ title: `Log the ${APP_NAME}`, time: t.remi
 export const reminderLink = (t) => dailyReminderLink(reminderOpts(t));
 
 // Other Google accounts that open this same data (e.g. a work address).
-function linkedPanel() {
+export function linkedPanel() {
   if (state.preview) return "";
   if (state.linkedTo) return html`<section class="panel"><h2>Linked account</h2>
     <p>You're signed in as <b>${state.email}</b>, linked to your main account. Everything you log goes there.</p></section>`;
@@ -46,8 +46,7 @@ export function targetsView() {
       <div class="targets">${fields}</div>
       <p class="hint">Reminders are phone notifications now. <button class="linkbtn" data-act="openTab" data-tab="notify">Notification settings</button></p>
       ${saveStatus()}</section>
-    ${linkedPanel()}
-    <section class="panel prose"><h2>How scoring works</h2>
+    <details class="panel prose foldpanel"><summary><h2>How scoring works</h2></summary>
       <h3 class="rulehead">Your categories</h3><dl class="rules">${scoredQuestions(settings()).map((q) => rule(questionName(q), "up to 4", questionRule(q)))}</dl>
-      <h3 class="rulehead">How the game works</h3><dl class="rules">${gameRules()}</dl></section>`;
+      <h3 class="rulehead">How the game works</h3><dl class="rules">${gameRules()}</dl></details>`;
 }

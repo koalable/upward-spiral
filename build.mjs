@@ -113,10 +113,14 @@ await esbuild.build({
 
 // Offline previews (pretend data, every page in one bundle).
 const previewApp = await bundle("src/entries/preview.js");
-const links = Object.fromEntries(PAGES.map(([id]) => [id, `preview-${id}.html`]));
-for (const [id, , title] of PAGES) {
-  writeFileSync(`dist/preview-${id}.html`, `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${title} — preview</title>
+// preview-*.html: pretend-you with Ada and Bea. preview-rosa-*.html: Rosa, a pretend beta tester (see seedRosa).
+for (const persona of ["", "rosa"]) {
+  const pre = persona ? `preview-${persona}-` : "preview-";
+  const links = Object.fromEntries(PAGES.map(([id]) => [id, `${pre}${id}.html`]));
+  for (const [id, , title] of PAGES) {
+    writeFileSync(`dist/${pre}${id}.html`, `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${title} — preview</title>
 <link rel="stylesheet" href="${LUCIDE}"><link rel="stylesheet" href="${INTER}"><style>body{margin:0}${css}</style></head><body><div id="wlc"></div>
-<script>window.WLC_PAGE=${JSON.stringify(id)};window.WLC_CONFIG={pages:${JSON.stringify(links)}};</script><script>${previewApp}</script></body></html>`);
+<script>window.WLC_PAGE=${JSON.stringify(id)};window.WLC_PERSONA=${JSON.stringify(persona)};window.WLC_CONFIG={pages:${JSON.stringify(links)}};</script><script>${previewApp}</script></body></html>`);
+  }
 }
 console.log(report);

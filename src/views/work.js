@@ -4,8 +4,11 @@ import { state } from "../state.js";
 import { normalizeWork, todayState, todayPicks, blocker, progress, countdown, goalTheme, milestoneTheme, msIcon, goalIcon, MS_ICONS, saturation } from "../work.js";
 import { timerFor, isRunning, isUp, msLeft, minutesLeft, countdownText, durationText } from "../timer.js";
 import { pressed, saveStatus, icon } from "./components.js";
+import { isPaused } from "../breathing.js";
 
-export const workData = () => normalizeWork(state.work);
+// Goals paused for breathing room this week drop out of today's picks.
+export const withPauses = (w, key = state.date) => ({ ...w, pausedGoals: w.goals.filter((g) => isPaused(state.settings, "goal", g.id, key)).map((g) => g.id) });
+export const workData = () => withPauses(normalizeWork(state.work));
 const field = (label, input) => html`<label class="field"><span>${label}</span>${input}</label>`;
 const goalOf = (w, id) => w.goals.find((g) => g.id === id);
 const msOf = (w, id) => w.milestones.find((m) => m.id === id);

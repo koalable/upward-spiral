@@ -62,8 +62,8 @@ export function todosView() {
 export function dashboardTodos() {
   const today = todayKey(), d = dashboard(todoData().items, today);
   const open = d.week.length;
-  return html`<section class="panel"><h2>To-dos today</h2>
+  return html`<div class="plateblock"><h3 class="platehead">${icon("checklist")} To-dos</h3>
     ${list(d.today, today, "Nothing planned or due today.")}
     ${open ? html`<details class="tweek" ${state.editTodo && d.week.some((x) => x.id === state.editTodo) ? "open" : ""}><summary>${open} more this week</summary>${list(d.week, today)}</details>` : ""}
-    ${addForm("tdash", { on: today, label: "Add a to-do for today" })}</section>`;
+    ${addForm("tdash", { on: today, label: "Add a to-do for today" })}</div>`;
 }
