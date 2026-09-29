@@ -34,3 +34,15 @@ test("progress and countdown", () => {
   assert.equal(countdown("2026-10-11", T), "Due tomorrow");
   assert.equal(countdown("2026-10-08", T), "2 days past due");
 });
+
+test("milestone icons: guessed from the name unless picked", async () => {
+  const { guessIcon, msIcon } = await import("../src/work.js");
+  assert.equal(guessIcon("Packing"), "luggage");
+  assert.equal(guessIcon("Docs"), "id-card");
+  assert.equal(guessIcon("Meds"), "pill");
+  assert.equal(guessIcon("Tech"), "laptop");
+  assert.equal(guessIcon("Toiletries"), "bath");
+  assert.equal(guessIcon("Pitch podcasts"), "mic");
+  assert.equal(guessIcon("Something else"), "flag");
+  assert.equal(msIcon({ name: "Meds", icon: "heart" }), "heart");
+});

@@ -89,3 +89,31 @@ export const goalTheme = (w, goalId) => {
   const i = w.goals.findIndex((g) => g.id === goalId);
   return i < 0 ? "ember" : GOAL_THEMES[i % GOAL_THEMES.length];
 };
+
+// Milestone tile icons (Lucide names). A milestone can pick one; otherwise it's guessed from its name.
+export const MS_ICONS = [
+  ["luggage", "Suitcase"], ["id-card", "Documents"], ["pill", "Meds"], ["laptop", "Tech"], ["bath", "Toiletries"],
+  ["shirt", "Clothes"], ["plane", "Travel"], ["mail", "Email"], ["pen-line", "Writing"], ["book-open", "Reading"],
+  ["mic", "Speaking"], ["presentation", "Workshop"], ["megaphone", "Promotion"], ["globe", "Website"], ["code", "Code"],
+  ["wallet", "Money"], ["palette", "Design"], ["camera", "Photos"], ["users", "People"], ["phone", "Calls"],
+  ["house", "Home"], ["utensils", "Food"], ["shopping-cart", "Shopping"], ["dumbbell", "Fitness"], ["heart", "Health"],
+  ["calendar", "Planning"], ["rocket", "Launch"], ["gift", "Gifts"], ["sparkles", "Ideas"], ["flag", "Milestone"],
+];
+const GUESS = [
+  [/pack|luggage|suitcase|bag/, "luggage"], [/doc|passport|visa|paper|form|ticket|id\b/, "id-card"],
+  [/med|pill|pharm|prescri/, "pill"], [/tech|laptop|computer|charger|phone case|gadget|electronic/, "laptop"],
+  [/toilet|bath|shower|skincare|makeup/, "bath"], [/cloth|outfit|wear|shoe|wardrobe/, "shirt"],
+  [/travel|flight|trip|hotel|airport/, "plane"], [/email|newsletter|substack|mail|inbox/, "mail"],
+  [/writ|draft|chapter|essay|book|manuscript|edit/, "pen-line"], [/read|research|study|learn/, "book-open"],
+  [/podcast|pitch|speak|talk|interview|keynote/, "mic"], [/workshop|class|teach|training|course|slides/, "presentation"],
+  [/market|promo|social|launch|announce|post/, "megaphone"], [/web|site|seo|domain/, "globe"], [/app|code|build|dev/, "code"],
+  [/money|budget|financ|pay|invoice|tax|bank/, "wallet"], [/design|art|brand|logo/, "palette"], [/photo|video|film/, "camera"],
+  [/people|team|client|network|friend|family/, "users"], [/call|phone/, "phone"], [/house|home|clean|tenant|reno|repair/, "house"],
+  [/food|meal|cook|grocer|snack/, "utensils"], [/shop|buy|order/, "shopping-cart"], [/gym|fitness|exercise|run|workout/, "dumbbell"],
+  [/health|doctor|dentist|therap/, "heart"], [/plan|schedule|calendar/, "calendar"], [/gift|present/, "gift"], [/idea|brainstorm/, "sparkles"],
+];
+export function guessIcon(name) {
+  const n = String(name || "").toLowerCase();
+  return GUESS.find(([re]) => re.test(n))?.[1] || "flag";
+}
+export const msIcon = (m) => m?.icon || guessIcon(m?.name);

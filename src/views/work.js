@@ -1,7 +1,7 @@
 // Work: Today (a few tasks, picked for you) and Goals (goal → milestones → tasks, with progress).
 import { html, shortDate, longDate, clock, atTime } from "../util.js";
 import { state } from "../state.js";
-import { normalizeWork, todayState, todayPicks, blocker, progress, countdown, goalTheme } from "../work.js";
+import { normalizeWork, todayState, todayPicks, blocker, progress, countdown, goalTheme, msIcon, MS_ICONS } from "../work.js";
 import { timerFor, isRunning, isUp, msLeft, minutesLeft, countdownText, durationText } from "../timer.js";
 import { pressed, saveStatus, icon } from "./components.js";
 
@@ -101,43 +101,74 @@ function bar(p) {
 }
 
 function taskRow(w, t, key) {
-  const b = blocker(t, w.tasks);
-  return html`<li class="${t.done ? "done" : ""}">${b ? html`<span class="circle lockd" title="Waiting on: ${b.name}">${icon("lock")}</span>` : check(t)}
+  const b = blocker(t, w.tasks), tm = timerFor(w, t.id);
+  return html`<li class="${t.done ? "done" : ""}${tm ? " timing" : ""}">${b ? html`<span class="circle lockd" title="Waiting on: ${b.name}">${icon("lock")}</span>` : check(t)}
     <div class="max"><div class="rname">${t.name}</div>
       <div class="small-text">${meta([startAt(t), timeText(t)], t, key)}${b ? ` · after “${b.name}”` : ""}${t.done ? ` · done ${shortDate(t.done)}` : ""}</div></div>
-    <button class="circle transparent" data-act="wEdit" data-kind="task" data-id="${t.id}" aria-label="Edit ${t.name}">${icon("edit")}</button></li>`;
+    ${t.done || b || tm ? "" : html`<button class="circle transparent" data-act="wTimerStart" data-id="${t.id}" aria-label="Start a ${minutesLeft(t)}-minute timer: ${t.name}" title="Timer (${durationText(minutesLeft(t))})">${icon("play_arrow")}</button>`}
+    <button class="circle transparent" data-act="wEdit" data-kind="task" data-id="${t.id}" aria-label="Edit ${t.name}">${icon("edit")}</button>
+    ${timerStrip(w, t)}</li>`;
 }
 
-function milestoneBlock(w, g, m, key) {
-  const tasks = w.tasks.filter((t) => t.goal === g.id && (t.ms || "") === (m?.id || ""));
-  if (!m && !tasks.length) return "";
-  const p = progress(tasks, key);
-  return html`<div class="ms">
-    <nav class="padding">${icon("flag")}<div class="max"><b>${m ? m.name : "Other tasks"}</b>
+// A goal's milestones as tiles; tasks without a milestone get an "Other" tile.
+function tilesFor(w, g) {
+  const tasks = w.tasks.filter((t) => t.goal === g.id);
+  const ms = w.milestones.filter((m) => m.goal === g.id).sort((a, b) => (a.due || "9999").localeCompare(b.due || "9999"));
+  const tiles = ms.map((m) => ({ id: m.id, m, name: m.name, icon: msIcon(m), tasks: tasks.filter((t) => t.ms === m.id) }));
+  const loose = tasks.filter((t) => !t.ms || !ms.some((m) => m.id === t.ms));
+  if (loose.length) tiles.push({ id: "_", m: null, name: "Other", icon: "list", tasks: loose });
+  return tiles;
+}
+
+function tile(g, x, on, key) {
+  const done = x.tasks.filter((t) => t.done).length, all = x.tasks.length && done === x.tasks.length;
+  const late = x.tasks.some((t) => !t.done && t.due && t.due < key);
+  return html`<button class="mtile${on ? " on" : ""}${all ? " all" : ""}" data-act="wMs" data-goal="${g.id}" data-ms="${x.id}" aria-expanded="${on ? "true" : "false"}"
+    aria-label="${x.name}: ${done} of ${x.tasks.length} done${late ? ", something overdue" : ""}">
+    <span class="mi">${icon(x.icon)}</span><span class="mrule"></span><b>${x.name}</b>
+    <small>${all ? icon("check") : ""}${done} / ${x.tasks.length}${late ? html` <i class="late" aria-hidden="true"></i>` : ""}</small></button>`;
+}
+
+// The open milestone: its deadline and status, then its tasks.
+function tilePanel(w, g, x, key) {
+  const p = progress(x.tasks, key), m = x.m;
+  const tasks = [...x.tasks].sort((a, b) => Boolean(a.done) - Boolean(b.done) || (a.due || "9999").localeCompare(b.due || "9999"));
+  return html`<div class="mpanel">
+    <nav class="padding"><div class="max"><b>${x.name}</b>
       <div class="small-text">${m?.due ? `${shortDate(m.due)} · ${countdown(m.due, key)} · ` : ""}${p.done}/${p.total} done${p.spent ? ` · ${durationText(p.spent)} spent` : ""}</div>
       ${m ? html`<div class="stat">${status(p, m.due, key)}</div>` : ""}</div>
       ${m ? html`<button class="circle transparent" data-act="wEdit" data-kind="ms" data-id="${m.id}" aria-label="Edit ${m.name}">${icon("edit")}</button>` : ""}</nav>
-    ${tasks.length ? bar(p) : ""}
-    ${tasks.length ? html`<ul class="list">${tasks.sort((a, b) => (a.due || "9999").localeCompare(b.due || "9999")).map((t) => taskRow(w, t, key))}</ul>` : ""}
-    ${m ? html`<nav class="padding"><button class="transparent small" data-act="wNew" data-kind="task" data-goal="${g.id}" data-ms="${m.id}">${icon("add")}<span>Task</span></button></nav>` : ""}</div>`;
+    ${tasks.length ? html`<ul class="list">${tasks.map((t) => taskRow(w, t, key))}</ul>` : html`<p class="padding small-text">No tasks yet.</p>`}
+    <nav class="padding"><button class="border small" data-act="wNew" data-kind="task" data-goal="${g.id}" data-ms="${m?.id || ""}">${icon("add")}<span>Task</span></button></nav></div>`;
 }
 
+function stat(value, label) {
+  return html`<div class="gstat"><b>${value}</b><small>${label}</small></div>`;
+}
+
+// Today: cards start closed; tap one to see its milestone tiles. Goals: tiles always showing, plus edit buttons.
 function goalCards(w, key, compact) {
   return w.goals.map((g) => {
     const tasks = w.tasks.filter((t) => t.goal === g.id), p = progress(tasks, key);
-    const ms = w.milestones.filter((m) => m.goal === g.id).sort((a, b) => (a.due || "9999").localeCompare(b.due || "9999"));
-    // On Today the cards are collapsed; tapping one opens its milestones and tasks underneath.
     const open = !compact || state.openGoals?.includes(g.id);
-    return html`<article class="round no-padding goal ${goalTheme(w, g.id)}${compact ? " fold" : ""}">
-      <nav class="padding ghband"${compact ? html` data-act="wOpen" data-id="${g.id}"` : ""}><span class="gchip">${icon("target")}</span><div class="max"><h6>${g.name}</h6>
-        <div class="small-text">${g.due ? `${shortDate(g.due)} · ${countdown(g.due, key)} · ` : ""}${p.pct}% · ${p.done}/${p.total} tasks${p.hoursLeft ? ` · ${p.hoursLeft}h left` : ""}${p.spent ? ` · ${durationText(p.spent)} spent` : ""}</div>
-        <div class="stat">${status(p, g.due, key)}</div></div>
-        ${compact ? html`<button class="circle transparent" data-act="wOpen" data-id="${g.id}" aria-expanded="${open ? "true" : "false"}" aria-label="${open ? "Hide" : "Show"} tasks: ${g.name}">${icon(open ? "expand_less" : "expand_more")}</button>`
-          : html`<button class="circle transparent" data-act="wEdit" data-kind="goal" data-id="${g.id}" aria-label="Edit ${g.name}">${icon("edit")}</button>`}</nav>
+    const tiles = tilesFor(w, g);
+    const pick = state.openMs?.[g.id], sel = tiles.length === 1 ? tiles[0] : tiles.find((x) => x.id === pick);
+    const extra = [p.hoursLeft ? `${p.hoursLeft}h left` : "", p.spent ? `${durationText(p.spent)} spent` : ""].filter(Boolean).join(" · ");
+    return html`<article class="round no-padding goal ${goalTheme(w, g.id)}${compact ? " fold" : ""}${open ? " open" : ""}">
+      <div class="gbody"${compact ? html` data-act="wOpen" data-id="${g.id}"` : ""}>
+        <div class="gtop"><span class="gchip">${icon("target")}</span><span class="max"></span><span class="gpill">${status(p, g.due, key)}</span>
+          ${compact ? html`<button class="circle transparent" data-act="wOpen" data-id="${g.id}" aria-expanded="${open ? "true" : "false"}" aria-label="${open ? "Hide" : "Show"} milestones: ${g.name}">${icon(open ? "expand_less" : "expand_more")}</button>`
+            : html`<button class="circle transparent" data-act="wEdit" data-kind="goal" data-id="${g.id}" aria-label="Edit ${g.name}">${icon("edit")}</button>`}</div>
+        <h3 class="gname">${g.name}</h3>
+        <div class="gstats">${stat(g.due ? shortDate(g.due) : "—", g.due ? countdown(g.due, key) : "Due date")}${stat(`${p.pct}%`, "Progress")}${stat(`${p.done}/${p.total}`, "Tasks")}</div>
+        ${extra ? html`<div class="gextra">${extra}</div>` : ""}
+      </div>
       ${bar(p)}
-      ${!open ? "" : html`${ms.map((m) => milestoneBlock(w, g, m, key))}${milestoneBlock(w, g, null, key)}
-        <nav class="padding wrap"><button class="border small" data-act="wNew" data-kind="ms" data-goal="${g.id}">${icon("flag")}<span>Milestone</span></button>
-          <button class="border small" data-act="wNew" data-kind="task" data-goal="${g.id}">${icon("add")}<span>Task</span></button></nav>`}
+      ${!open ? "" : html`
+        ${tiles.length > 1 ? html`<div class="mtiles" role="group" aria-label="Milestones">${tiles.map((x) => tile(g, x, x === sel, key))}</div>` : ""}
+        ${sel ? tilePanel(w, g, sel, key) : tiles.length ? html`<p class="padding small-text mhint">Tap a milestone to see its tasks.</p>` : html`<p class="padding small-text mhint">No tasks yet.</p>`}
+        ${compact ? "" : html`<nav class="padding wrap"><button class="border small" data-act="wNew" data-kind="ms" data-goal="${g.id}">${icon("flag")}<span>Milestone</span></button>
+          <button class="border small" data-act="wNew" data-kind="task" data-goal="${g.id}">${icon("add")}<span>Task</span></button></nav>`}`}
     </article>`;
   });
 }
@@ -153,6 +184,9 @@ function workForm(w) {
     <div class="grid">
       <div class="s12 m8">${field("Name", html`<input placeholder=" " id="w-name" maxlength="120" value="${e.name || ""}">`)}</div>
       <div class="s6 m4">${field(e.kind === "task" ? "Due" : "Deadline", html`<input id="w-due" type="date" value="${e.due || ""}">`)}</div>
+      ${e.kind === "ms" ? html`
+        <div class="s12 m4">${field("Icon", html`<select id="w-icon"><option value="">Automatic (${MS_ICONS.find(([k]) => k === msIcon({ name: e.name }))?.[1] || "Milestone"})</option>
+          ${MS_ICONS.map(([k, label]) => html`<option value="${k}" ${k === e.icon ? "selected" : ""}>${label}</option>`)}</select>`)}</div>` : ""}
       ${e.kind === "task" ? html`
         <div class="s6 m4">${field("Start time (optional)", html`<input id="w-at" type="time" value="${e.at || ""}">`)}</div>
         <div class="s6 m4">${field("Time estimate (hours)", html`<input id="w-hours" type="number" min="0" max="200" step="0.25" value="${e.hours || ""}">`)}</div>
@@ -170,6 +204,7 @@ export function readWorkForm(view) {
   const name = val("#w-name"); if (name !== undefined) e.name = name.trim();
   const due = val("#w-due"); if (due !== undefined) e.due = due;
   const at = val("#w-at"); if (at !== undefined) e.at = at;
+  const ic = val("#w-icon"); if (ic !== undefined) e.icon = ic;
   const hours = val("#w-hours"); if (hours !== undefined) e.hours = hours === "" ? "" : Math.max(0, Number(hours));
   const ms = val("#w-ms"); if (ms !== undefined) e.ms = ms;
   const after = val("#w-after"); if (after !== undefined) e.after = after;

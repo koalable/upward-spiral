@@ -48,6 +48,7 @@ function saveItem() {
   if (!e.name) return ui.view.querySelector("#w-name").focus(), "none";
   const item = { id: e.id || newId(e.kind === "ms" ? "m" : e.kind[0]), name: e.name, due: e.due || "" };
   if (e.kind !== "goal") item.goal = e.goal;
+  if (e.kind === "ms") item.icon = e.icon || "";
   if (e.kind === "task") Object.assign(item, { ms: e.ms || "", at: e.at || "", hours: e.hours || "", spent: e.spent || 0, after: e.after || "", done: e.done || "", created: e.created || Date.now() });
   edit((w) => {
     const list = w[LIST[e.kind]], at = list.findIndex((x) => x.id === item.id);
@@ -100,6 +101,10 @@ export default {
     wOpen(el) {
       const id = el.dataset.id, open = state.openGoals || [];
       state.openGoals = open.includes(id) ? open.filter((x) => x !== id) : [...open, id];
+    },
+    wMs(el) {
+      const { goal, ms } = el.dataset;
+      state.openMs = { ...(state.openMs || {}), [goal]: state.openMs?.[goal] === ms ? "" : ms };
     },
     wCancel() { state.editWork = null; },
     wSave: saveItem,

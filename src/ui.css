@@ -355,16 +355,41 @@
 #wlc.ui .rose progress::-webkit-progress-value,#wlc.ui .sun progress::-webkit-progress-value,#wlc.ui .teal progress::-webkit-progress-value{background:var(--h)}
 #wlc.ui .rose progress::-moz-progress-bar,#wlc.ui .sun progress::-moz-progress-bar,#wlc.ui .teal progress::-moz-progress-bar{background:var(--h)}
 #wlc.ui .goal{background:color-mix(in srgb,var(--h) 10%,var(--card));border:1px solid color-mix(in srgb,var(--h) 45%,transparent);overflow:hidden;margin-bottom:16px}
-#wlc.ui .goal>nav.ghband{background:var(--h);color:#fff;align-items:flex-start;gap:12px;padding:16px}
-#wlc.ui .goal>nav.ghband h6{margin:0 0 4px!important;font-family:var(--serif);font-weight:400;font-size:1.5em}
-#wlc.ui .goal>nav.ghband .small-text{color:rgb(255 255 255 / .85)}
-#wlc.ui .goal>nav.ghband .badge{background:rgb(255 255 255 / .2);color:#fff;border-color:transparent}
-#wlc.ui .goal>nav.ghband .stat{margin-top:10px}
-#wlc.ui .goal>nav.ghband button{color:#fff}
-#wlc.ui .goal.fold>nav.ghband{cursor:pointer}
+#wlc.ui .goal>.gbody{background:var(--h);color:#fff;padding:14px 16px 16px}
+
+#wlc.ui .goal>.gbody .small-text{color:rgb(255 255 255 / .85)}
+#wlc.ui .goal>.gbody .badge{background:rgb(255 255 255 / .2);color:#fff;border-color:transparent}
+#wlc.ui .goal>.gbody .stat{margin-top:10px}
+#wlc.ui .goal>.gbody button{color:#fff}
+#wlc.ui .goal.fold>.gbody{cursor:pointer}
 #wlc.ui .gchip{display:grid;place-items:center;width:36px;height:36px;border-radius:12px;background:rgb(255 255 255 / .2);font-size:1.15em;flex:none}
 #wlc.ui .goal>progress{margin:14px 16px 12px;width:calc(100% - 32px)}
 #wlc.ui .goal .ms{border-top-color:color-mix(in srgb,var(--h) 30%,transparent)}
+/* Goal card: big title, a stats row, then milestone tiles; the picked tile's tasks open underneath. */
+#wlc.ui .goal>.gbody .gtop{display:flex;align-items:center;gap:8px;margin:-4px -8px 0 0}
+#wlc.ui .goal>.gbody .gname{margin:6px 0 12px;font:400 2.1em/1.05 var(--serif);color:#fff;overflow-wrap:anywhere}
+#wlc.ui .goal>.gbody .gstats{display:flex;flex-wrap:wrap;align-items:center;gap:10px 0;border-top:1px solid rgb(255 255 255 / .35);padding-top:12px}
+#wlc.ui .gstat{display:flex;flex-direction:column;padding:0 14px;border-left:1px solid rgb(255 255 255 / .35)}
+#wlc.ui .gstat:first-child{padding-left:0;border-left:0}
+#wlc.ui .gstat b{font:400 1.55em/1.1 var(--serif);font-variant-numeric:tabular-nums}
+#wlc.ui .gstat small{font-size:.66em;letter-spacing:.12em;text-transform:uppercase;opacity:.92;margin-top:2px}
+#wlc.ui .gpill .badge{white-space:nowrap}
+#wlc.ui .gextra{margin-top:10px;font-size:.85em}
+#wlc.ui .mtiles{display:flex;gap:8px;overflow-x:auto;padding:4px 16px 12px;scroll-snap-type:x proximity;scroll-padding-inline:16px;-webkit-overflow-scrolling:touch}
+#wlc.ui .mtiles .mtile{flex:1 0 80px;height:auto;min-height:0;white-space:normal;justify-content:flex-start;margin:0;max-width:150px;scroll-snap-align:start;display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 8px 12px;border-radius:14px;border:1px solid color-mix(in srgb,var(--h) 35%,transparent);background:color-mix(in srgb,var(--h) 12%,var(--card));color:var(--fg);font:inherit;cursor:pointer;text-align:center;transition:transform .15s,background .15s}
+#wlc.ui .mtile .mi{font-size:1.5em;line-height:1}
+#wlc.ui .mtile .mrule{width:1px;height:14px;background:currentColor;opacity:.5}
+#wlc.ui .mtile b{font:400 1.15em/1.15 var(--serif);overflow-wrap:anywhere}
+#wlc.ui .mtile small{font-size:.8em;letter-spacing:.08em;font-variant-numeric:tabular-nums;display:flex;align-items:center;gap:3px}
+#wlc.ui .mtile .late{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--bad)}
+#wlc.ui .mtiles .mtile.on{background:var(--s4);border-color:var(--s4);color:#fff;transform:translateY(3px)}
+#wlc.ui .mtile.all:not(.on){opacity:.75}
+#wlc.ui .mtile:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
+#wlc.ui .mpanel{margin:0 16px 12px;border-radius:14px;border:1px solid color-mix(in srgb,var(--h) 35%,transparent);background:var(--card);overflow:hidden}
+#wlc.ui .mpanel>nav.padding{padding:12px 12px 8px 16px}
+#wlc.ui .mpanel .list li{padding-left:12px;padding-right:8px}
+#wlc.ui .mhint{margin:0}
+@media(prefers-reduced-motion:reduce){#wlc.ui .mtile{transition:none}#wlc.ui .mtiles .mtile.on{transform:none}}
 #wlc.ui .list li.tagged{box-shadow:inset 4px 0 0 var(--h)}
 #wlc.ui .tasksday{margin:16px 0 8px}
 #wlc.ui .workhint{margin:0 0 18px;line-height:1.6}
@@ -470,8 +495,8 @@
 #wlc.ui .cday.rest,#wlc.ui .cday.future{opacity:1}
 #wlc.ui .bdg{opacity:1}#wlc.ui .bdg:not(.got) b,#wlc.ui .bdg:not(.got) .bico{opacity:.55}
 /* Goal colour bands: all text white */
-#wlc.ui .goal>nav.ghband .small-text{color:#fff}
-#wlc.ui .goal>nav.ghband .badge.bad,#wlc.ui .goal>nav.ghband .badge.good{color:#fff;background:rgb(0 0 0 / .25)}
+#wlc.ui .goal>.gbody .small-text{color:#fff}
+#wlc.ui .goal>.gbody .badge.bad,#wlc.ui .goal>.gbody .badge.good{color:#fff;background:rgb(0 0 0 / .25)}
 /* Day rings: dark ink on the pale tabs; a full ring turns deep with white text */
 #wlc.ui .rings .rlab{color:#141414}
 #wlc.ui .rings g.full .tab,#wlc.ui .rings g.full .arc{stroke:var(--s4)}
