@@ -5,8 +5,7 @@ import { clone, newId, todayKey } from "../util.js";
 import { ui, refreshAfterRemoteChange } from "../render.js";
 import { todayState, removeTask, removeMilestone, removeGoal } from "../work.js";
 import { startTimer, pauseTimer, stopTimer, addTime, isUp, msLeft, countdownText } from "../timer.js";
-import { workTodayView, workGoalsView, workData, readWorkForm, openMode } from "../views/work.js";
-import { setPref } from "../prefs.js";
+import { workTodayView, workGoalsView, workData, readWorkForm } from "../views/work.js";
 import { parsePlan, PLAN_PROMPT } from "../workimport.js";
 
 const LIST = { goal: "goals", ms: "milestones", task: "tasks" };
@@ -90,6 +89,7 @@ export default {
     wNew(el) {
       const d = el.dataset;
       state.editWork = { kind: d.kind, goal: d.goal, ms: d.ms || "" };
+      state.taskCard = null;
       state.tab = "wgoals";
       setTimeout(() => { ui.view.querySelector("#wform")?.scrollIntoView({ behavior: "smooth", block: "start" }); ui.view.querySelector("#w-name")?.focus(); }, 0);
     },
@@ -97,18 +97,26 @@ export default {
       const { kind, id } = el.dataset;
       state.editWork = { kind, ...clone(workData()[LIST[kind]].find((x) => x.id === id)) };
       state.tab = "wgoals";
+      state.taskCard = null;
       setTimeout(() => ui.view.querySelector("#wform")?.scrollIntoView({ behavior: "smooth", block: "start" }), 0);
     },
     wOpen(el) {
-      const id = el.dataset.id, open = state.openGoals || [];
-      if (openMode() === "page") { state.goalPage = id; setTimeout(() => window.scrollTo({ top: 0 }), 0); return; }
-      state.openGoals = open.includes(id) ? open.filter((x) => x !== id) : [...open, id];
+      state.goalPage = el.dataset.id;
+      state.taskCard = null;
+      setTimeout(() => window.scrollTo({ top: 0 }), 0);
     },
-    wClose() { state.goalPage = null; state.editWork = null; },
-    wMode(el) { setPref("workOpen", el.dataset.mode); state.goalPage = null; },
+    wClose() { state.goalPage = null; state.editWork = null; state.taskCard = null; },
+    wTask(el) { state.taskCard = el.dataset.id; },
+    wTaskClose() { state.taskCard = null; },
+    wTaskDelete(el) {
+      const t = workData().tasks.find((x) => x.id === el.dataset.id);
+      if (!t || !confirm(`Delete "${t.name}"?`)) return "none";
+      edit((w) => { if (w.timer?.id === t.id) delete w.timer; removeTask(w, t.id); });
+      state.taskCard = null;
+    },
     wMs(el) {
       const { goal, ms } = el.dataset;
-      state.openMs = { ...(state.openMs || {}), [goal]: state.openMs?.[goal] === ms ? "" : ms };
+      state.openMs = { ...(state.openMs || {}), [goal]: ms };
     },
     wCancel() { state.editWork = null; },
     wSave: saveItem,
