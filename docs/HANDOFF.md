@@ -36,6 +36,8 @@ Words: **habit** = one recurring action; **ritual** = a saved sequence of habits
 - Work goals each get their own colour; their tasks carry a matching stripe.
 - Check-in → Today opens with the **day's rings** (`src/rings.js`, `src/views/rings.js`): one ring per group, each a labelled tab (icon, name, points) curling around the centre. Fill up / Protect / Spend well = check-in points in that group. Show up = finishing the check-in + habits due today + today's Work tasks (+ any Show up questions). Centre = average of the rings, day points underneath. Rings sweep in, update live, deepen with a check when full; all full shows a celebration. Tapping a tab jumps to that group.
 - Everything streak-related lives on Progress → Streaks & badges. Check-in has no streak info and no banners.
+- Accessibility (Sep 28): WCAG AA contrast pass in both themes. Tokens `--control` (borders of inputs/buttons/chips/checkboxes, 3:1+), `--gold` (streak/star colour, dark amber on cream); light `--muted` darkened. Checkboxes are custom: outlined when empty, solid with a check when ticked. Ring tab labels use dark ink; a full ring turns `--s4` with white text. Re-run the audit script idea: measure every text/control against its real background in `dist/preview-*.html`.
+- No calendar reminders anywhere any more (Meds, Targets, Habits): phone notifications replace them.
 - Substances accept half units: a med can count as 1 or ½ unit per log (Meds → edit item); the stepper moves by ½; up to 1 unit over the limit earns 2.
 
 ## Code and deploy
@@ -52,6 +54,7 @@ Words: **habit** = one recurring action; **ritual** = a saved sequence of habits
 
 ## Notifications
 - Check-in → Notifications. Each person turns them on per device (installed app only) and picks: check-in reminder (time, skipped once finished), ritual start (at ritual times, if not done), meds (at med times, unless that dose is logged), Work morning list (time, off by default), streak saver (time, only if the streak habit is empty), quiet hours. "Send a test" button.
+- Meds also get **"next dose OK"** pushes: for meds with hours between doses, once that gap has passed since the last logged dose (today's or yesterday's log).
 - Choices + device tokens in `users/{uid}/notify/settings`. Planner is pure `src/notify.js` (tested in `test/notify.test.js`). Server: `notifyTick` runs every 15 minutes in each person's own time zone; `sendTest` is a callable. Web push key (public) is `VAPID_KEY` in build.mjs.
 
 ## Linked accounts

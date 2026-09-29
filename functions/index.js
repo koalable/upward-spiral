@@ -279,7 +279,7 @@ function localNow(ms, tz) {
     minute: "2-digit",
     hourCycle: "h23"
   }).formatToParts(new Date(ms)).map((p) => [p.type, p.value]));
-  return { date: `${parts.year}-${parts.month}-${parts.day}`, minutes: Number(parts.hour) * 60 + Number(parts.minute) };
+  return { date: `${parts.year}-${parts.month}-${parts.day}`, minutes: Number(parts.hour) * 60 + Number(parts.minute), ms };
 }
 function inQuiet(q, minutes) {
   if (!q?.on || !q.from || !q.to) return false;
@@ -335,6 +335,17 @@ function dueNotifications(prefs, data, now, links = {}) {
       });
     }
   }
+  if (p.meds.on && now.ms) {
+    const logs = [...data.medlogPrev?.items || [], ...data.medlog?.items || []];
+    for (const m of (cfg.meds || []).filter((x) => x.active !== false && Number(x.every) > 0)) {
+      const last = logs.filter((x) => x.medId === m.id).sort((a, b) => b.at - a.at)[0];
+      if (!last) continue;
+      const okAt = last.at + Number(m.every) * 36e5;
+      if (now.ms >= okAt && now.ms - okAt < CATCH_UP_MIN * 6e4) {
+        add(`doseok:${m.id}:${last.at}`, `${m.name}${m.dose ? ` ${m.dose}${m.unit ? " " + m.unit : ""}` : ""} OK now`, "Next dose is OK if you need it.", home);
+      }
+    }
+  }
   if (p.work.on && inWindow(p.work.time, minutes)) {
     const picks = todayPicks(normalizeWork(data.work), date).filter((t) => !t.done);
     if (picks.length) add("work", `${plural(picks.length, "task")} today`, picks.slice(0, 3).map((t) => t.name).join(" \xB7 "), links.work || home);
@@ -371,6 +382,11 @@ async function push(tokens, messages) {
   }
   return tokens.filter((t) => !dead.has(t));
 }
+var prevDate = (date) => {
+  const d = /* @__PURE__ */ new Date(`${date}T12:00:00Z`);
+  d.setUTCDate(d.getUTCDate() - 1);
+  return d.toISOString().slice(0, 10);
+};
 async function userData(uid, date) {
   const u = db.collection("users").doc(uid);
   const refs = [
@@ -379,10 +395,11 @@ async function userData(uid, date) {
     u.collection("lists").doc("routines"),
     u.collection("routinelog").doc(date),
     u.collection("lists").doc("work"),
-    u.collection("medlog").doc(date)
+    u.collection("medlog").doc(date),
+    u.collection("medlog").doc(prevDate(date))
   ];
-  const [settings, day, routines, routinelog, work, medlog] = (await db.getAll(...refs)).map((s) => s.exists ? s.data() : null);
-  return { settings, day, routines, routinelog, work, medlog };
+  const [settings, day, routines, routinelog, work, medlog, medlogPrev] = (await db.getAll(...refs)).map((s) => s.exists ? s.data() : null);
+  return { settings, day, routines, routinelog, work, medlog, medlogPrev };
 }
 var notifyTick = (0, import_scheduler.onSchedule)({ schedule: "every 15 minutes", timeZone: "UTC", region: "us-central1", memory: "256MiB" }, async () => {
   const snap = await db.collectionGroup("notify").get();

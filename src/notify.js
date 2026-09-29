@@ -34,7 +34,7 @@ export function localNow(ms, tz) {
   const parts = Object.fromEntries(new Intl.DateTimeFormat("en-CA", {
     timeZone: tz || "America/Los_Angeles", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23",
   }).formatToParts(new Date(ms)).map((p) => [p.type, p.value]));
-  return { date: `${parts.year}-${parts.month}-${parts.day}`, minutes: Number(parts.hour) * 60 + Number(parts.minute) };
+  return { date: `${parts.year}-${parts.month}-${parts.day}`, minutes: Number(parts.hour) * 60 + Number(parts.minute), ms };
 }
 
 export function inQuiet(q, minutes) {
@@ -100,6 +100,20 @@ export function dueNotifications(prefs, data, now, links = {}) {
           add(`med:${m.id}:${t}`, `Time for ${m.name}`, [m.dose, m.unit].filter(Boolean).join(" ") || "Tap to log it.", home);
         }
       });
+    }
+  }
+
+  // Next dose OK: for meds with "hours between doses", once that many hours have passed since the last dose.
+  // Uses today's and yesterday's logs (data.medlogPrev) so a late-night dose still counts. Needs now.ms.
+  if (p.meds.on && now.ms) {
+    const logs = [...(data.medlogPrev?.items || []), ...(data.medlog?.items || [])];
+    for (const m of (cfg.meds || []).filter((x) => x.active !== false && Number(x.every) > 0)) {
+      const last = logs.filter((x) => x.medId === m.id).sort((a, b) => b.at - a.at)[0];
+      if (!last) continue;
+      const okAt = last.at + Number(m.every) * 3_600_000;
+      if (now.ms >= okAt && now.ms - okAt < CATCH_UP_MIN * 60_000) {
+        add(`doseok:${m.id}:${last.at}`, `${m.name}${m.dose ? ` ${m.dose}${m.unit ? " " + m.unit : ""}` : ""} OK now`, "Next dose is OK if you need it.", home);
+      }
     }
   }
 

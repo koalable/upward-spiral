@@ -56,6 +56,18 @@ test("nothing repeats once sent, and quiet hours hold everything", () => {
 
 test("local time follows the person's time zone", () => {
   const ms = Date.UTC(2026, 8, 29, 4, 30); // 04:30 UTC = 21:30 the day before in Los Angeles
-  assert.deepEqual(localNow(ms, "America/Los_Angeles"), { date: "2026-09-28", minutes: 21 * 60 + 30 });
-  assert.deepEqual(localNow(ms, "Asia/Tokyo"), { date: "2026-09-29", minutes: 13 * 60 + 30 });
+  assert.deepEqual(localNow(ms, "America/Los_Angeles"), { date: "2026-09-28", minutes: 21 * 60 + 30, ms });
+  assert.deepEqual(localNow(ms, "Asia/Tokyo"), { date: "2026-09-29", minutes: 13 * 60 + 30, ms });
+});
+
+test("next dose OK fires once the gap has passed, counting last night's dose", () => {
+  const cfg = { ...settings, meds: [{ id: "v", name: "Vyvanse", dose: "20", unit: "mg", every: 4 }] };
+  const base = Date.UTC(2026, 8, 28, 15, 0); // any fixed instant
+  const now = (minsAfter) => ({ date, minutes: 12 * 60, ms: base + minsAfter * 60_000 });
+  const medlog = { items: [{ medId: "v", at: base - 4 * 3_600_000 }] };
+  assert.deepEqual(ids(dueNotifications({}, { settings: cfg, medlog }, now(5))), [`doseok:v:${base - 4 * 3_600_000}`]);
+  assert.deepEqual(ids(dueNotifications({}, { settings: cfg, medlog }, now(-10))), []); // not yet
+  assert.deepEqual(ids(dueNotifications({}, { settings: cfg, medlogPrev: medlog }, now(5))).length, 1);
+  const again = { items: [...medlog.items, { medId: "v", at: base }] };
+  assert.deepEqual(ids(dueNotifications({}, { settings: cfg, medlog: again }, now(5))), []); // took another since
 });

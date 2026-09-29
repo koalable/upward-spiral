@@ -429,3 +429,42 @@
 #wlc.ui .nrow{align-items:flex-start}#wlc.ui .nrow .switch,#wlc.ui .nrow .nico{margin-top:2px}
 /* Older phones (iOS 14 and earlier) don't know aspect-ratio: give the rings box its height another way. */
 @supports not (aspect-ratio:1){#wlc.ui .rings{height:0;padding-top:59%}}
+
+/* ---------- Accessibility pass (WCAG 2.1 AA), Sep 28 2026 ----------
+   --control: borders of things you can type in or tap (3:1 against the card, both themes).
+   --gold: streak/star colour that stays readable on cream.
+   Light-mode muted text darkened to 6:1. */
+#wlc.ui{--control:#71717a;--gold:#eab308}
+#wlc.ui.light{--control:#8c8372;--gold:#8a5306;--muted:#5f5a54}
+#wlc.ui label.field input,#wlc.ui label.field select,#wlc.ui textarea,#wlc.ui input.field,#wlc.ui select.field,
+#wlc.ui span.step,#wlc.ui .tog,#wlc.ui .btn.ghost,#wlc.ui button.chip,#wlc.ui a.chip,#wlc.ui button.border,#wlc.ui a.button.border{border-color:var(--control)}
+#wlc.ui span.step input{border-left-color:var(--control);border-right-color:var(--control)}
+#wlc.ui .tog .box{border:2px solid var(--control)}
+#wlc.ui .tog[aria-pressed=true]{border-color:var(--fg)}
+#wlc.ui .tog[aria-pressed=true] .box{background:var(--fg);border-color:var(--fg);color:var(--bg)}
+/* Checkboxes: empty = outlined box, ticked = solid box with a check. Never grey-on-grey. */
+#wlc.ui input[type=checkbox]:not(.switch input){appearance:none;-webkit-appearance:none;width:20px;height:20px;margin:0;border:2px solid var(--control);border-radius:5px;background:transparent;display:inline-grid;place-items:center;flex:none;cursor:pointer;vertical-align:middle}
+#wlc.ui input[type=checkbox]:not(.switch input)::after{content:"";width:5px;height:10px;border:solid var(--bg);border-width:0 2.5px 2.5px 0;transform:translateY(-1px) rotate(45deg);opacity:0}
+#wlc.ui input[type=checkbox]:not(.switch input):checked{background:var(--fg);border-color:var(--fg)}
+#wlc.ui input[type=checkbox]:not(.switch input):checked::after{opacity:1}
+#wlc.ui input[type=checkbox]:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
+#wlc.ui .switch span{background:var(--control)}
+/* Gold text */
+#wlc.ui .streaknum,#wlc.ui .leg.star,#wlc.ui .cstar,#wlc.ui .tag.lead,#wlc.ui .badge.ice,#wlc.ui .lvlbadge{color:var(--gold)}
+#wlc.ui.light .tag.lead,#wlc.ui.light .badge.ice,#wlc.ui.light .lvlbadge{border-color:var(--gold)}
+#wlc.ui .cday.all .cstar{color:#fde047;text-shadow:0 0 2px #000}
+/* Dimmed-but-readable: future days and locked badges */
+#wlc.ui .cday.rest,#wlc.ui .cday.future{opacity:1}
+#wlc.ui .bdg{opacity:1}#wlc.ui .bdg:not(.got) b,#wlc.ui .bdg:not(.got) .bico{opacity:.55}
+/* Goal colour bands: all text white */
+#wlc.ui .goal>nav.ghband .small-text{color:#fff}
+#wlc.ui .goal>nav.ghband .badge.bad,#wlc.ui .goal>nav.ghband .badge.good{color:#fff;background:rgb(0 0 0 / .25)}
+/* Day rings: dark ink on the pale tabs; a full ring turns deep with white text */
+#wlc.ui .rings .rlab{color:#141414}
+#wlc.ui .rings g.full .tab,#wlc.ui .rings g.full .arc{stroke:var(--s4)}
+#wlc.ui button.chip:not(.fill){border-color:var(--control)}
+#wlc.ui .eq4 small,#wlc.ui .etile .num small{opacity:1}
+#wlc.ui.light{--good:#166534}
+#wlc.ui .bdg.got b{color:var(--fg)}
+#wlc.ui .bdg:not(.got) b{opacity:1;color:var(--muted)}
+#wlc.ui.light .badge.good{color:#166534;border-color:#86c79a}

@@ -33,12 +33,15 @@ async function push(tokens, messages) {
   return tokens.filter((t) => !dead.has(t));
 }
 
+const prevDate = (date) => { const d = new Date(`${date}T12:00:00Z`); d.setUTCDate(d.getUTCDate() - 1); return d.toISOString().slice(0, 10); };
+
 async function userData(uid, date) {
   const u = db.collection("users").doc(uid);
   const refs = [u, u.collection("days").doc(date), u.collection("lists").doc("routines"),
-    u.collection("routinelog").doc(date), u.collection("lists").doc("work"), u.collection("medlog").doc(date)];
-  const [settings, day, routines, routinelog, work, medlog] = (await db.getAll(...refs)).map((s) => (s.exists ? s.data() : null));
-  return { settings, day, routines, routinelog, work, medlog };
+    u.collection("routinelog").doc(date), u.collection("lists").doc("work"), u.collection("medlog").doc(date),
+    u.collection("medlog").doc(prevDate(date))];
+  const [settings, day, routines, routinelog, work, medlog, medlogPrev] = (await db.getAll(...refs)).map((s) => (s.exists ? s.data() : null));
+  return { settings, day, routines, routinelog, work, medlog, medlogPrev };
 }
 
 export const notifyTick = onSchedule({ schedule: "every 15 minutes", timeZone: "UTC", region: "us-central1", memory: "256MiB" }, async () => {

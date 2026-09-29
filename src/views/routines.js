@@ -1,5 +1,5 @@
 // Routines: today's rituals, the step-by-step ritual runner, and setting routines up. (Beer CSS markup)
-import { html, todayKey, addDays, longDate, atTime } from "../util.js";
+import { html, todayKey, addDays, longDate, atTime, clock } from "../util.js";
 import { APP_NAME } from "../constants.js";
 import { state, isEditable } from "../state.js";
 import {
@@ -151,8 +151,7 @@ export function routineSetupView() {
   const sections = rituals.map((rit) => {
     const mine = items.map((r, i) => [r, i]).filter(([r]) => (r.group || "anytime") === rit.id);
     return html`<article class="round no-padding"><nav class="padding">${icon(rit.icon || "checklist")}<h6 class="max">${rit.name}</h6>
-        ${rit.time ? html`<a class="button border small" id="rlink-${rit.id}" href="${reminderHref(rit.id)}" target="_blank" rel="noopener">${icon("event")}<span>Google</span></a>
-          <button class="border small" data-act="rIcs" data-id="${rit.id}" aria-label="Add ${rit.name} reminder to Apple Calendar">${icon("event")}<span>iCal</span></button>` : ""}
+        ${rit.time ? html`<span class="small-text">${icon("bell")} ${clock(atTime(todayKey(), rit.time))}</span>` : ""}
         <button class="circle transparent" data-act="ritEdit" data-id="${rit.id}" aria-label="Edit ${rit.name}">${icon("edit")}</button></nav>
       ${mine.length ? html`<ul class="list">${mine.map(([r, i]) => html`<li>
         <span class="remoji" aria-hidden="true">${r.icon || "•"}</span>
@@ -164,7 +163,7 @@ export function routineSetupView() {
         : html`<p class="padding small-text">No steps yet.</p>`}</article>`;
   });
   return html`${routineForm()}${ritualForm()}${sections}
-    <p class="small-text">Steps run in this order. "Google" and "iCal" add a repeating calendar reminder on the days that ritual has steps. ${saveStatus()}</p>`;
+    <p class="small-text">Steps run in this order. A ritual with a start time sends a phone notification then (turn it on under Check-in → Notifications). ${saveStatus()}</p>`;
 }
 
 // Reads the open routine form into state.editRoutine so a redraw doesn't lose typing.

@@ -1,4 +1,4 @@
-// Targets & rules: my display name, private targets, the check-in reminder, and how scoring works.
+// Targets & rules: my display name, private targets, linked accounts, and how scoring works.
 import { html } from "../util.js";
 import { APP_NAME } from "../constants.js";
 import { scoredQuestions, questionName, questionRule } from "../scoring.js";
@@ -39,14 +39,12 @@ export function targetsView() {
     hasBuiltin("reading") && field("readMin", "Reading minutes a day"),
     hasBuiltin("practices") && field("customPractice", "My own practice", "text"),
     hasBuiltin("substances") && [field("substanceLimit", "Substance daily limit"), field("substanceRule", "Substances — what counts", "text")],
-    field("reminder", "Daily reminder time", "time"),
   ];
   return html`
     <section class="panel"><h2>My targets</h2>
       <p class="hint">Private. Lower a target any time rather than dropping it. Past days keep the targets they were scored with.</p>
       <div class="targets">${fields}</div>
-      <p class="spaced"><a class="btn ghost" id="reminder-link" href="${reminderLink(t)}" target="_blank" rel="noopener">Google Calendar reminder</a>
-        <button class="btn ghost" data-act="icsReminder">Apple Calendar (iCal) reminder</button></p>
+      <p class="hint">Reminders are phone notifications now. <button class="linkbtn" data-act="openTab" data-tab="notify">Notification settings</button></p>
       ${saveStatus()}</section>
     ${linkedPanel()}
     <section class="panel prose"><h2>How scoring works</h2>
