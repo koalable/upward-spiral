@@ -1,5 +1,7 @@
 // On every page: theme, text size, signing in and out, and joining.
-import { state, settings } from "../state.js";
+import { state, settings, sheet, closeSheet } from "../state.js";
+import { WELCOME_CATS } from "../views/join.js";
+import { applyPreset } from "../layout.js";
 import { setPath } from "../util.js";
 import { render } from "../render.js";
 import { saveMember } from "../day.js";
@@ -31,12 +33,24 @@ export default {
     textLarger: () => { stepTextSize(1); },
     signIn: () => (auth.signIn(), "none"),
     signOut: () => (auth.signOut(), "none"),
+    welcomePreset(el) { const d = sheet("welcome"); d.preset = el.dataset.preset; d.cats = [...WELCOME_CATS[d.preset]]; },
+    welcomeCat(el) { const d = sheet("welcome"), id = el.dataset.id; d.cats = d.cats.includes(id) ? d.cats.filter((x) => x !== id) : [...d.cats, id]; },
+    welcomeNext() { sheet("welcome").step++; window.scrollTo({ top: 0 }); },
+    welcomeBack() { sheet("welcome").step--; window.scrollTo({ top: 0 }); },
+    // Joining: what they picked in the welcome becomes their starting setup.
     join() {
+      const d = sheet("welcome") || { preset: "full", cats: WELCOME_CATS.full, workName: "" };
+      const s = settings();
+      s.cats = d.cats.map((id) => ({ id, kind: "builtin", scored: true }));
+      s.lead = ["writing", "movement", "reading", "sleep", "diet"].find((id) => d.cats.includes(id)) || d.cats[0] || null;
+      s.floor = s.floor.filter((id) => d.cats.includes(id));
+      s.layout = applyPreset({ names: d.workName?.trim() ? { work: d.workName.trim() } : {} }, d.preset);
+      closeSheet();
       state.members[state.uid] = { uid: state.uid, name: state.userName || "Member", joined: todayKey(), freezes: 0 };
       saveMember(0);
-      save(paths.settings(state.uid), settings(), 0);
-    },
-    // A link to a Settings tab (e.g. "Notification settings" on Meds) opens Settings there.
+      save(paths.settings(state.uid), s, 0);
+      state.tab = "today";
+    },    // A link to a Settings tab (e.g. "Notification settings" on Meds) opens Settings there.
     openTab: (el) => { state.tab = el.dataset.tab; window.scrollTo({ top: 0 }); },
     // Settings live on the Check-in page; from anywhere else the gear goes there.
     openSettings() {

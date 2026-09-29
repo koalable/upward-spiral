@@ -90,6 +90,10 @@ var BUILTINS = {
 };
 var BUILTIN_ORDER = Object.keys(BUILTINS);
 
+// src/breathing.js
+var pauseFor = (s, date) => (s?.breathing || []).find((b) => b.week === weekStart(date)) || null;
+var pausedIds = (s, kind, date) => (pauseFor(s, date)?.items || []).filter((x) => x.kind === kind).map((x) => x.id);
+
 // src/scoring.js
 var isScored = (q) => q.scored && q.kind !== "text" && q.kind !== "ladder";
 var scoredQuestions = (cfg) => (cfg.cats || []).filter(isScored);
@@ -176,7 +180,8 @@ function scoreDay(day, currentCfg) {
   const cfg = day.cfg || currentCfg;
   const a = day.a || {};
   const targets = { ...DEFAULT_TARGETS, ...cfg.targets || {} };
-  const questions = scoredQuestions(cfg);
+  const paused = new Set(pausedIds(currentCfg, "cat", day.date || ""));
+  const questions = scoredQuestions(cfg).filter((q) => !paused.has(q.id));
   let earned = 0;
   for (const q of questions) {
     const pts = q.kind === "builtin" ? builtinPoints(q.id, a, targets, result.detail) : customPoints(q, a);
@@ -250,10 +255,6 @@ function todayPicks(w, key, pausedGoals = []) {
   }
   return picks.map((x, i) => [x, i]).sort(([a, i], [b, j]) => (a.at || "99").localeCompare(b.at || "99") || i - j).map(([x]) => x);
 }
-
-// src/breathing.js
-var pauseFor = (s, date) => (s?.breathing || []).find((b) => b.week === weekStart(date)) || null;
-var pausedIds = (s, kind, date) => (pauseFor(s, date)?.items || []).filter((x) => x.kind === kind).map((x) => x.id);
 
 // src/rings.js
 function habitsDue(items, key, log) {
@@ -336,7 +337,8 @@ function dueNotifications(prefs, data, now, links = {}) {
     const log = data.routinelog ? { [date]: data.routinelog } : {};
     for (const r of rituals) {
       if (!r.time || !inWindow(r.time, minutes)) continue;
-      const { due, done } = habitsDue(inRitual(items, r.id), date, log);
+      const on = inRitual(items, r.id).filter((h) => !pausedIds(cfg, "habit", date).includes(h.id));
+      const { due, done } = habitsDue(on, date, log);
       if (due > done) add(`ritual:${r.id}`, `${r.name} ritual`, `${plural(due - done, "habit")} to go.`, links.routines || home);
     }
   }

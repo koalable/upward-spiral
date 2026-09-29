@@ -115,7 +115,8 @@ await esbuild.build({
 // Offline previews (pretend data, every page in one bundle).
 const previewApp = await bundle("src/entries/preview.js");
 // preview-*.html: pretend-you with Ada and Bea. preview-rosa-*.html: Rosa, a pretend beta tester (see seedRosa).
-for (const persona of ["", "rosa"]) {
+// preview-new-*.html: someone signing in for the first time.
+for (const persona of ["", "rosa", "new"]) {
   const pre = persona ? `preview-${persona}-` : "preview-";
   const links = Object.fromEntries(PAGES.map(([id]) => [id, `${pre}${id}.html`]));
   for (const [id, , title] of PAGES) {

@@ -675,3 +675,14 @@
 #wlc.ui .ink input,#wlc.ui .ink select{background:color-mix(in srgb,var(--on) 10%,transparent);color:var(--fg);border-color:var(--control)}
 #wlc.ui .ink input[type=date]::-webkit-calendar-picker-indicator{filter:invert(var(--inv,1))}
 #wlc.ui.light .gc3 input[type=date]::-webkit-calendar-picker-indicator{--inv:0}
+
+/* Breathing room on the streak calendars: paused days, neither missed nor done */
+#wlc.ui .cday.paused{border:1px dotted var(--good);color:var(--muted)}
+/* First-visit welcome */
+#wlc.ui .welcome h2{font:400 2em/1.1 var(--serif);margin:6px 0 8px}
+#wlc.ui .wsteps{display:flex;gap:6px;margin-bottom:8px}
+#wlc.ui .wsteps i{flex:1;height:4px;border-radius:99px;background:var(--border)}
+#wlc.ui .wsteps i.on{background:var(--fg)}
+#wlc.ui .welcome .brpick{width:100%;height:auto;display:flex;align-items:center;gap:12px;padding:9px 2px;margin:0;border:0;border-radius:0;background:none;color:var(--fg);font:inherit;text-align:left;white-space:normal;justify-content:flex-start}
+#wlc.ui .welcome .brpick.on .brbox{background:var(--good);border-color:var(--good);color:#fff}
+#wlc.ui .welcome nav.wrap{gap:8px;margin-top:14px}

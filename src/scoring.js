@@ -4,6 +4,7 @@ import {
   POINTS_PER_CATEGORY, SCALED_POINTS, CHECK_IN_POINTS,
 } from "./constants.js";
 import { toNum, isSet, minutesOf } from "./util.js";
+import { pausedIds } from "./breathing.js";
 
 // ---------- settings ----------
 export function defaultSettings() {
@@ -124,7 +125,9 @@ export function scoreDay(day, currentCfg) {
   const cfg = day.cfg || currentCfg;
   const a = day.a || {};
   const targets = { ...DEFAULT_TARGETS, ...(cfg.targets || {}) };
-  const questions = scoredQuestions(cfg);
+  // Categories on a breathing-room pause sit out: not counted as missed, not needed for the streak or floor.
+  const paused = new Set(pausedIds(currentCfg, "cat", day.date || ""));
+  const questions = scoredQuestions(cfg).filter((q) => !paused.has(q.id));
 
   let earned = 0;
   for (const q of questions) {

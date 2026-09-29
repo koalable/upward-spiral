@@ -1,6 +1,6 @@
 // Streak calendars: turn "how did this area go each day" into runs, milestones, and badges.
-// A day's status is "all", "some", "none", or null when nothing was due (a rest day for that area:
-// it neither breaks nor extends a run).
+// A day's status is "all", "some", "none", "paused" (breathing room), or null when nothing was due.
+// Paused and nothing-due days neither break nor extend a run.
 
 export const BADGES = [
   [1, "Ideal Day"], [3, "Tiptop Triple"], [7, "Wonderful Week"], [14, "Fantastic Fortnight"],
@@ -17,7 +17,7 @@ export function runs(dates, statusOf) {
     const status = statusOf(d);
     if (d === today) beforeToday = run;
     if (status === "all") run++;
-    else if (status !== null && d !== today) run = 0; // today isn't over yet
+    else if (status !== null && status !== "paused" && d !== today) run = 0; // today isn't over yet
     best = Math.max(best, run);
     byDay[d] = { status, star: status === "all" && STAR_AT.has(run) };
   }

@@ -46,7 +46,7 @@ function builtinCard(id, a, t) {
         <div class="row"><span class="lbl">Processed food</span>${choices("processed", penalty, a.processed, "warn")}</div>`;
     }
     case "substances": return html`${hint}
-      ${t.substanceRule ? html`<p class="hint">Yours: ${t.substanceRule}</p>` : html`<p class="hint">Set what counts under Targets &amp; rules.</p>`}
+      ${t.substanceRule ? html`<p class="hint">Yours: ${t.substanceRule}</p>` : html`<p class="hint">Set what counts in Settings → Targets &amp; scoring.</p>`}
       <div class="row"><span class="lbl">Units today</span>${stepper("substances", a.substances, 0.5, "Units today")}<span class="muted small">limit ${t.substanceLimit}</span></div>`;
     case "movement": return html`${hint}
       <div class="sub"><span>Walking</span><span class="pts" id="live-walk"></span></div>

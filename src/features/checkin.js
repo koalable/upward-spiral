@@ -1,6 +1,6 @@
 // The daily check-in: answering questions, editing my questions, level-ups, journal, and targets.
 import { state, settings, targets, isEditable, findQuestion, sheet, openSheet, closeSheet } from "../state.js";
-import { answers, commitDay, saveSettings, saveMember } from "../day.js";
+import { answers, commitDay, saveSettings, saveMember, republishWeek } from "../day.js";
 import { builtinAsCustom, scoredQuestions } from "../scoring.js";
 import { clone, getPath, setPath, isSet, toNum, todayKey, newId } from "../util.js";
 import { ui, render, patch } from "../render.js";
@@ -113,6 +113,7 @@ const actions = {
     }
     closeSheet();
     saveSettings();
+    republishWeek();
     window.scrollTo({ top: 0, behavior: "smooth" });
   },
   brEnd() {
@@ -120,6 +121,7 @@ const actions = {
     const s = settings(), week = weekStart(todayKey());
     s.breathing = (s.breathing || []).filter((b) => b.week !== week);
     saveSettings();
+    republishWeek();
   },
   layoutPreset: (el) => editLayout((l) => applyPreset(l, el.dataset.preset)),
   layoutToggle: (el) => editLayout((l) => toggleIn(l, el.dataset.key, el.dataset.id)),

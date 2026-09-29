@@ -140,3 +140,8 @@ export function seedRosa(db) {
   };
   return { name: "Rosa" };
 }
+
+// ---------- A brand-new person (preview-new-*.html): signed in, nothing set up yet ----------
+export function seedNew() {
+  return { name: "Sam" };
+}

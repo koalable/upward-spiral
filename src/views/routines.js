@@ -8,6 +8,7 @@ import {
   scheduleLabel, doneThisWeek,
 } from "../routines.js";
 import { pressed, saveStatus, icon } from "./components.js";
+import { isPaused, pausedIds } from "../breathing.js";
 
 export const routineData = () => read("routines");
 export const findRitual = (id) => routineData().rituals.find((r) => r.id === id);
@@ -15,7 +16,9 @@ const clock12 = (hhmm) => new Date(atTime(todayKey(), hhmm)).toLocaleTimeString(
 export const mmss = (ms) => { const s = Math.max(0, Math.ceil(ms / 1000)); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`; };
 
 // Today's due steps for a ritual, in order.
-export const ritualSteps = (id, key = state.date) => inRitual(routineData().items, id).filter((r) => isScheduled(r, key, state.routinelog));
+// Today's steps in a ritual: scheduled, and not on a breathing-room pause.
+export const ritualSteps = (id, key = state.date) => inRitual(routineData().items, id)
+  .filter((r) => isScheduled(r, key, state.routinelog) && !isPaused(state.settings, "habit", r.id, key));
 
 // ---------- today ----------
 function mark(r, key, open) {
@@ -67,7 +70,7 @@ export function routinesView() {
   if (!items.length) return emptyState();
   const key = state.date, today = todayKey(), open = isEditable(key);
   const label = key === today ? "Today" : key === addDays(today, -1) ? "Yesterday" : longDate(key);
-  const later = items.filter((r) => !isScheduled(r, key, state.routinelog));
+  const later = items.filter((r) => !isScheduled(r, key, state.routinelog) && !isPaused(state.settings, "habit", r.id, key));
   return html`
     <nav class="daybar">
       <button class="circle transparent" data-act="shiftDay" data-by="-1" aria-label="Previous day">${icon("chevron_left")}</button>
@@ -75,6 +78,8 @@ export function routinesView() {
       <button class="circle transparent" data-act="shiftDay" data-by="1" aria-label="Next day" ${key === today ? "disabled" : ""}>${icon("chevron_right")}</button></nav>
     ${open ? "" : html`<p class="small-text center-align">This day is closed for checking off.</p>`}
     ${rituals.map((rit) => ritualCard(rit, key, open))}
+    ${(() => { const off = items.filter((r) => pausedIds(state.settings, "habit", key).includes(r.id));
+      return off.length ? html`<p class="pausednote">${icon("leaf")} Paused this week: ${off.map((r) => r.name).join(", ")}. Not counted as missed.</p>` : ""; })()}
     ${later.length ? html`<details class="later"><summary class="small-text">Not scheduled ${key === today ? "today" : "this day"} (${later.length})</summary>
       <ul class="list">${later.map((r) => routineRow(r, key, open))}</ul></details>` : ""}
     <p class="small-text center-align">${icon("lock")} Private to you. ${saveStatus()}</p>`;

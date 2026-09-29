@@ -6,6 +6,7 @@ import { state, settings } from "../state.js";
 import { normalizeRoutines, dayStatus } from "../routines.js";
 import { GROUPS, groupOf, iconOf, MOMENTUM, windows, trend } from "../energy.js";
 import { icon } from "./components.js";
+import { isPaused } from "../breathing.js";
 import { totals } from "./progress.js";
 
 const round = (n) => Math.round(n * 10) / 10;
@@ -17,8 +18,8 @@ function spark(values) {
 }
 
 function tile(theme, { name, ico, t, values, unit, note, wide }) {
-  return html`<div class="etile ${theme} m${t.level}${light(t.level) ? " lt" : ""}${wide ? " wide" : ""}" role="group" aria-label="${name}: ${t.now} ${unit}, ${MOMENTUM[t.level].toLowerCase()}. Usually ${round(t.avg)}.">
-    <div class="hd"><span class="ico">${icon(ico)}</span><span class="mo">${MOMENTUM[t.level]}</span></div>
+  return html`<div class="etile ${theme} m${t.level}${light(t.level) ? " lt" : ""}${wide ? " wide" : ""}" role="group" aria-label="${name}: ${t.now} ${unit}, ${t.paused ? "paused this week" : MOMENTUM[t.level].toLowerCase()}. Usually ${round(t.avg)}.">
+    <div class="hd"><span class="ico">${icon(ico)}</span><span class="mo">${t.paused ? "Paused" : MOMENTUM[t.level]}</span></div>
     <div class="name">${name}</div>
     <div class="foot"><div><div class="num serif">${t.now}<small>${unit}</small></div><div class="was">${note || `usually ${round(t.avg)}`}</div></div>${spark(values)}</div></div>`;
 }
@@ -35,6 +36,8 @@ export function energyView() {
   const groups = GROUPS.map((g) => {
     const tiles = qs.filter((q) => groupOf(q).id === g.id).map((q) => {
       const values = sums.map((s) => s.byQuestion[q.id] || 0);
+      // On a breathing-room pause this week: shown as paused, and left out of the group's momentum.
+      if (isPaused(cfg, "cat", q.id, today)) return { name: questionName(q), ico: iconOf(q), values, t: { ...trend(values), level: 2, paused: true }, unit: "pts", note: "paused this week", paused: true };
       return { name: questionName(q), ico: iconOf(q), values, t: trend(values), unit: "pts" };
     });
     if (g.id === "show") {
@@ -45,7 +48,7 @@ export function energyView() {
         tiles.push({ name: "Habits", ico: "list-checks", values: rv, t: trend(rv), unit: `/${w.days} days`, note: "all done · no points" });
       }
     }
-    const counted = tiles.filter((x) => x.name !== "Habits").map((x) => x.values); // routines are streak-only
+    const counted = tiles.filter((x) => x.name !== "Habits" && !x.paused).map((x) => x.values); // routines are streak-only
     const values = counted.length ? sumSeries(counted) : w.windows.map(() => 0);
     return { ...g, tiles, values, t: trend(values) };
   }).filter((g) => g.tiles.length);

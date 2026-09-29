@@ -9,8 +9,9 @@ import { runs, BADGES, nextBadge } from "../streaks.js";
 import { pressed } from "./components.js";
 import { groupOf, iconOf, GROUPS } from "../energy.js";
 import { icon } from "./components.js";
+import { isPaused } from "../breathing.js";
 
-const LABEL = { all: "all done", some: "some done", none: "not done" };
+const LABEL = { all: "all done", some: "some done", none: "not done", paused: "paused (breathing room)" };
 
 // Every area this person has, each with a way to judge a day.
 export function areas() {
@@ -27,6 +28,7 @@ export function areas() {
       about: `Filled: full ${POINTS_PER_CATEGORY} points. Ring: some points.`,
       status: (d) => {
         if (!started(d)) return null;
+        if (isPaused(cfg, "cat", q.id, d)) return "paused";
         const r = scoreDay(state.days[d], cfg);
         if (!r.logged) return "none";
         if (!(q.id in r.points)) return null; // not one of this day's questions
@@ -36,11 +38,17 @@ export function areas() {
     });
   }
   const { items, rituals } = read("routines"), log = state.routinelog;
+  // Habits on a breathing-room pause that day sit out; if that leaves nothing due, the day shows as paused.
+  const habitStatus = (list) => (d) => {
+    const on = list.filter((r) => !isPaused(cfg, "habit", r.id, d));
+    const s = dayStatus(on, d, log);
+    return s === null && on.length < list.length ? "paused" : s;
+  };
   if (items.length) {
-    list.push({ id: "r-all", name: "All habits", group: "show", ico: "list-checks", about: "Filled: every habit due that day. Ring: some.", status: (d) => dayStatus(items, d, log) });
+    list.push({ id: "r-all", name: "All habits", group: "show", ico: "list-checks", about: "Filled: every habit due that day. Ring: some.", status: habitStatus(items) });
     for (const { id: g, name } of rituals) {
       const mine = inRitual(items, g);
-      if (mine.length) list.push({ id: `r-${g}`, name: `${name} ritual`, group: "show", ico: rituals.find((r) => r.id === g).icon || "checklist", about: "Filled: every habit due that day. Ring: some.", status: (d) => dayStatus(mine, d, log) });
+      if (mine.length) list.push({ id: `r-${g}`, name: `${name} ritual`, group: "show", ico: rituals.find((r) => r.id === g).icon || "checklist", about: "Filled: every habit due that day. Ring: some.", status: habitStatus(mine) });
     }
   }
   // Same order and colours as everywhere else: Fill up, Protect, Spend well, Show up.

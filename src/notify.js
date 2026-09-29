@@ -87,7 +87,8 @@ export function dueNotifications(prefs, data, now, links = {}) {
     const log = data.routinelog ? { [date]: data.routinelog } : {};
     for (const r of rituals) {
       if (!r.time || !inWindow(r.time, minutes)) continue;
-      const { due, done } = habitsDue(inRitual(items, r.id), date, log);
+      const on = inRitual(items, r.id).filter((h) => !pausedIds(cfg, "habit", date).includes(h.id));
+      const { due, done } = habitsDue(on, date, log);
       if (due > done) add(`ritual:${r.id}`, `${r.name} ritual`, `${plural(due - done, "habit")} to go.`, links.routines || home);
     }
   }

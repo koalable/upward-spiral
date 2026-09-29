@@ -47,3 +47,23 @@ test("moving a late goal's tasks to next week", () => {
   moveDueTasks(w, ["g1"], "2026-10-01");
   assert.deepEqual(w.tasks.map((t) => t.due), ["2026-10-09", "2026-10-08", "2026-10-09"]);
 });
+
+test("paused categories sit out of the day's score, streak and floor", async () => {
+  const { scoreDay } = await import("../src/scoring.js");
+  const cfg = { cats: [{ id: "writing", kind: "builtin", scored: true }, { id: "reading", kind: "builtin", scored: true }], lead: "writing", floor: ["writing", "reading"], targets: { writeMin: 30, readMin: 20 } };
+  const day = { date: "2026-10-01", logged: true, a: { reading: 20, sessions: [] } };
+  const before = scoreDay(day, cfg);
+  assert.equal(before.streakDay, false); // no writing: streak day missed
+  const paused = { ...cfg, breathing: [newBreathing({ items: [{ kind: "cat", id: "writing" }] }, "2026-10-01", "b1")] };
+  const after = scoreDay(day, paused);
+  assert.ok(!("writing" in after.points));
+  assert.equal(after.streakDay, true); // the paused streak habit isn't needed
+  assert.equal(after.showedUp, true);  // floor = what's left (reading)
+  assert.ok(after.total > before.total);
+});
+
+test("paused days neither break nor extend a streak run", async () => {
+  const { runs } = await import("../src/streaks.js");
+  const s = { "d1": "all", "d2": "paused", "d3": "paused", "d4": "all" };
+  assert.equal(runs(["d1", "d2", "d3", "d4"], (d) => s[d]).current, 2);
+});

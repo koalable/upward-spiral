@@ -2,6 +2,6 @@
 import { start } from "../main.js";
 import { CHECKIN_TABS } from "../page.js";
 import { ALL_PAGES } from "../allpages.js";
-import { seedPreview, seedRosa } from "../preview.js";
+import { seedPreview, seedRosa, seedNew } from "../preview.js";
 
-start({ page: window.WLC_PAGE || "checkin", pages: ALL_PAGES, order: CHECKIN_TABS, seed: window.WLC_PERSONA === "rosa" ? seedRosa : seedPreview });
+start({ page: window.WLC_PAGE || "checkin", pages: ALL_PAGES, order: CHECKIN_TABS, seed: { rosa: seedRosa, new: seedNew }[window.WLC_PERSONA] || seedPreview });

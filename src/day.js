@@ -4,7 +4,7 @@ import { scoreDay } from "./scoring.js";
 import { bonusOn } from "./ladder.js";
 import { MAX_DAILY_BONUS } from "./constants.js";
 import { save, paths } from "./store.js";
-import { clone, todayKey } from "./util.js";
+import { clone, todayKey, weekOf } from "./util.js";
 
 export function dayFor(key) {
   state.days[key] ??= { date: key, a: {} };
@@ -46,6 +46,13 @@ export function commitDay(key = state.date) {
   publishScore(key);
   syncFreezes();
   return true;
+}
+
+// Taking or ending a breathing room changes how this week's days score (paused categories sit out),
+// so republish the numbers the group sees for each day of the week logged so far. Answers aren't touched.
+export function republishWeek(today = todayKey()) {
+  for (const d of weekOf(today)) if (d <= today && state.days[d]?.logged) publishScore(d);
+  syncFreezes();
 }
 
 // After question/target edits, today's score should reflect the new setup.

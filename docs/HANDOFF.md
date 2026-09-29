@@ -16,7 +16,7 @@ People (all on the member list in `firestore.rules`):
 
 | Page | App URL | Tabs |
 |---|---|---|
-| Check-in | / | Today, Meds, Journal, Categories, Targets & rules, Notifications (live). On the branch: Today · Meds · Reflect, with the rest under the Settings gear |
+| Check-in | / | Today · Meds · Reflect; Customize, Categories, Targets & scoring, Notifications, Account under the Settings gear |
 | Habits | /routines | Rituals (run step by step), Set up habits, To-dos (one list grouped Today / This week / Later this month / Later / Someday / Done by date) |
 | Work | /work | Today (3–5 picked tasks, timed ones on top, task timers; goals deck below; a goal opens its own page), Goals (goals → milestones → tasks, dependencies, progress, "Paste a plan from Claude") |
 | Progress | /progress | Streaks & badges (check-in streak, 30-day tally, floor day, streak freezes, then per-area calendars), My progress (energy flow), Group |
@@ -30,13 +30,15 @@ Words: **habit** = one recurring action; **ritual** = a saved sequence of habits
 - Done and live: rings, streaks on Progress, half units, the app at app.kstarr.com, notifications server, linked accounts, redirects.
 - Waiting on people: Karla installs the app on her iPhone, turns on notifications and sends a test; Karla links hello@kstarr.com; Erik links mxfenrir@gmail.com (both may need to close and reopen the app once).
 
-## In progress (branch `checkin-reshuffle`, not released; preview only)
-- Sep 29 cleanup done on this branch: shared list load/save (`src/docs.js`), route + one open-sheet slot, timer read from the Work doc, old in-browser med alerts and calendar-reminder code removed, Check-in bundle ~24% smaller, dead styles removed. See HOW-IT-WORKS → How the code fits together.
-- Settings behind a gear (Customize, Categories, Targets & scoring, Notifications, Account); `src/layout.js` renames/hides pages, tabs and Today sections (Everything / Simple presets).
-- Check-in = Today · Meds · Reflect. Today: rings, "On your plate" (to-dos + Work/House tasks), meds, fold-up energy groups with points, "Close the day".
-- **Breathing room** (`src/breathing.js`, `src/views/breathing.js`): pause any mix of categories, habits, goals for the rest of the week; asks how much room, what, why, and whether a smaller version would do. Language is only **on track / late / restarting after a break** (Karla: no "making it up"). Late goals can move this week's tasks to next week. Paused things leave Today, rings and today's picks. Still to do: streaks/momentum/calendars treat paused days as paused; habits page and notifications skip paused habits.
-- **Tidy up** (Work → Today, plus a line on Check-in's On your plate): tasks more than 7 days late, one at a time → Push back (+1/+2 weeks/date) / Archive / Already done, then Why? (+ note). Logged in the work doc's `slips` (task, goal, days late, action, why, note, from/to) for behaviour data later; archived tasks move to `archived`. Logic: `staleTasks`, `resolveStale` in `src/work.js`.
-- Rosa (pretend beta tester) in `dist/preview-rosa-*.html` (`seedRosa` in `src/preview.js`).
+## Released Sep 29 (evening)
+- **One app, no jumps:** all four pages are one bundle (`src/entries/app.js`); page links switch in place and remember each page's screen and scroll; the back gesture works. Redraws only change what's different (morphdom in `showScreen`), so taps don't replay animations, reset folds, or re-sweep the rings (areas marked `data-live` are left to their updater).
+- **Settings** behind the gear (Customize, Categories, Targets & scoring, Notifications, Account); `src/layout.js` renames/hides pages, tabs and Today sections (Everything / Simple). Done returns to where you were.
+- **Check-in** = Today · Meds · Reflect. Today: rings, "On your plate" (to-dos + Work/House tasks), meds, fold-up energy groups with points, "Close the day".
+- **Breathing room** (`src/breathing.js`, `src/views/breathing.js`): pause any mix of categories, habits, goals for the rest of the week; asks how much room, what, why, and whether a smaller version would do. Words: only **on track / late / restarting after a break**. Paused things sit out of Today, rings, today's picks, the day's score (lead/floor too), streak calendars ("paused", neither breaks nor extends a run), momentum ("Paused"), the Habits page and ritual reminders. Taking/ending one republishes this week's group scores (`republishWeek`).
+- **Tidy up**: tasks >7 days late → push back / archive / done + why, logged in `slips`.
+- **Welcome** for new people (`src/views/join.js`): three steps (simple or everything + name the projects page; what to track; privacy) instead of the rules page.
+- Preview personas: `dist/preview-*.html` (you + Ada/Bea), `preview-rosa-*` (beta tester), `preview-new-*` (first visit).
+- Code cleanup: `src/docs.js` read/edit for lists, `state.route` + `state.sheet`, timer read from the Work doc by the server. See HOW-IT-WORKS.
 
 ## Open questions for Karla
 - Should Tidy up also cover to-dos with due dates (Habits page)?
