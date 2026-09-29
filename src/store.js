@@ -13,6 +13,7 @@ export const paths = {
   routineLog: (uid, d) => `users/${uid}/routinelog/${d}`,
   work: (uid) => `users/${uid}/lists/work`,
   notify: (uid) => `users/${uid}/notify/settings`,
+  alias: (email) => `aliases/${email.toLowerCase()}`,
   member: (uid) => `members/${uid}`,
   score: (uid, d) => `scores/${uid}_${d}`,
   win: (uid, week) => `wins/${uid}_${week}`,

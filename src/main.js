@@ -98,10 +98,15 @@ function startFirebase(config) {
   };
   fbAuth.getRedirectResult().catch((err) => setBanner(`Sign-in didn't finish: ${err?.message || "unknown error"}`, "bad"));
   auth.signOut = () => fbAuth.signOut().then(() => location.reload());
-  fbAuth.onAuthStateChanged((user) => {
+  fbAuth.onAuthStateChanged(async (user) => {
     if (!user) { showTabs(false); setWho(""); showScreen(signInView()); return; }
-    Object.assign(state, { uid: user.uid, email: user.email, userName: user.displayName || user.email });
-    setWho(html`${state.userName} <button class="linkbtn" data-act="signOut">Sign out</button>`);
+    Object.assign(state, { uid: user.uid, authUid: user.uid, email: user.email, userName: user.displayName || user.email, linkedTo: "" });
+    // A linked account (e.g. a work address) acts as its main account: same data, same streaks.
+    try {
+      const alias = await firebase.firestore().doc(`aliases/${user.email.toLowerCase()}`).get();
+      if (alias.exists && alias.data().uid) Object.assign(state, { uid: alias.data().uid, linkedTo: alias.data().uid });
+    } catch { /* not linked, or rules not published yet */ }
+    setWho(html`${state.userName}${state.linkedTo ? html` <span class="muted">(linked)</span>` : ""} <button class="linkbtn" data-act="signOut">Sign out</button>`);
     showTabs(true);
     subscribe();
   });

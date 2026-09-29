@@ -66,8 +66,11 @@ export const notifyTick = onSchedule({ schedule: "every 15 minutes", timeZone: "
 
 // "Send a test" button in the app.
 export const sendTest = onCall({ region: "us-central1" }, async (req) => {
-  const uid = req.auth?.uid;
-  if (!uid) throw new HttpsError("unauthenticated", "Sign in first.");
+  if (!req.auth?.uid) throw new HttpsError("unauthenticated", "Sign in first.");
+  // A linked account (aliases/{email}) acts as its main account.
+  const email = String(req.auth.token.email || "").toLowerCase();
+  const alias = email ? await db.doc(`aliases/${email}`).get() : null;
+  const uid = alias?.exists ? alias.data().uid : req.auth.uid;
   const ref = db.doc(`users/${uid}/notify/settings`);
   const prefs = normalizeNotify((await ref.get()).data());
   const tokens = prefs.tokens.map((x) => x.t).filter(Boolean);

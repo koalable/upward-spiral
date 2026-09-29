@@ -4,6 +4,7 @@ import { answers, commitDay, saveSettings, saveMember } from "../day.js";
 import { builtinAsCustom, scoredQuestions } from "../scoring.js";
 import { clone, getPath, setPath, isSet, toNum, todayKey, newId } from "../util.js";
 import { ui, render, patch } from "../render.js";
+import { store, paths } from "../store.js";
 import { isLadder, ladderStatus, levelOf } from "../ladder.js";
 import { LADDER_TEMPLATES, DEFAULT_WEEKS_TO_LEVEL } from "../constants.js";
 import { todayView, patchToday } from "../views/today.js";
@@ -66,7 +67,25 @@ function saveQuestion() {
   tidyStreakAndFloor();
 }
 
+async function loadAliases() {
+  const all = await store().find("aliases", ["uid", "==", state.uid]).catch(() => ({}));
+  state.aliases = all;
+  render();
+}
+
 const actions = {
+  linkAccount() {
+    const email = ($("#link-email")?.value || "").trim().toLowerCase();
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email) || email === (state.email || "").toLowerCase()) return $("#link-email")?.focus(), "none";
+    state.linkMsg = "Linking…";
+    store().set(paths.alias(email), { uid: state.uid, at: Date.now() })
+      .then(() => { state.linkMsg = `Linked. Sign in with ${email} to use it.`; return loadAliases(); })
+      .catch(() => { state.linkMsg = "Couldn't link that email. Is it on the challenge list?"; render(); });
+  },
+  unlinkAccount(el) {
+    store().remove(paths.alias(el.dataset.email)).then(loadAliases, loadAliases);
+    return "none";
+  },
   // tapping a ring's tab jumps to that group's questions (Show up → today's to-dos and Work)
   jumpGroup(el) {
     const target = $(`#grp-${el.dataset.group}`) || (el.dataset.group === "show" ? $("#live-dash") || $("#live-finish") : null);
@@ -171,6 +190,7 @@ export default {
   ],
   actions,
   liveTab: (tab) => tab === "today",
+  data(name) { if (name === "loaded" && !state.preview && !state.linkedTo) loadAliases(); },
   busy: () => Boolean(state.editQuestion),
   leave: (tab, view) => { if (tab === "setup") readQuestionForm(view); },
   patch: (tab, view) => { if (tab === "today") patchToday(view); },

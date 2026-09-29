@@ -407,8 +407,10 @@ var notifyTick = (0, import_scheduler.onSchedule)({ schedule: "every 15 minutes"
   }
 });
 var sendTest = (0, import_https.onCall)({ region: "us-central1" }, async (req) => {
-  const uid = req.auth?.uid;
-  if (!uid) throw new import_https.HttpsError("unauthenticated", "Sign in first.");
+  if (!req.auth?.uid) throw new import_https.HttpsError("unauthenticated", "Sign in first.");
+  const email = String(req.auth.token.email || "").toLowerCase();
+  const alias = email ? await db.doc(`aliases/${email}`).get() : null;
+  const uid = alias?.exists ? alias.data().uid : req.auth.uid;
   const ref = db.doc(`users/${uid}/notify/settings`);
   const prefs = normalizeNotify((await ref.get()).data());
   const tokens = prefs.tokens.map((x) => x.t).filter(Boolean);

@@ -9,12 +9,21 @@ service cloud.firestore {
         && request.auth.token.email_verified == true
         && request.auth.token.email in [
           'karlastarr@gmail.com',
+          'hello@kstarr.com',
           'erikjschultz@gmail.com',
           'ssstarr29@gmail.com'
         ];
     }
+    // Linked accounts: a second Google account that acts as someone's main account.
+    // aliases/{email} = { uid: main account } is written by the main account (Targets & rules → Linked accounts).
+    function aliasPath() {
+      return /databases/$(database)/documents/aliases/$(request.auth.token.email);
+    }
+    function actingAs() {
+      return exists(aliasPath()) ? get(aliasPath()).data.uid : request.auth.uid;
+    }
     function me(uid) {
-      return member() && request.auth.uid == uid;
+      return member() && (request.auth.uid == uid || actingAs() == uid);
     }
     function data() {
       return request.resource.data;
@@ -43,8 +52,8 @@ service cloud.firestore {
       allow read: if member();
       allow create, update: if member()
         && data().keys().hasOnly(['uid', 'date', 'total', 'logged', 'showed', 'streak', 'updated', 'doneAt', 'bonus', 'levelUp'])
-        && data().uid == request.auth.uid
-        && id == request.auth.uid + '_' + data().date
+        && me(data().uid)
+        && id == data().uid + '_' + data().date
         && data().total is number && data().total >= 0 && data().total <= 33
         && data().logged is bool && data().showed is bool && data().streak is bool
         && (!('doneAt' in data()) || data().doneAt is number)
@@ -57,10 +66,10 @@ service cloud.firestore {
       allow read: if member();
       allow create, update: if member()
         && data().keys().hasOnly(['uid', 'week', 'text'])
-        && data().uid == request.auth.uid
-        && id == request.auth.uid + '_' + data().week
+        && me(data().uid)
+        && id == data().uid + '_' + data().week
         && data().text is string && data().text.size() <= 1000;
-      allow delete: if member() && resource.data.uid == request.auth.uid;
+      allow delete: if me(resource.data.uid);
     }
 
     // Season settings are shared; any member can start or move a season.
@@ -71,7 +80,19 @@ service cloud.firestore {
         && data().keys().hasOnly(['start', 'n', 'weeks', 'breakDays', 'uid'])
         && data().start is string && data().start.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
         && data().n is int && data().n >= 1 && data().n <= 1000
-        && data().uid == request.auth.uid;
+        && me(data().uid);
+    }
+
+    // Linked accounts. Only the main account can link or unlink an email to itself;
+    // the linked account can read its own entry to find out who it acts as.
+    match /aliases/{email} {
+      allow read: if member() && (request.auth.token.email == email || resource.data.uid == request.auth.uid);
+      allow create, update: if member()
+        && data().keys().hasOnly(['uid', 'at'])
+        && data().uid == request.auth.uid
+        && email != request.auth.token.email
+        && !exists(aliasPath());
+      allow delete: if member() && resource.data.uid == request.auth.uid;
     }
   }
 }

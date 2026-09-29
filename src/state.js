@@ -7,7 +7,7 @@ import { todayKey, addDays, dateRange, daysBetween, parseKey, toNum } from "./ut
 
 export const state = {
   // who
-  uid: null, email: "", userName: "", preview: false,
+  uid: null, authUid: null, email: "", userName: "", preview: false, linkedTo: "", aliases: null,
   // what's on screen
   tab: "", date: todayKey(), board: "week",
   // data (shared)
