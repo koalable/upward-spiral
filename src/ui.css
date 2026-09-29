@@ -686,3 +686,11 @@
 #wlc.ui .welcome .brpick{width:100%;height:auto;display:flex;align-items:center;gap:12px;padding:9px 2px;margin:0;border:0;border-radius:0;background:none;color:var(--fg);font:inherit;text-align:left;white-space:normal;justify-content:flex-start}
 #wlc.ui .welcome .brpick.on .brbox{background:var(--good);border-color:var(--good);color:#fff}
 #wlc.ui .welcome nav.wrap{gap:8px;margin-top:14px}
+/* Progress → My progress: projects */
+#wlc.ui .plist{list-style:none;margin:8px 0 0;padding:0}
+#wlc.ui .plist li{display:flex;gap:12px;align-items:flex-start;padding:12px 0 12px 12px;border-top:1px solid var(--border);box-shadow:inset 3px 0 0 var(--p)}
+#wlc.ui .pgico{font-size:1.5em;width:32px;display:grid;place-items:center;color:var(--fg);margin-top:2px}
+#wlc.ui .pgtop{display:flex;align-items:center;gap:8px;justify-content:space-between;margin-bottom:6px}
+#wlc.ui .pgtop b{font:400 1.25em/1.1 var(--serif)}
+#wlc.ui .projprog .ptrack i{background:var(--p)}
+#wlc.ui .projprog .pbar{margin-bottom:4px}

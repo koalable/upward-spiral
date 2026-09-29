@@ -11,10 +11,10 @@ export const PAGE_ICON_CHOICES = [
 export const PAGE_ICONS = { checkin: "edit_note", routines: "checklist", progress: "insights", work: "work" };
 
 // What can be hidden. Check-in itself can't (Settings lives there), and neither can its Today tab.
-export const HIDEABLE_PAGES = [["routines", "Habits"], ["work", "Work"], ["progress", "Progress"]];
+export const HIDEABLE_PAGES = [["routines", "Habits"], ["work", "Projects"], ["progress", "Progress"]];
 export const HIDEABLE_TABS = {
   checkin: [["meds", "Meds"], ["reflect", "Reflect"]],
-  routines: [["routines", "Rituals"], ["rsetup", "Set up habits"], ["todos", "To-dos"]],
+  routines: [["routines", "Rituals"], ["rsetup", "Set up habits & rituals"], ["todos", "To-dos"]],
   work: [["wtoday", "Today"], ["wgoals", "Goals"]],
   progress: [["streaks", "Streaks & badges"], ["me", "My progress"], ["group", "Group"]],
 };

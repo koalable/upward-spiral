@@ -6,6 +6,12 @@ import { state, settings, currentStreak, longestStreak, myFreezes, dayTotal, sho
 import { change, progressBar } from "./components.js";
 import { spiral, spiralDays, spiralLegend } from "./spiral.js";
 import { energyView } from "./energy.js";
+import { read } from "../docs.js";
+import { progress, countdown, goalTheme, goalIcon } from "../work.js";
+import { durationText } from "../timer.js";
+import { isPaused } from "../breathing.js";
+import { normalizeLayout, pageLabel, pageHidden } from "../layout.js";
+import { icon } from "./components.js";
 
 export function totals(dates) {
   const today = todayKey(), out = { total: 0, checkins: 0, byQuestion: {} };
@@ -25,6 +31,32 @@ function doubleMisses() {
   return days.filter((d) => d < today && addDays(d, -1) >= days[0] && !showedUp(state.uid, d) && !showedUp(state.uid, addDays(d, -1))).length;
 }
 
+// Projects: how far each goal has come, and how many of its tasks got done this week against the usual
+// (the average of the three weeks before). Named after the projects page (e.g. House).
+function projectsProgress(today) {
+  const w = read("work");
+  if (!w.goals.length) return "";
+  const l = normalizeLayout(state.settings?.layout);
+  if (pageHidden(l, "work")) return "";
+  const wk = weekStart(today), weeks = [3, 2, 1].map((n) => weekStart(addDays(wk, -7 * n)));
+  const doneIn = (tasks, start) => tasks.filter((t) => t.done && weekStart(t.done) === start).length;
+  const usual = (tasks) => Math.round((weeks.reduce((n, s) => n + doneIn(tasks, s), 0) / 3) * 10) / 10;
+  const all = w.tasks, now = doneIn(all, wk), before = usual(all);
+  return html`<section class="panel projprog"><h2>${pageLabel(l, "work", "Projects")}</h2>
+    <p class="hint">${now} task${now === 1 ? "" : "s"} done this week · usually ${before}</p>
+    <ul class="plist">${w.goals.map((g) => {
+      const tasks = all.filter((t) => t.goal === g.id), p = progress(tasks, today), wkDone = doneIn(tasks, wk);
+      const paused = isPaused(state.settings, "goal", g.id, today);
+      const status = p.total && p.done === p.total ? ["Complete", "good"] : paused ? ["Paused this week", ""]
+        : (g.due && g.due < today) || p.overdue ? ["Late", "bad"] : ["On track", "good"];
+      return html`<li class="${goalTheme(w, g.id)}">
+        <span class="pgico">${icon(goalIcon(g))}</span>
+        <div class="max"><div class="pgtop"><b>${g.name}</b><span class="badge ${status[1]}">${status[0]}</span></div>
+          <div class="pbar"><span class="ptrack" role="progressbar" aria-label="${g.name}: ${p.done} of ${p.total} tasks done" aria-valuenow="${p.pct}" aria-valuemax="100"><i style="width:${p.pct}%"></i></span><span>${p.pct}%</span></div>
+          <div class="small-text">${p.done}/${p.total} tasks · ${wkDone} this week (usually ${usual(tasks)})${g.due ? ` · ${countdown(g.due, today)}` : ""}${p.spent ? ` · ${durationText(p.spent)} spent` : ""}</div></div></li>`;
+    })}</ul></section>`;
+}
+
 export function progressView() {
   const today = todayKey(), uid = state.uid;
   const mk = monthKey(today), pmk = monthKey(addDays(`${mk}-01`, -1));
@@ -42,6 +74,7 @@ export function progressView() {
 
   return html`
     ${energyView()}
+    ${projectsProgress(today)}
     <section class="hero">
       <div><div class="big num streaknum">${streak.days}${streak.capped ? "+" : ""}<small> days</small></div><div class="cap">Current ${leadName().toLowerCase()} streak</div></div>
       <div><div class="big num">${longestStreak(uid)}<small> days</small></div><div class="cap">Longest streak in the last 120 days</div></div>

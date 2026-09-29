@@ -71,7 +71,7 @@ function saveRoutine() {
 }
 
 export default {
-  tabs: [["routines", "Rituals", routinesView], ["rsetup", "Set up habits", routineSetupView]],
+  tabs: [["routines", "Rituals", routinesView], ["rsetup", "Set up habits & rituals", routineSetupView]],
   actions: {
     runStart(el) {
       const steps = ritualSteps(el.dataset.ritual);

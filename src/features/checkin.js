@@ -253,7 +253,7 @@ export default {
       l.names[d.layoutName] = el.value.slice(0, 16);
       settings().layout = l; saveSettings();
       const chip = document.querySelector(`nav.pages [data-page="${d.layoutName}"] span`);
-      if (chip) chip.textContent = el.value.trim() || "Work";
+      if (chip) chip.textContent = el.value.trim() || "Projects";
       return true;
     }
     if (d.answer) {

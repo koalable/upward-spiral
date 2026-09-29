@@ -17,7 +17,7 @@ function step1(d) {
   return html`<h2>Hi ${String(state.userName || "").split(" ")[0] || "there"}. What do you want this for?</h2>
     <p class="hint">You can change all of this later in Settings.</p>
     <div class="presets">${opts.map(([id, name, hint]) => html`<button class="preset${d.preset === id ? " on" : ""}" data-act="welcomePreset" data-preset="${id}" aria-pressed="${pressed(d.preset === id)}"><b>${name}</b><span class="small-text">${hint}</span></button>`)}</div>
-    <label class="field"><span>Call your projects page (optional)</span><input data-draft="workName" maxlength="16" placeholder="Work" value="${d.workName || ""}"></label>
+    <label class="field"><span>Call your projects page (optional)</span><input data-draft="workName" maxlength="16" placeholder="Projects" value="${d.workName || ""}"></label>
     <p class="hint small">E.g. House, Studio, School. It holds your goals, milestones and tasks.</p>`;
 }
 

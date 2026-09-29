@@ -11,7 +11,7 @@
 export const PAGES = [
   ["checkin", "Check-in", "/challenge"],
   ["routines", "Habits", "/challenge-routines"],
-  ["work", "Work", "/challenge-work"],
+  ["work", "Projects", "/challenge-work"],
   ["progress", "Progress", "/challenge-progress"],
 ];
 
