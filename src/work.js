@@ -8,6 +8,7 @@
 //   today:      { date, pins: [ids], skips: [ids], extra }                   resets each day
 //   perDay:     how many tasks Today shows (3–5)
 import { daysBetween } from "./util.js";
+import { stopTimer } from "./timer.js";
 
 export function normalizeWork(doc) {
   return {
@@ -96,6 +97,15 @@ export function countdown(due, key) {
   if (n === 1) return "Due tomorrow";
   if (n < 60) return `${n} days left`;
   return `${Math.round(n / 7)} weeks left`;
+}
+
+// Ticking a task off (or back on). Finishing the task that's on the timer stops the timer first.
+export function toggleDone(w, id, date, now = Date.now()) {
+  const t = w.tasks.find((x) => x.id === id);
+  if (!t) return w;
+  if (!t.done && w.timer?.id === t.id) stopTimer(w, now);
+  t.done = t.done ? "" : date;
+  return w;
 }
 
 // Removing a task frees anything that waited on it.

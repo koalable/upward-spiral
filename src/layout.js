@@ -7,6 +7,9 @@ export const PAGE_ICON_CHOICES = [
   ["notebook-pen", "Notebook"], ["graduation-cap", "School"], ["heart", "Heart"], ["sprout", "Sprout"], ["target", "Target"],
 ];
 
+// Each page's usual icon (Customize can change Work's).
+export const PAGE_ICONS = { checkin: "edit_note", routines: "checklist", progress: "insights", work: "work" };
+
 // What can be hidden. Check-in itself can't (Settings lives there), and neither can its Today tab.
 export const HIDEABLE_PAGES = [["routines", "Habits"], ["work", "Work"], ["progress", "Progress"]];
 export const HIDEABLE_TABS = {

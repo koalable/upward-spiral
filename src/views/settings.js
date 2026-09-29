@@ -5,11 +5,10 @@ import { state, settings } from "../state.js";
 import { PAGES } from "../page.js";
 import { getPref } from "../prefs.js";
 import { TEXT_SIZES } from "../constants.js";
-import { normalizeLayout, pageLabel, pageIcon, pageHidden, tabHidden, sectionHidden, HIDEABLE_PAGES, HIDEABLE_TABS, SECTIONS, PAGE_ICON_CHOICES } from "../layout.js";
+import { normalizeLayout, pageLabel, pageIcon, pageHidden, tabHidden, sectionHidden, HIDEABLE_PAGES, HIDEABLE_TABS, SECTIONS, PAGE_ICON_CHOICES, PAGE_ICONS } from "../layout.js";
 import { linkedPanel } from "./targets.js";
 import { icon, pressed, saveStatus } from "./components.js";
 
-const PAGE_ICONS = { routines: "checklist", work: "work", progress: "insights" };
 
 function swatch(on, act, data, label) {
   return html`<button class="switchrow" data-act="${act}" ${data} aria-pressed="${pressed(on)}"><span class="max">${label}</span><span class="sw${on ? " on" : ""}" aria-hidden="true"></span></button>`;

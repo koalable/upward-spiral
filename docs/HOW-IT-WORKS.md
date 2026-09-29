@@ -1,0 +1,55 @@
+# How it works
+
+The reference for how the app is built and designed. Read `HANDOFF.md` first for how to work with Karla and what's in progress.
+
+## How the code fits together (after the Sep 29 cleanup)
+- **Pages** are separate bundles (`src/entries/*`); each page = `core` + its features (`src/features/*`), views in `src/views/*`, pure logic in `src/*.js` (tested in `test/`).
+- **Data in:** `subscribe()` in `src/main.js` is one table of collections and docs; everything lands in `state[name]`.
+- **Lists** (work, routines, todos, notify): read with `read(name)`, change with `edit(name, fn)` from `src/docs.js` (copy → change → clean up → save after a pause). Never write `state.work` etc. by hand. Things worked out on the fly (e.g. paused goals) are passed as arguments, never stored.
+- **Where you are:** `state.route = { tab, goal?, ms? }` (`src/route.js`), mirrored in the URL hash, so the back gesture and direct links work. `state.tab` is a shortcut for `route.tab`. Settings = the Settings tabs (`SETTINGS_TABS` in `src/page.js`).
+- **What's open:** `state.sheet` holds the one open form/card/sheet: `openSheet(what, draft)`, `sheet(what)`, `closeSheet()` in `src/state.js`. Form fields marked `data-draft="key"` (+ `data-num`, `data-redraw`) write into the draft as you type (`src/features/core.js`); parsing happens at Save. Don't add read-the-form-back code.
+- **Scores** the group sees are published only from `src/day.js` (`commitDay` after answers, `saveSettings` after setup changes).
+- `[role=tab]` is reserved for the page tabs (`src/events.js`); use `aria-pressed` for anything tab-like inside a page.
+
+## Design (approved)
+- shadcn-style dark UI plus cream light mode; Inter for text, Instrument Serif for headings and big numbers; Lucide icons. In the installed app the page switcher is a bottom tab bar.
+- **Energy flow** groups, used the same way on every page:
+  - Fill up / Garden (green): sleep, diet, healthy practices
+  - Protect / Tide (blue): substances, screen time
+  - Spend well / Ember (orange): writing, reading, movement
+  - Show up / Dusk (violet): check-ins, habits, rituals, Work tasks
+- Tile **shade = momentum**. This week vs the average of the 3 weeks before, same days so far: >20% up surging, 5–20% up rising, within 5% steady, 5–20% down dipping, >20% down slipping.
+- Work goals each get their own colour; their tasks carry a matching stripe.
+- Check-in → Today opens with the **day's rings** (`src/rings.js`, `src/views/rings.js`): one ring per group, each a labelled tab (icon, name, points) curling around the centre. Fill up / Protect / Spend well = check-in points in that group. Show up = finishing the check-in + habits due today + today's Work tasks (+ any Show up questions). Centre = average of the rings, day points underneath. Rings sweep in, update live, deepen with a check when full; all full shows a celebration. Tapping a tab jumps to that group.
+- Everything streak-related lives on Progress → Streaks & badges.
+- Accessibility (Sep 28): WCAG AA contrast pass in both themes. Tokens `--control` (borders of inputs/buttons/chips/checkboxes, 3:1+), `--gold` (streak/star colour, dark amber on cream); light `--muted` darkened. Checkboxes are custom: outlined when empty, solid with a check when ticked. Ring tab labels use dark ink; a full ring turns `--s4` with white text. Re-run the audit script idea: measure every text/control against its real background in `dist/preview-*.html`.
+- Work tasks (Sep 29): optional **start time** (`at`). A timed task due today is always on Today's list; timed tasks sort to the top, earliest first (Check-in dashboard too). **Timer** (▶ on Today): counts down from what's left of the estimate (25 min if none, 15 if used up); pause/resume/stop; at zero, "Time's up" with Done / +10 min, plus a phone push. Minutes add up in the task's `spent`, shown as "1h 10m of 2h" and totalled on its milestone and goal ("… spent"). Logic in `src/timer.js`, tests in `test/timer.test.js`.
+- Work goals (Sep 29, from Karla's pastel mockups; Work page only). Three levels: **all goals** = a stacked deck of pastel cards (Today under the day's tasks, and Goals), each with a big line icon, serif name, "done/total · days left", progress bar + %; tap → **the goal's page** (big name + icon disc, deadline, status, progress) with its **milestones as folder tabs** (tab colours cycle through the pastels; the picked tab's card comes to the front with its tasks and "Add task"); tap a task's name → **task card** sliding up from the bottom (goal › milestone, start time, due, time spent vs estimate, timer, waiting on / unlocks, Mark done / Edit / Delete). Colours (Sep 29, Karla's pick): earthy in light mode (terracotta, olive, ochre, slate, plum, teal, brick), jewel tones in dark mode (emerald, sapphire, garnet, amber, violet, teal, berry): `GOAL_THEMES` = gc1–gc7 in `src/work.js`; `.gc*`, `.ink` (text on the colour) and `.plain` (panels back in app colours) in ui.css. **Saturation grows with completion**: `saturation(pct)` = 35% at 0% done to full at 100%, applied through `.satbg::before` so text stays crisp (deck cards, goal disc, folder tabs and card by milestone %, task card). Goals and milestones have an Icon picker (or a guess from the name: `MS_ICONS`, `guessIcon`, `goalIcon`). Note: `[role=tab]` is reserved for the page tabs in `src/events.js`, so the folder tabs use `aria-pressed`.
+- Bottom tab bar (installed app): hidden while typing (the iPhone keyboard dragged it up), and the page is nudged back into place when the keyboard closes (`keepTabBarDown` in `src/main.js`).
+- No calendar reminders anywhere any more (Meds, Targets, Habits): phone notifications replace them.
+- Substances accept half units: a med can count as 1 or ½ unit per log (Meds → edit item); the stepper moves by ½; up to 1 unit over the limit earns 2.
+
+## Code and deploy
+- Source: GitHub **koalable/upward-spiral** (public). `src/` holds the code; `node build.mjs` builds everything; tests: `node --test test/*.test.js`.
+- `build.mjs` writes:
+  - `app/` → the home-screen app (pages, versioned `js/`, `app.css`, manifest, icons from `app-src/`, service worker from `app-src/sw.js`)
+  - `functions/index.js` → the notification server (from `functions/src/index.js`, bundles `src/notify.js`)
+  - `dist/cdn/*` → the old Webflow pages' bundles (backup only)
+- **Release = build, commit, push to main.** `.github/workflows/deploy-app.yml` publishes Hosting (`app/`), Cloud Functions and Firestore rules automatically using the `FIREBASE_SERVICE_ACCOUNT` secret. Check the run under GitHub → Actions → Deploy app.
+- Caching: HTML is served `no-cache` and the service worker revalidates page loads, so a release shows on the next open. (Phones that opened the app before Sep 28 evening may need one close-and-reopen.)
+- Firebase project: upward-spiral-of-awesomeness, **Blaze** plan with a $1 budget alert. Google Cloud APIs for Functions, Scheduler, Artifact Registry, Cloud Build, Run, Eventarc, Pub/Sub, Billing etc. are enabled. The service account `firebase-adminsdk-fbsvc@…` has the deploy roles.
+- Google sign-in: authDomain is the page's own host; redirect URIs for app.kstarr.com and the web.app domain are on the OAuth web client; app.kstarr.com is an Authorized domain in Firebase Auth. DNS: CNAME `app` → `upward-spiral-of-awesomeness.web.app` at Network Solutions.
+- Webflow IDs: site 6933d4ae2e861d77f0889941; old pages checkin 6aadf10cdfca7bb48ab485f5, routines 6ab9cc27b34bf1ccbfbe8156, work 6aba1c3cafaa8c16e9abf6b6, progress 6ab9cc2781d40ecb770f6786.
+
+## Notifications
+- Settings (gear) → Notifications. Each person turns them on per device (installed app only) and picks: check-in reminder (time, skipped once finished), ritual start (at ritual times, if not done), meds (at med times, unless that dose is logged), Work morning list (time, off by default), streak saver (time, only if the streak habit is empty), quiet hours. "Send a test" button.
+- Meds also get **"next dose OK"** pushes: for meds with hours between doses, once that gap has passed since the last logged dose (today's or yesterday's log).
+- Choices + device tokens in `users/{uid}/notify/settings`. Planner is pure `src/notify.js` (tested in `test/notify.test.js`). Server: `notifyTick` runs every minute: Work timers every run (read from `lists/work` → `timer`; marks `timer.sent`), everything else every 15 minutes in each person's own time zone; `sendTest` is a callable. Web push key (public) is `VAPID_KEY` in build.mjs.
+
+## Linked accounts
+- `aliases/{email}` = `{uid, at}` lets a second Google account act as someone's main account (same data, streaks, notifications). Linked/unlinked from Settings → Account → Linked accounts, by the main account only. Link first, then sign in with the second address (signing in first starts an empty account).
+- Rules: `me(uid)` also accepts an alias; the email must still be on the member list. To add a person or address, edit the list in `firestore.rules` and push.
+
+## Data (Firestore, private per person under users/{uid})
+- `days/{date}` check-in answers · `lists/todos` to-dos (items with optional `on` = do-on date and `due` = deadline; `done` = date finished; old `goals/*` lists are read once, only if there's no to-do list yet) · `lists/routines` habits and rituals · `routinelog/{date}` habits done · `lists/work` goals, milestones, tasks (with `at`, `spent`), today's picks, the running/paused `timer`, `slips` (log of late tasks pushed back/archived/done, with why), `archived` tasks · `medlog/{date}` med logs · `notify/settings` notification choices. Settings doc (`users/{uid}`) also holds `layout` (Customize) and `breathing` (breathing rooms).
+- Shared: members, scores, wins, config/season, aliases.

@@ -16,8 +16,7 @@ import { edit as docEdit } from "../docs.js";
 import { pausable } from "../views/breathing.js";
 import { weekStart } from "../util.js";
 import { questionsView, parseQuestionDraft } from "../views/questions.js";
-import { targetsView, reminderLink, reminderOpts } from "../views/targets.js";
-import { openIcs } from "../calendar.js";
+import { targetsView } from "../views/targets.js";
 
 const $ = (sel) => ui.view.querySelector(sel);
 
@@ -142,7 +141,6 @@ const actions = {
     target?.scrollIntoView({ behavior: "smooth", block: "start" });
     return "none";
   },
-  icsReminder: () => (openIcs(reminderOpts(settings().targets)), "none"),
   // answering
   toggle: (el) => answer((a) => {
     const on = !getPath(a, el.dataset.answer);
@@ -266,8 +264,6 @@ export default {
     if (d.target) {
       const t = settings().targets;
       t[d.target] = el.type === "number" ? Math.max(0, toNum(el.value)) : el.value;
-      const link = ui.view.querySelector("#reminder-link");
-      if (link) link.href = reminderLink(t);
       return saveSettings(), true;
     }
     if ("display" in d) {

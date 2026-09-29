@@ -6,13 +6,12 @@ import { state, formOpen } from "./state.js";
 import { getPref, setPref } from "./prefs.js";
 import { icon } from "./views/components.js";
 import { page, PAGES, pageUrl, everyFeature, anyFeature, SETTINGS_TABS } from "./page.js";
-import { normalizeLayout, pageLabel, pageIcon, pageHidden, tabHidden } from "./layout.js";
+import { normalizeLayout, pageLabel, pageIcon, pageHidden, tabHidden, PAGE_ICONS } from "./layout.js";
 import { parseRoute, formatRoute } from "./route.js";
 import { joinView } from "./views/join.js";
 
 export const ui = { root: null, view: null };
 
-const PAGE_ICONS = { checkin: "edit_note", routines: "checklist", progress: "insights", work: "work" };
 
 export function mountShell(root) {
   ui.root = root;

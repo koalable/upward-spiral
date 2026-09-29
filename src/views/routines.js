@@ -1,14 +1,12 @@
 // Routines: today's rituals, the step-by-step ritual runner, and setting routines up. (Beer CSS markup)
 import { read } from "../docs.js";
 import { html, todayKey, addDays, longDate, atTime, clock } from "../util.js";
-import { APP_NAME } from "../constants.js";
 import { sheet } from "../state.js";
 import { state, isEditable } from "../state.js";
 import {
   DAY_LETTERS, EVERY_DAY, WEEKDAYS, normalizeRoutines, inRitual, doneCount, target, isDone, isScheduled,
-  scheduleLabel, doneThisWeek, reminderDays,
+  scheduleLabel, doneThisWeek,
 } from "../routines.js";
-import { dailyReminderLink } from "../calendar.js";
 import { pressed, saveStatus, icon } from "./components.js";
 
 export const routineData = () => read("routines");
@@ -142,11 +140,6 @@ function ritualForm() {
       ${e.id && e.custom ? html`<button class="transparent error-text" data-act="ritRemove">Delete ritual</button>` : ""}</nav></article>`;
 }
 
-export function reminderOpts(id) {
-  const rit = findRitual(id), list = inRitual(routineData().items, id);
-  return { title: `${rit.name} ritual`, time: rit.time || "09:00", days: reminderDays(list), details: `${list.map((r) => r.name).join(", ")}\n\n${APP_NAME}: ${location.href}` };
-}
-export const reminderHref = (id) => dailyReminderLink(reminderOpts(id));
 
 export function routineSetupView() {
   const { items, rituals } = routineData();

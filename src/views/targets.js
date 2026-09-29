@@ -1,14 +1,10 @@
 // Settings → Targets & scoring: my display name, private targets, and how scoring works (folded away).
 import { html } from "../util.js";
-import { APP_NAME } from "../constants.js";
 import { scoredQuestions, questionName, questionRule } from "../scoring.js";
 import { state, settings, hasBuiltin } from "../state.js";
-import { dailyReminderLink } from "../calendar.js";
 import { rule, saveStatus } from "./components.js";
 import { gameRules } from "./rules.js";
 
-export const reminderOpts = (t) => ({ title: `Log the ${APP_NAME}`, time: t.reminder, details: `60-second check-in: ${location.href}` });
-export const reminderLink = (t) => dailyReminderLink(reminderOpts(t));
 
 // Other Google accounts that open this same data (e.g. a work address).
 export function linkedPanel() {

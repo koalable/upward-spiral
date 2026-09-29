@@ -1,5 +1,5 @@
 // Work: Today (a few tasks, picked for you) and Goals (goal → milestones → tasks, with progress).
-import { html, shortDate, longDate, clock, atTime } from "../util.js";
+import { html, shortDate, longDate, clock, atTime, addDays, daysBetween } from "../util.js";
 import { state, sheet } from "../state.js";
 import { normalizeWork, todayState, todayPicks, blocker, progress, countdown, goalTheme, milestoneTheme, msIcon, goalIcon, MS_ICONS, saturation, staleTasks, PUSH_WHYS, ARCHIVE_WHYS } from "../work.js";
 import { timerFor, isRunning, isUp, msLeft, minutesLeft, countdownText, durationText } from "../timer.js";
@@ -74,9 +74,9 @@ function tidyCard(w, key) {
   const stale = staleTasks(w, key);
   if (!stale.length) return "";
   const t = stale[0], d = sheet("tidy")?.id === t.id ? state.sheet : { id: t.id };
-  const g = goalOf(w, t.goal), m = msOf(w, t.ms), late = Math.round((new Date(`${key}T12:00:00`) - new Date(`${t.due}T12:00:00`)) / 86400000);
+  const g = goalOf(w, t.goal), m = msOf(w, t.ms), late = daysBetween(t.due, key);
   const whys = d.action === "pushed" ? PUSH_WHYS : d.action === "archived" ? ARCHIVE_WHYS : [];
-  const plus = (n) => { const x = new Date(`${key}T12:00:00`); x.setDate(x.getDate() + n); return x.toISOString().slice(0, 10); };
+  const plus = (n) => addDays(key, n);
   const ready = d.action === "done" || (d.why && (d.action !== "pushed" || d.to));
   return html`<section class="panel tidy ink ${goalTheme(w, t.goal)} satbg" style="--sat:.55">
     <div class="tidyhead">${icon("alarm")}<span class="max">Tidy up · ${stale.length} task${stale.length === 1 ? "" : "s"} over a week late</span></div>

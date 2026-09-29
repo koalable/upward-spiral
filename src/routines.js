@@ -62,10 +62,3 @@ export function dayStatus(routines, key, log) {
   if (!due) return null;
   return done === due ? "all" : done > 0 ? "some" : "none";
 }
-
-// Days of the week to repeat a reminder for a group: the union of its routines' days.
-export function reminderDays(routines) {
-  const set = new Set();
-  for (const r of routines) (r.perWeek ? EVERY_DAY : r.days || EVERY_DAY).forEach((d) => set.add(d));
-  return [...set].sort();
-}

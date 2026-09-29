@@ -57,24 +57,6 @@ export function medStatus(med, now = Date.now()) {
   return { text: parts.join(" · ") || "Tap to log", warn };
 }
 
-// Upcoming moments worth an alert today (used by notifications).
-export function upcomingAlerts(now = Date.now()) {
-  const today = todayKey();
-  const out = [];
-  for (const med of activeMeds()) {
-    const taken = logsFor(med, today).length;
-    scheduleOf(med).forEach((t, i) => {
-      const at = atTime(today, t);
-      if (i >= taken && at > now) out.push({ at, title: `Time for ${med.name}`, body: doseLabel(med.dose, med.unit) });
-    });
-    const last = toNum(med.every) > 0 && lastTaken(med);
-    if (last) {
-      const okAt = last.at + toNum(med.every) * HOUR_MS;
-      if (okAt > now) out.push({ at: okAt, title: `${med.name}: next dose OK now`, body: "Only if you need it." });
-    }
-  }
-  return out;
-}
 
 // ---------- writing ----------
 function saveLogDoc(key, doc) {

@@ -154,12 +154,8 @@
 #wlc.ui .qform h3{margin-top:0}
 #wlc.ui .formslot{margin-top:14px}
 #wlc.ui .floorlist{display:flex;flex-wrap:wrap;gap:4px 18px}
-#wlc.ui .goalcols{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
-#wlc.ui .goalcols .panel{margin:0}
 #wlc.ui .goallist li.done span{text-decoration:line-through;color:var(--muted)}
 #wlc.ui .goallist span{flex:1;overflow-wrap:anywhere}
-#wlc.ui .addrow{display:flex;gap:6px}
-#wlc.ui .addrow input{flex:1;min-width:0}
 #wlc.ui .medgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,13em),1fr));gap:8px}
 #wlc.ui .medbtn{height:auto;min-height:60px;flex-direction:column;align-items:flex-start;gap:2px;padding:10px 12px;background:transparent;color:var(--fg);border:1px solid var(--border);text-align:left;white-space:normal}
 #wlc.ui .medname{font-weight:600}
@@ -245,11 +241,6 @@
 #wlc.ui.light .badge.good{color:#15803d;border-color:#bbf7d0}
 #wlc.ui .ink .badge.bad{color:#a61b1b;border-color:#d99a9a}
 #wlc.ui .ink .badge.good{color:#166534;border-color:#7fb592}
-#wlc.ui .goal{margin-bottom:16px}
-#wlc.ui .goal>progress{margin:0 16px 8px;width:calc(100% - 32px)}
-#wlc.ui .ms{border-top:1px solid var(--border)}
-#wlc.ui .ms>progress{margin:0 16px 4px;width:calc(100% - 32px);height:4px}
-#wlc.ui .ms>nav.padding{padding-top:12px;padding-bottom:8px}
 #wlc.ui .lockd{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;color:var(--muted);flex:none}
 #wlc.ui button.on{color:#eab308}
 #wlc.ui .list li.done{color:inherit;font-weight:inherit}
@@ -347,26 +338,9 @@
 #wlc.ui table.areas tr.me td{background:color-mix(in srgb,var(--h) 18%,transparent)}
 #wlc.ui .arealink{display:inline-flex;align-items:center;gap:10px;text-decoration:none;padding:2px 0}
 #wlc.ui .arealink .tchip{width:26px;height:26px;border-radius:8px;font-size:.9em}
-#wlc.ui .dashboard .goalcols,#wlc.ui .dashboard{display:block}
 #wlc.ui .list.dash{margin:4px -4px 0}
 
-/* More colours: extra themes for Work goals */
-#wlc.ui .rose{--h:#c8406f;--s0:#fbe1ea;--s1:#f5b6cb;--s2:#e97fa2;--s3:#c8406f;--s4:#8f2248}
-#wlc.ui .sun{--h:#b88400;--s0:#fbf1cc;--s1:#f5de86;--s2:#e8c14a;--s3:#b88400;--s4:#7a5700}
-#wlc.ui .teal{--h:#0e8a80;--s0:#d5f1ee;--s1:#9fdcd5;--s2:#55bdb2;--s3:#0e8a80;--s4:#075e57}
-#wlc.ui .rose progress::-webkit-progress-value,#wlc.ui .sun progress::-webkit-progress-value,#wlc.ui .teal progress::-webkit-progress-value{background:var(--h)}
-#wlc.ui .rose progress::-moz-progress-bar,#wlc.ui .sun progress::-moz-progress-bar,#wlc.ui .teal progress::-moz-progress-bar{background:var(--h)}
-#wlc.ui .goal{background:color-mix(in srgb,var(--h) 10%,var(--card));border:1px solid color-mix(in srgb,var(--h) 45%,transparent);overflow:hidden;margin-bottom:16px}
-#wlc.ui .goal>.gbody{background:var(--h);color:#fff;padding:14px 16px 16px}
 
-#wlc.ui .goal>.gbody .small-text{color:rgb(255 255 255 / .85)}
-#wlc.ui .goal>.gbody .badge{background:rgb(255 255 255 / .2);color:#fff;border-color:transparent}
-#wlc.ui .goal>.gbody .stat{margin-top:10px}
-#wlc.ui .goal>.gbody button{color:#fff}
-#wlc.ui .goal.fold>.gbody{cursor:pointer}
-#wlc.ui .gchip{display:grid;place-items:center;width:36px;height:36px;border-radius:12px;background:rgb(255 255 255 / .2);font-size:1.15em;flex:none}
-#wlc.ui .goal>progress{margin:14px 16px 12px;width:calc(100% - 32px)}
-#wlc.ui .goal .ms{border-top-color:color-mix(in srgb,var(--h) 30%,transparent)}
 /* ---------- Work goals: pastel rows (Karla's mockup), a goal page, milestone bars ---------- */
 /* Goal colours: --p card, --on text on it, --pd accent (icons, progress). Dark mode = jewel tones, light = earthy. */
 #wlc.ui .gc1{--p:#1f5f55;--on:#eafaf5;--pd:#8fe0c9}
@@ -409,8 +383,6 @@
 #wlc.ui .phead .pchev{flex:none;width:40px;height:40px;padding:0;border-radius:50%;background:color-mix(in srgb,var(--fg) 14%,transparent);color:var(--fg);border:0;font-size:1.1em}
 #wlc.ui .gbtns{gap:8px;margin:12px 0 4px}
 #wlc.ui .mcard{flex:1;min-width:0;background:var(--card);border-radius:0 14px 14px 0;padding:6px 0 4px}
-#wlc.ui .mmeta{display:flex;align-items:center;gap:6px;padding:4px 4px 2px 14px}
-#wlc.ui .mmeta .badge{margin-left:4px}
 #wlc.ui .mcard .list li{padding:10px 6px 10px 12px}
 #wlc.ui .mcard .addtask{margin:2px 0 4px 6px;color:var(--fg)}
 #wlc.ui .mhint{margin:4px 0}
@@ -583,8 +555,6 @@
 #wlc.ui .cday.rest,#wlc.ui .cday.future{opacity:1}
 #wlc.ui .bdg{opacity:1}#wlc.ui .bdg:not(.got) b,#wlc.ui .bdg:not(.got) .bico{opacity:.55}
 /* Goal colour bands: all text white */
-#wlc.ui .goal>.gbody .small-text{color:#fff}
-#wlc.ui .goal>.gbody .badge.bad,#wlc.ui .goal>.gbody .badge.good{color:#fff;background:rgb(0 0 0 / .25)}
 /* Day rings: dark ink on the pale tabs; a full ring turns deep with white text */
 #wlc.ui .rings .rlab{color:#141414}
 #wlc.ui .rings g.full .tab,#wlc.ui .rings g.full .arc{stroke:var(--s4)}
@@ -679,7 +649,6 @@
 #wlc.ui .brbox{flex:none;width:24px;height:24px;border-radius:7px;border:2px solid var(--control);display:grid;place-items:center;font-size:.8em}
 #wlc.ui .brpick.on .brbox{background:var(--good);border-color:var(--good);color:#fff}
 #wlc.ui .brwhys{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}
-#wlc.ui .brplan{margin:6px 0;padding-left:18px}
 #wlc.ui .bracts{gap:8px;padding-top:12px;border-top:1px solid var(--border)}
 @media(max-width:420px){#wlc.ui .brlevels{grid-template-columns:1fr}}
 #wlc.ui .brback{list-style:none;margin:0 0 8px;padding:0}

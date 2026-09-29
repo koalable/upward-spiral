@@ -4,7 +4,6 @@ import { sheet, openSheet, closeSheet } from "../state.js";
 import { saveSettings } from "../day.js";
 import { clone, todayKey, addDays, newId, clock, atTime } from "../util.js";
 import { findMed, medList, logMed, deleteMedLog, updateMedLog, doseLabel, substanceUnits } from "../meds.js";
-import { enableAlerts, disableAlerts, scheduleAlerts } from "../notifications.js";
 import { ui, render } from "../render.js";
 import { medsView, patchMedStatus } from "../views/meds.js";
 
@@ -13,7 +12,7 @@ const $ = (sel) => ui.view.querySelector(sel);
 function showToast({ key, entry }) {
   const dose = entry.dose ? " " + doseLabel(entry.dose, entry.unit) : "";
   state.toast = { key, id: entry.id, text: `${entry.name}${dose} at ${clock(entry.at)}`, when: Date.now() };
-  scheduleAlerts();
+ 
 }
 
 function saveMed() {
@@ -30,7 +29,7 @@ function saveMed() {
   if (at >= 0) list[at] = med; else list.push(med);
   closeSheet();
   saveSettings();
-  scheduleAlerts();
+ 
 }
 
 function logOther() {
@@ -46,19 +45,19 @@ export default {
   tabs: [["meds", "Meds", medsView]],
   actions: {
     medTake(el) { const med = findMed(el.dataset.id); if (med) showToast(logMed({ med })); },
-    medUndo() { if (state.toast) deleteMedLog(state.toast.key, state.toast.id); state.toast = null; scheduleAlerts(); },
+    medUndo() { if (state.toast) deleteMedLog(state.toast.key, state.toast.id); state.toast = null; },
     medDeleteLog(el) {
       if (!confirm("Delete this entry?")) return "none";
       deleteMedLog(el.dataset.day, el.dataset.id);
       if (state.toast?.id === el.dataset.id) state.toast = null;
-      scheduleAlerts();
+     
     },
     medEditLog(el) { openSheet("log", { id: el.dataset.id }); state.toast = null; state.tab = "meds"; },
     medCancelLog: closeSheet,
     medSaveLog(el) {
       updateMedLog(el.dataset.day, el.dataset.id, { time: $("#log-time").value, dose: $("#log-dose").value.trim() });
       closeSheet();
-      scheduleAlerts();
+     
     },
     medNew() { openSheet("med", { kind: "rx", times: [] }); },
     medEdit(el) { openSheet("med", clone(medList()[Number(el.dataset.index)])); },
@@ -69,14 +68,10 @@ export default {
       if (!confirm(`Remove "${med.name}" from your list? Past entries stay in your history.`)) return "none";
       list.splice(Number(el.dataset.index), 1);
       saveSettings();
-      scheduleAlerts();
+     
     },
     medLogOther: logOther,
-    alertsOn() { enableAlerts().then(render); return "none"; },
-    alertsOff() { disableAlerts(); },
   },
   busy: (view) => Boolean(view.querySelector("details.oneoff[open]")),
   patch: (tab, view) => { if (tab === "meds") patchMedStatus(view); },
-  data: (name) => { if (name === "medlog" || name === "loaded") scheduleAlerts(); },
-  midnight: scheduleAlerts,
 };

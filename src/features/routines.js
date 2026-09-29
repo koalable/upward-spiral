@@ -5,8 +5,7 @@ import { edit as docEdit } from "../docs.js";
 import { clone, newId, todayKey } from "../util.js";
 import { ui, render } from "../render.js";
 import { doneCount, target, EVERY_DAY, WEEKDAYS } from "../routines.js";
-import { routinesView, routineSetupView, patchRoutines, modeOf, routineData, ritualSteps, reminderOpts } from "../views/routines.js";
-import { openIcs } from "../calendar.js";
+import { routinesView, routineSetupView, patchRoutines, modeOf, routineData, ritualSteps } from "../views/routines.js";
 
 const $ = (sel) => ui.view.querySelector(sel);
 
@@ -74,7 +73,6 @@ function saveRoutine() {
 export default {
   tabs: [["routines", "Rituals", routinesView], ["rsetup", "Set up habits", routineSetupView]],
   actions: {
-    rIcs: (el) => (openIcs(reminderOpts(el.dataset.id)), "none"),
     runStart(el) {
       const steps = ritualSteps(el.dataset.ritual);
       const first = steps.findIndex((r) => doneCount(r, state.date, state.routinelog) < target(r));

@@ -3,7 +3,7 @@ import { state, sheet, openSheet, closeSheet } from "../state.js";
 import { save, paths } from "../store.js";
 import { clone, newId, todayKey } from "../util.js";
 import { ui, render, refreshAfterRemoteChange } from "../render.js";
-import { todayState, removeTask, removeMilestone, removeGoal, resolveStale } from "../work.js";
+import { todayState, removeTask, removeMilestone, removeGoal, resolveStale, toggleDone } from "../work.js";
 import { startTimer, pauseTimer, stopTimer, addTime, isUp, msLeft, countdownText } from "../timer.js";
 import { workTodayView, workGoalsView, workData } from "../views/work.js";
 import { edit as docEdit } from "../docs.js";
@@ -48,14 +48,7 @@ function saveItem() {
 export default {
   tabs: [["wtoday", "Today", workTodayView], ["wgoals", "Goals", workGoalsView]],
   actions: {
-    wToggle(el) {
-      edit((w) => {
-        const t = w.tasks.find((x) => x.id === el.dataset.id);
-        if (!t) return;
-        if (!t.done && w.timer?.id === t.id) stopTimer(w, Date.now());
-        t.done = t.done ? "" : state.date;
-      });
-    },
+    wToggle(el) { edit((w) => toggleDone(w, el.dataset.id, state.date)); },
     wTimerStart(el) { edit((w) => startTimer(w, el.dataset.id, Date.now())); },
     wTimerPause: withTimer(pauseTimer),
     wTimerStop: withTimer(stopTimer),

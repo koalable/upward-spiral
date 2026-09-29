@@ -1,6 +1,6 @@
 # Upward Spiral of Awesomeness: handoff for a new chat
 
-Last updated Sep 29, 2026 (Work task start times and timers; bottom bar fix). Read this first, then `README.md` in the repo.
+Last updated Sep 29, 2026. Read this first; the reference for code, design, data and notifications is `docs/HOW-IT-WORKS.md`.
 
 ## How Karla wants to work
 - Run ideas and details by her **before** building. Keep answers short and plain (non-technical).
@@ -16,7 +16,7 @@ People (all on the member list in `firestore.rules`):
 
 | Page | App URL | Tabs |
 |---|---|---|
-| Check-in | / | Today (just that day: progress rings, to-dos planned or due today + overdue, "N more this week", Work tasks, then the check-in), Meds, Journal, Categories, Targets & rules (incl. Linked accounts), Notifications |
+| Check-in | / | Today, Meds, Journal, Categories, Targets & rules, Notifications (live). On the branch: Today · Meds · Reflect, with the rest under the Settings gear |
 | Habits | /routines | Rituals (run step by step), Set up habits, To-dos (one list grouped Today / This week / Later this month / Later / Someday / Done by date) |
 | Work | /work | Today (3–5 picked tasks, timed ones on top, task timers; goals deck below; a goal opens its own page), Goals (goals → milestones → tasks, dependencies, progress, "Paste a plan from Claude") |
 | Progress | /progress | Streaks & badges (check-in streak, 30-day tally, floor day, streak freezes, then per-area calendars), My progress (energy flow), Group |
@@ -25,60 +25,23 @@ Old addresses kstarr.com/challenge, /challenge-routines, /challenge-work, /chall
 
 Words: **habit** = one recurring action; **ritual** = a saved sequence of habits. Categories = the scored check-in questions.
 
-## Design (approved)
-- shadcn-style dark UI plus cream light mode; Inter for text, Instrument Serif for headings and big numbers; Lucide icons. In the installed app the page switcher is a bottom tab bar.
-- **Energy flow** groups, used the same way on every page:
-  - Fill up / Garden (green): sleep, diet, healthy practices
-  - Protect / Tide (blue): substances, screen time
-  - Spend well / Ember (orange): writing, reading, movement
-  - Show up / Dusk (violet): check-ins, habits, rituals, Work tasks
-- Tile **shade = momentum**. This week vs the average of the 3 weeks before, same days so far: >20% up surging, 5–20% up rising, within 5% steady, 5–20% down dipping, >20% down slipping.
-- Work goals each get their own colour; their tasks carry a matching stripe.
-- Check-in → Today opens with the **day's rings** (`src/rings.js`, `src/views/rings.js`): one ring per group, each a labelled tab (icon, name, points) curling around the centre. Fill up / Protect / Spend well = check-in points in that group. Show up = finishing the check-in + habits due today + today's Work tasks (+ any Show up questions). Centre = average of the rings, day points underneath. Rings sweep in, update live, deepen with a check when full; all full shows a celebration. Tapping a tab jumps to that group.
-- Everything streak-related lives on Progress → Streaks & badges. Check-in has no streak info and no banners.
-- Accessibility (Sep 28): WCAG AA contrast pass in both themes. Tokens `--control` (borders of inputs/buttons/chips/checkboxes, 3:1+), `--gold` (streak/star colour, dark amber on cream); light `--muted` darkened. Checkboxes are custom: outlined when empty, solid with a check when ticked. Ring tab labels use dark ink; a full ring turns `--s4` with white text. Re-run the audit script idea: measure every text/control against its real background in `dist/preview-*.html`.
-- Work tasks (Sep 29): optional **start time** (`at`). A timed task due today is always on Today's list; timed tasks sort to the top, earliest first (Check-in dashboard too). **Timer** (▶ on Today): counts down from what's left of the estimate (25 min if none, 15 if used up); pause/resume/stop; at zero, "Time's up" with Done / +10 min, plus a phone push. Minutes add up in the task's `spent`, shown as "1h 10m of 2h" and totalled on its milestone and goal ("… spent"). Logic in `src/timer.js`, tests in `test/timer.test.js`.
-- Work goals (Sep 29, from Karla's pastel mockups; Work page only). Three levels: **all goals** = a stacked deck of pastel cards (Today under the day's tasks, and Goals), each with a big line icon, serif name, "done/total · days left", progress bar + %; tap → **the goal's page** (big name + icon disc, deadline, status, progress) with its **milestones as folder tabs** (tab colours cycle through the pastels; the picked tab's card comes to the front with its tasks and "Add task"); tap a task's name → **task card** sliding up from the bottom (goal › milestone, start time, due, time spent vs estimate, timer, waiting on / unlocks, Mark done / Edit / Delete). Colours (Sep 29, Karla's pick): earthy in light mode (terracotta, olive, ochre, slate, plum, teal, brick), jewel tones in dark mode (emerald, sapphire, garnet, amber, violet, teal, berry): `GOAL_THEMES` = gc1–gc7 in `src/work.js`; `.gc*`, `.ink` (text on the colour) and `.plain` (panels back in app colours) in ui.css. **Saturation grows with completion**: `saturation(pct)` = 35% at 0% done to full at 100%, applied through `.satbg::before` so text stays crisp (deck cards, goal disc, folder tabs and card by milestone %, task card). Goals and milestones have an Icon picker (or a guess from the name: `MS_ICONS`, `guessIcon`, `goalIcon`). Note: `[role=tab]` is reserved for the page tabs in `src/events.js`, so the folder tabs use `aria-pressed`.
-- Bottom tab bar (installed app): hidden while typing (the iPhone keyboard dragged it up), and the page is nudged back into place when the keyboard closes (`keepTabBarDown` in `src/main.js`).
-- No calendar reminders anywhere any more (Meds, Targets, Habits): phone notifications replace them.
-- Substances accept half units: a med can count as 1 or ½ unit per log (Meds → edit item); the stepper moves by ½; up to 1 unit over the limit earns 2.
-
-## Code and deploy
-- Source: GitHub **koalable/upward-spiral** (public). `src/` holds the code; `node build.mjs` builds everything; tests: `node --test test/*.test.js`.
-- `build.mjs` writes:
-  - `app/` → the home-screen app (pages, versioned `js/`, `app.css`, manifest, icons from `app-src/`, service worker from `app-src/sw.js`)
-  - `functions/index.js` → the notification server (from `functions/src/index.js`, bundles `src/notify.js`)
-  - `dist/cdn/*` → the old Webflow pages' bundles (backup only)
-- **Release = build, commit, push to main.** `.github/workflows/deploy-app.yml` publishes Hosting (`app/`), Cloud Functions and Firestore rules automatically using the `FIREBASE_SERVICE_ACCOUNT` secret. Check the run under GitHub → Actions → Deploy app.
-- Caching: HTML is served `no-cache` and the service worker revalidates page loads, so a release shows on the next open. (Phones that opened the app before Sep 28 evening may need one close-and-reopen.)
-- Firebase project: upward-spiral-of-awesomeness, **Blaze** plan with a $1 budget alert. Google Cloud APIs for Functions, Scheduler, Artifact Registry, Cloud Build, Run, Eventarc, Pub/Sub, Billing etc. are enabled. The service account `firebase-adminsdk-fbsvc@…` has the deploy roles.
-- Google sign-in: authDomain is the page's own host; redirect URIs for app.kstarr.com and the web.app domain are on the OAuth web client; app.kstarr.com is an Authorized domain in Firebase Auth. DNS: CNAME `app` → `upward-spiral-of-awesomeness.web.app` at Network Solutions.
-- Webflow IDs: site 6933d4ae2e861d77f0889941; old pages checkin 6aadf10cdfca7bb48ab485f5, routines 6ab9cc27b34bf1ccbfbe8156, work 6aba1c3cafaa8c16e9abf6b6, progress 6ab9cc2781d40ecb770f6786.
-
-## Notifications
-- Check-in → Notifications. Each person turns them on per device (installed app only) and picks: check-in reminder (time, skipped once finished), ritual start (at ritual times, if not done), meds (at med times, unless that dose is logged), Work morning list (time, off by default), streak saver (time, only if the streak habit is empty), quiet hours. "Send a test" button.
-- Meds also get **"next dose OK"** pushes: for meds with hours between doses, once that gap has passed since the last logged dose (today's or yesterday's log).
-- Choices + device tokens in `users/{uid}/notify/settings`. Planner is pure `src/notify.js` (tested in `test/notify.test.js`). Server: `notifyTick` runs every minute: Work timers every run (`users/{uid}/notify/timer` = `{id, name, end, sent}`, written by the app), everything else every 15 minutes in each person's own time zone; `sendTest` is a callable. Web push key (public) is `VAPID_KEY` in build.mjs.
-
-## Linked accounts
-- `aliases/{email}` = `{uid, at}` lets a second Google account act as someone's main account (same data, streaks, notifications). Linked/unlinked from Check-in → Targets & rules → Linked accounts, by the main account only. Link first, then sign in with the second address (signing in first starts an empty account).
-- Rules: `me(uid)` also accepts an alias; the email must still be on the member list. To add a person or address, edit the list in `firestore.rules` and push.
-
-## Data (Firestore, private per person under users/{uid})
-- `days/{date}` check-in answers · `lists/todos` to-dos (items with optional `on` = do-on date and `due` = deadline; `done` = date finished; old `goals/*` day/week/month lists were carried over once and are no longer used) · `lists/routines` habits and rituals · `routinelog/{date}` habits done · `lists/work` goals, milestones, tasks (with `at`, `spent`), today's picks, the running/paused `timer` · `medlog/{date}` med logs · `notify/settings` notification choices.
-- Shared: members, scores, wins, config/season, aliases.
-
 ## Status at hand-off
 - Sep 29: Work start times + timers, bottom bar fix (check on iPhone that the bar stays put and a timer's push arrives).
 - Done and live: rings, streaks on Progress, half units, the app at app.kstarr.com, notifications server, linked accounts, redirects.
 - Waiting on people: Karla installs the app on her iPhone, turns on notifications and sends a test; Karla links hello@kstarr.com; Erik links mxfenrir@gmail.com (both may need to close and reopen the app once).
 
 ## In progress (branch `checkin-reshuffle`, not released; preview only)
+- Sep 29 cleanup done on this branch: shared list load/save (`src/docs.js`), route + one open-sheet slot, timer read from the Work doc, old in-browser med alerts and calendar-reminder code removed, Check-in bundle ~24% smaller, dead styles removed. See HOW-IT-WORKS → How the code fits together.
 - Settings behind a gear (Customize, Categories, Targets & scoring, Notifications, Account); `src/layout.js` renames/hides pages, tabs and Today sections (Everything / Simple presets).
 - Check-in = Today · Meds · Reflect. Today: rings, "On your plate" (to-dos + Work/House tasks), meds, fold-up energy groups with points, "Close the day".
 - **Breathing room** (`src/breathing.js`, `src/views/breathing.js`): pause any mix of categories, habits, goals for the rest of the week; asks how much room, what, why, and whether a smaller version would do. Language is only **on track / late / restarting after a break** (Karla: no "making it up"). Late goals can move this week's tasks to next week. Paused things leave Today, rings and today's picks. Still to do: streaks/momentum/calendars treat paused days as paused; habits page and notifications skip paused habits.
 - **Tidy up** (Work → Today, plus a line on Check-in's On your plate): tasks more than 7 days late, one at a time → Push back (+1/+2 weeks/date) / Archive / Already done, then Why? (+ note). Logged in the work doc's `slips` (task, goal, days late, action, why, note, from/to) for behaviour data later; archived tasks move to `archived`. Logic: `staleTasks`, `resolveStale` in `src/work.js`.
 - Rosa (pretend beta tester) in `dist/preview-rosa-*.html` (`seedRosa` in `src/preview.js`).
+
+## Open questions for Karla
+- Should Tidy up also cover to-dos with due dates (Habits page)?
+- Retire the old Webflow backup pages (`challenge-*-old`) and stop building `dist/cdn/`? (Needs her OK: it's her public site.)
+- Product trims she hasn't decided: fold to-dos into Work/House; move level-up habits to Habits; retire seasons / streak freezes / weekly points goal.
 
 ## Not wanted (for now)
 - Sharing "tasks done today" with the group; season week on Group; rituals on the Check-in page.

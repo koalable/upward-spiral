@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { isScheduled, dayStatus, scheduleLabel, reminderDays } from "../src/routines.js";
+import { isScheduled, dayStatus, scheduleLabel } from "../src/routines.js";
 import { runs } from "../src/streaks.js";
 
 // 2026-09-21 is a Monday.
@@ -32,7 +32,6 @@ test("day status: flexible routines never spoil a day", () => {
   assert.equal(dayStatus(rs, "2026-09-21", log({ "2026-09-21": { a: 1, c: 1 } })), "some");
   assert.equal(dayStatus(rs, "2026-09-21", {}), "none");
   assert.equal(dayStatus([{ id: "a", days: [2] }], "2026-09-21", {}), null);
-  assert.deepEqual(reminderDays([{ days: [1] }, { days: [3, 1] }]), [1, 3]);
 });
 
 test("runs: rest days don't break a streak; today doesn't until it's over", () => {
