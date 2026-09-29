@@ -131,6 +131,8 @@ export function seedRosa(db) {
       T("a7", "g4b", "t", "Call back the couple with the cat", at(0), 0.25, { at: "16:30" }),
       T("b1", "gwin", "wg", "Get 3 gutter quotes", at(7), 1),
       T("b2", "gwin", "wh", "Furnace service: Belmont", at(14), 0.5),
+      T("b3", "gwin", "wg", "Clear Clinton downspout", at(-12), 0.5),
+      T("a8", "g4b", "t", "Return deposit to old tenant", at(-9), 0.5, { pushes: 1 }),
       T("s1", "gsmoke", "sa", "Alder St: all 6 units", at(-3), 3, { done: at(-3), spent: 190 }),
       T("s2", "gsmoke", "sb", "Belmont: all 5 units", at(18), 2.5),
       T("s3", "gsmoke", "sc", "Clinton: all 3 units", at(38), 1.5),

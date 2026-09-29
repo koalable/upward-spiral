@@ -1,7 +1,7 @@
 // Work: Today (a few tasks, picked for you) and Goals (goal → milestones → tasks, with progress).
 import { html, shortDate, longDate, clock, atTime } from "../util.js";
 import { state } from "../state.js";
-import { normalizeWork, todayState, todayPicks, blocker, progress, countdown, goalTheme, milestoneTheme, msIcon, goalIcon, MS_ICONS, saturation } from "../work.js";
+import { normalizeWork, todayState, todayPicks, blocker, progress, countdown, goalTheme, milestoneTheme, msIcon, goalIcon, MS_ICONS, saturation, staleTasks, PUSH_WHYS, ARCHIVE_WHYS } from "../work.js";
 import { timerFor, isRunning, isUp, msLeft, minutesLeft, countdownText, durationText } from "../timer.js";
 import { pressed, saveStatus, icon } from "./components.js";
 import { isPaused } from "../breathing.js";
@@ -68,6 +68,32 @@ function todayRow(w, t, key, pinned) {
     ${timerStrip(w, t)}</li>`;
 }
 
+// Tidy up: one task at a time that's over a week late. Push it back, archive it, or say it's done, and why.
+function tidyCard(w, key) {
+  const stale = staleTasks(w, key);
+  if (!stale.length) return "";
+  const t = stale[0], d = state.tidy?.id === t.id ? state.tidy : { id: t.id };
+  const g = goalOf(w, t.goal), m = msOf(w, t.ms), late = Math.round((new Date(`${key}T12:00:00`) - new Date(`${t.due}T12:00:00`)) / 86400000);
+  const whys = d.action === "pushed" ? PUSH_WHYS : d.action === "archived" ? ARCHIVE_WHYS : [];
+  const plus = (n) => { const x = new Date(`${key}T12:00:00`); x.setDate(x.getDate() + n); return x.toISOString().slice(0, 10); };
+  const ready = d.action === "done" || (d.why && (d.action !== "pushed" || d.to));
+  return html`<section class="panel tidy ink ${goalTheme(w, t.goal)} satbg" style="--sat:.55">
+    <div class="tidyhead">${icon("alarm")}<span class="max">Tidy up · ${stale.length} task${stale.length === 1 ? "" : "s"} over a week late</span></div>
+    <h3 class="tidyname">${t.name}</h3>
+    <div class="small-text">${[g?.name, m?.name].filter(Boolean).join(" › ")} · due ${shortDate(t.due)}, ${late} days ago${t.pushes ? ` · pushed back ${t.pushes}×` : ""}</div>
+    <div class="tidyacts">${[["pushed", "calendar", "Push back"], ["archived", "folder", "Archive"], ["done", "check", "Already done"]].map(([a, ic, label]) =>
+      html`<button class="chip ${d.action === a ? "fill" : "border"}" data-act="tidyAction" data-id="${t.id}" data-action="${a}" aria-pressed="${pressed(d.action === a)}">${icon(ic)}${label}</button>`)}</div>
+    ${d.action === "pushed" ? html`<div class="tidystep"><span class="tlabel">New due date</span><div class="tidyacts">
+      ${[[7, "+1 week"], [14, "+2 weeks"]].map(([n, label]) => html`<button class="chip ${d.to === plus(n) ? "fill" : "border"}" data-act="tidyTo" data-to="${plus(n)}">${label}</button>`)}
+      <input class="field tidydate" type="date" data-tidy-to min="${key}" value="${d.to || ""}" aria-label="Pick a date"></div></div>` : ""}
+    ${whys.length ? html`<div class="tidystep"><span class="tlabel">Why?</span><div class="tidyacts">${whys.map(([id, label]) =>
+      html`<button class="chip ${d.why === id ? "fill" : "border"}" data-act="tidyWhy" data-why="${id}" aria-pressed="${pressed(d.why === id)}">${label}</button>`)}</div>
+      <input class="field" data-tidy-note maxlength="200" placeholder="A note for later (optional)" value="${d.note || ""}" aria-label="Note"></div>` : ""}
+    ${d.action ? html`<nav class="wrap tidysave"><button data-act="tidySave" ${ready ? "" : "disabled"}>Save${stale.length > 1 ? " and next" : ""}</button>
+      <button class="transparent" data-act="tidyCancel">Cancel</button></nav>` : ""}
+  </section>`;
+}
+
 export function workTodayView() {
   const w = workData(), key = state.date;
   if (!w.goals.length) {
@@ -77,10 +103,11 @@ export function workTodayView() {
   }
   const g = pageGoal(w);
   if (g) return html`${goalPage(w, g, key)}${taskSheet(w, key)}`;
+  const tidy = tidyCard(w, key);
   const t = todayState(w, key), picks = todayPicks(w, key), pins = t.pins || [];
   const done = picks.filter((x) => x.done).length, all = picks.length && done === picks.length;
   const open = w.tasks.filter((x) => !x.done), blocked = open.filter((x) => blocker(x, w.tasks)).length;
-  return html`<article class="round no-padding ritual themed ember">
+  return html`${tidy}<article class="round no-padding ritual themed ember">
       <nav class="padding">${icon("target")}<div class="max"><h6>${longDate(key)}</h6><div class="small-text">${done} of ${picks.length} done</div></div>
         ${all ? html`<span class="chip fill">${icon("done_all")}Done</span>` : ""}</nav>
       <progress value="${picks.length ? Math.round((100 * done) / picks.length) : 0}" max="100"></progress>

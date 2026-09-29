@@ -3,7 +3,7 @@ import { html, todayKey, shortDate, clock, atTime } from "../util.js";
 import { pageUrl } from "../page.js";
 import { dashboardTodos } from "./todos.js";
 import { workData } from "./work.js";
-import { todayPicks, goalTheme } from "../work.js";
+import { todayPicks, goalTheme, staleTasks } from "../work.js";
 import { pressed, icon } from "./components.js";
 import { state } from "../state.js";
 import { normalizeLayout, pageLabel, pageIcon, pageHidden, tabHidden } from "../layout.js";
@@ -22,6 +22,7 @@ function workCard() {
       <button class="circle ${t.done ? "" : "border"}" data-act="wToggle" data-id="${t.id}" aria-pressed="${pressed(Boolean(t.done))}" aria-label="${t.done ? "Done" : "Mark done"}: ${t.name}">${t.done ? icon("check") : ""}</button>
       <div class="max"><div class="rname">${t.at ? html`<span class="wat">${clock(atTime(key, t.at))}</span> ` : ""}${t.name}</div><div class="small-text">${goal(t)}${t.due ? ` · ${t.due < key && !t.done ? "overdue, " : "due "}${shortDate(t.due)}` : ""}</div></div></li>`)}</ul>`
       : html`<p class="hint">Nothing open right now.</p>`}
+    ${(() => { const n = staleTasks(w, key).length; return n ? html`<a class="stalelink" href="${pageUrl("work")}">${icon("alarm")}<span class="max">${n} task${n === 1 ? "" : "s"} over a week late: push back or archive</span>${icon("chevron_right")}</a>` : ""; })()}
     <p class="small">${link}</p></div>`;
 }
 

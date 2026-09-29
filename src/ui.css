@@ -691,3 +691,18 @@
 #wlc.ui .breath.restart .bhead>i{color:var(--good)}
 #wlc.ui .brback li>.max{flex:1 1 170px}
 #wlc.ui .brback li>button{margin-left:auto}
+/* Tidy up: tasks over a week late */
+#wlc.ui .tidy{border:0;margin-bottom:16px}
+#wlc.ui .tidyhead{display:flex;align-items:center;gap:8px;font-size:.78em;letter-spacing:.1em;text-transform:uppercase}
+#wlc.ui .tidyname{font:400 1.7em/1.1 var(--serif);margin:8px 0 2px}
+#wlc.ui .tidyacts{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+#wlc.ui .tidystep{margin-top:12px}
+#wlc.ui .tidystep input.field{margin-top:8px;width:100%}
+#wlc.ui .tidyacts .tidydate{width:auto;margin:0}
+#wlc.ui .tidysave{gap:8px;margin-top:12px}
+#wlc.ui .stalelink{display:flex;align-items:center;gap:8px;margin:8px 0 0;padding:10px 12px;border-radius:12px;border:1px dashed var(--bad);color:var(--fg);text-decoration:none;font-size:.9em}
+#wlc.ui .stalelink>i:first-child{color:var(--bad)}
+#wlc.ui .ink input::placeholder{color:var(--muted);opacity:1}
+#wlc.ui .ink input,#wlc.ui .ink select{background:color-mix(in srgb,var(--on) 10%,transparent);color:var(--fg);border-color:var(--control)}
+#wlc.ui .ink input[type=date]::-webkit-calendar-picker-indicator{filter:invert(var(--inv,1))}
+#wlc.ui.light .gc3 input[type=date]::-webkit-calendar-picker-indicator{--inv:0}

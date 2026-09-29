@@ -16,8 +16,37 @@ export function normalizeWork(doc) {
     tasks: Array.isArray(doc?.tasks) ? doc.tasks : [],
     today: doc?.today || {},
     perDay: Math.min(5, Math.max(3, Number(doc?.perDay) || 3)),
+    archived: Array.isArray(doc?.archived) ? doc.archived : [],
+    slips: Array.isArray(doc?.slips) ? doc.slips : [],
     ...(doc?.timer ? { timer: doc.timer } : {}),
   };
+}
+
+// ---------- Tidy up: tasks more than a week late get pushed back, archived or marked done, with a reason ----------
+//   archived: [task + { archived: date, why }]   off every list, kept for the record
+//   slips:    [{ at, date, task, name, goal, late (days), action: "pushed"|"archived"|"done", why, note, from, to }]
+//             a log of what happened to late tasks and why, for spotting patterns later
+export const STALE_DAYS = 7;
+export const PUSH_WHYS = [["longer", "Took longer than planned"], ["waiting", "Waiting on someone"], ["toobig", "Too big, needs breaking down"], ["forgot", "Forgot about it"], ["priorities", "Other things came first"], ["life", "Life happened"]];
+export const ARCHIVE_WHYS = [["unneeded", "Not needed any more"], ["someone", "Someone else did it"], ["notworth", "Not worth the effort"], ["plans", "Plans changed"], ["replan", "Too big, I'll re-plan it"], ["other", "Something else"]];
+
+export const staleTasks = (w, key) => w.tasks
+  .filter((t) => !t.done && t.due && daysBetween(t.due, key) > STALE_DAYS)
+  .sort((a, b) => a.due.localeCompare(b.due));
+
+// Records what happened to a late task. action: "pushed" (to = new due date), "archived" or "done".
+export function resolveStale(w, id, { action, why = "", note = "", to = "" }, key, now = Date.now()) {
+  const t = w.tasks.find((x) => x.id === id);
+  if (!t) return w;
+  w.slips.push({ at: now, date: key, task: t.id, name: t.name, goal: t.goal, late: daysBetween(t.due, key), action, why, ...(note ? { note } : {}), from: t.due, ...(to ? { to } : {}) });
+  if (action === "pushed") { t.due = to; t.pushes = (t.pushes || 0) + 1; }
+  else if (action === "done") t.done = key;
+  else if (action === "archived") {
+    removeTask(w, t.id);
+    w.archived.push({ ...t, archived: key, why });
+    if (w.timer?.id === t.id) delete w.timer;
+  }
+  return w;
 }
 
 export const todayState = (w, key) => (w.today?.date === key ? w.today : { date: key, pins: [], skips: [], extra: 0 });

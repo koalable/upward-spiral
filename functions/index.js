@@ -217,6 +217,8 @@ function normalizeWork(doc) {
     tasks: Array.isArray(doc?.tasks) ? doc.tasks : [],
     today: doc?.today || {},
     perDay: Math.min(5, Math.max(3, Number(doc?.perDay) || 3)),
+    archived: Array.isArray(doc?.archived) ? doc.archived : [],
+    slips: Array.isArray(doc?.slips) ? doc.slips : [],
     ...doc?.timer ? { timer: doc.timer } : {}
   };
 }

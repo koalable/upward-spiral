@@ -46,3 +46,23 @@ test("milestone icons: guessed from the name unless picked", async () => {
   assert.equal(guessIcon("Something else"), "flag");
   assert.equal(msIcon({ name: "Meds", icon: "heart" }), "heart");
 });
+
+test("tasks over a week late: push back, archive or done, each logged with why", async () => {
+  const { staleTasks, resolveStale } = await import("../src/work.js");
+  const x = normalizeWork({ tasks: [
+    { id: "a", name: "A", due: "2026-09-20", done: "" }, // 10 days late
+    { id: "b", name: "B", due: "2026-09-25", done: "" }, // 5 days late: not yet
+    { id: "c", name: "C", due: "2026-09-10", done: "" },
+    { id: "d", name: "D", due: "2026-10-05", done: "", after: "c" },
+  ] });
+  const K = "2026-09-30";
+  assert.deepEqual(staleTasks(x, K).map((t) => t.id), ["c", "a"]);
+  resolveStale(x, "a", { action: "pushed", why: "waiting", to: "2026-10-07" }, K, 1);
+  resolveStale(x, "c", { action: "archived", why: "unneeded", note: "Client cancelled" }, K, 2);
+  assert.equal(x.tasks.find((t) => t.id === "a").due, "2026-10-07");
+  assert.ok(!x.tasks.some((t) => t.id === "c"));
+  assert.equal(x.archived[0].id, "c");
+  assert.equal(x.tasks.find((t) => t.id === "d").after, undefined); // no longer waits on the archived task
+  assert.deepEqual(x.slips.map((s) => [s.task, s.action, s.why, s.late]), [["a", "pushed", "waiting", 10], ["c", "archived", "unneeded", 20]]);
+  assert.deepEqual(staleTasks(x, K), []);
+});

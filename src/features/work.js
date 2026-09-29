@@ -2,8 +2,8 @@
 import { state } from "../state.js";
 import { save, paths } from "../store.js";
 import { clone, newId, todayKey } from "../util.js";
-import { ui, refreshAfterRemoteChange } from "../render.js";
-import { todayState, removeTask, removeMilestone, removeGoal } from "../work.js";
+import { ui, render, refreshAfterRemoteChange } from "../render.js";
+import { todayState, removeTask, removeMilestone, removeGoal, resolveStale } from "../work.js";
 import { startTimer, pauseTimer, stopTimer, addTime, isUp, msLeft, countdownText } from "../timer.js";
 import { workTodayView, workGoalsView, workData, readWorkForm } from "../views/work.js";
 import { parsePlan, PLAN_PROMPT } from "../workimport.js";
@@ -108,6 +108,15 @@ export default {
     },
     wClose() { state.goalPage = null; state.editWork = null; state.taskCard = null; },
     wTask(el) { state.taskCard = el.dataset.id; },
+    tidyAction(el) { state.tidy = { id: el.dataset.id, action: el.dataset.action }; },
+    tidyTo(el) { state.tidy.to = el.dataset.to; },
+    tidyWhy(el) { state.tidy.why = state.tidy.why === el.dataset.why ? "" : el.dataset.why; },
+    tidyCancel() { state.tidy = null; },
+    tidySave() {
+      const d = state.tidy;
+      edit((w) => resolveStale(w, d.id, d, state.date));
+      state.tidy = null;
+    },
     wTaskClose() { state.taskCard = null; },
     wTaskDelete(el) {
       const t = workData().tasks.find((x) => x.id === el.dataset.id);
@@ -141,6 +150,14 @@ export default {
       edit((w) => (e.kind === "goal" ? removeGoal : e.kind === "ms" ? removeMilestone : removeTask)(w, e.id));
       state.editWork = null;
     },
+  },
+  input(el) {
+    if ("tidyNote" in el.dataset && state.tidy) return (state.tidy.note = el.value), true;
+    return false;
+  },
+  change(el) {
+    if ("tidyTo" in el.dataset && state.tidy) return (state.tidy.to = el.value), render(), true;
+    return false;
   },
   leave() { readWorkForm(ui.view); },
   busy: () => Boolean(state.editWork),

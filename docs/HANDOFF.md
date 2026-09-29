@@ -77,6 +77,7 @@ Words: **habit** = one recurring action; **ritual** = a saved sequence of habits
 - Settings behind a gear (Customize, Categories, Targets & scoring, Notifications, Account); `src/layout.js` renames/hides pages, tabs and Today sections (Everything / Simple presets).
 - Check-in = Today · Meds · Reflect. Today: rings, "On your plate" (to-dos + Work/House tasks), meds, fold-up energy groups with points, "Close the day".
 - **Breathing room** (`src/breathing.js`, `src/views/breathing.js`): pause any mix of categories, habits, goals for the rest of the week; asks how much room, what, why, and whether a smaller version would do. Language is only **on track / late / restarting after a break** (Karla: no "making it up"). Late goals can move this week's tasks to next week. Paused things leave Today, rings and today's picks. Still to do: streaks/momentum/calendars treat paused days as paused; habits page and notifications skip paused habits.
+- **Tidy up** (Work → Today, plus a line on Check-in's On your plate): tasks more than 7 days late, one at a time → Push back (+1/+2 weeks/date) / Archive / Already done, then Why? (+ note). Logged in the work doc's `slips` (task, goal, days late, action, why, note, from/to) for behaviour data later; archived tasks move to `archived`. Logic: `staleTasks`, `resolveStale` in `src/work.js`.
 - Rosa (pretend beta tester) in `dist/preview-rosa-*.html` (`seedRosa` in `src/preview.js`).
 
 ## Not wanted (for now)
