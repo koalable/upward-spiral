@@ -4,7 +4,7 @@ import { saveMember } from "../day.js";
 import { save, paths } from "../store.js";
 import { todayKey, addDays } from "../util.js";
 import { toggleTheme, stepTextSize } from "../render.js";
-import { page, pageUrl } from "../page.js";
+import { page, pageUrl, SETTINGS_TABS } from "../page.js";
 import { auth } from "../auth.js";
 
 export default {
@@ -19,7 +19,8 @@ export default {
       saveMember(0);
       save(paths.settings(state.uid), settings(), 0);
     },
-    openTab: (el) => { state.tab = el.dataset.tab; },
+    // A link to a Settings tab (e.g. "Notification settings" on Meds) opens Settings there.
+    openTab: (el) => { state.tab = el.dataset.tab; state.settingsMode = SETTINGS_TABS.includes(el.dataset.tab); window.scrollTo({ top: 0 }); },
     // Settings live on the Check-in page; from anywhere else the gear goes there.
     openSettings() {
       if (page.id !== "checkin") { location.href = `${pageUrl("checkin")}#settings`; return "none"; }
