@@ -1,7 +1,7 @@
 // Check-in → Today as a daily dashboard: today's to-dos and today's Work tasks, above the check-in.
 import { html, todayKey, shortDate } from "../util.js";
 import { pageUrl } from "../page.js";
-import { goalList } from "./todos.js";
+import { dashboardTodos } from "./todos.js";
 import { workData } from "./work.js";
 import { todayPicks, goalTheme } from "../work.js";
 import { pressed, icon } from "./components.js";
@@ -21,5 +21,5 @@ function workCard() {
 }
 
 export function dashboardView() {
-  return html`<div class="dashboard">${goalList("d" + todayKey(), "To-dos today")}${workCard()}</div>`;
+  return html`<div class="dashboard">${dashboardTodos()}${workCard()}</div>`;
 }

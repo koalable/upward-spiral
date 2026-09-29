@@ -12,6 +12,7 @@ export const paths = {
   routines: (uid) => `users/${uid}/lists/routines`,
   routineLog: (uid, d) => `users/${uid}/routinelog/${d}`,
   work: (uid) => `users/${uid}/lists/work`,
+  todos: (uid) => `users/${uid}/lists/todos`,
   notify: (uid) => `users/${uid}/notify/settings`,
   alias: (email) => `aliases/${email.toLowerCase()}`,
   member: (uid) => `members/${uid}`,

@@ -16,8 +16,8 @@ People (all on the member list in `firestore.rules`):
 
 | Page | App URL | Tabs |
 |---|---|---|
-| Check-in | / | Today (just that day: progress rings, to-dos + Work tasks, then the check-in), Meds, Journal, Categories, Targets & rules (incl. Linked accounts), Notifications |
-| Habits | /routines | Rituals (run step by step), Set up habits, To-dos |
+| Check-in | / | Today (just that day: progress rings, to-dos planned or due today + overdue, "N more this week", Work tasks, then the check-in), Meds, Journal, Categories, Targets & rules (incl. Linked accounts), Notifications |
+| Habits | /routines | Rituals (run step by step), Set up habits, To-dos (one list grouped Today / This week / Later this month / Later / Someday / Done by date) |
 | Work | /work | Today (3–5 picked tasks), Goals (goals → milestones → tasks, dependencies, progress, "Paste a plan from Claude") |
 | Progress | /progress | Streaks & badges (check-in streak, 30-day tally, floor day, streak freezes, then per-area calendars), My progress (energy flow), Group |
 
@@ -62,7 +62,7 @@ Words: **habit** = one recurring action; **ritual** = a saved sequence of habits
 - Rules: `me(uid)` also accepts an alias; the email must still be on the member list. To add a person or address, edit the list in `firestore.rules` and push.
 
 ## Data (Firestore, private per person under users/{uid})
-- `days/{date}` check-in answers · `goals/d<date>|w<week>|m<month>` to-dos · `lists/routines` habits and rituals · `routinelog/{date}` habits done · `lists/work` goals, milestones, tasks, today's picks · `medlog/{date}` med logs · `notify/settings` notification choices.
+- `days/{date}` check-in answers · `lists/todos` to-dos (items with optional `on` = do-on date and `due` = deadline; `done` = date finished; old `goals/*` day/week/month lists were carried over once and are no longer used) · `lists/routines` habits and rituals · `routinelog/{date}` habits done · `lists/work` goals, milestones, tasks, today's picks · `medlog/{date}` med logs · `notify/settings` notification choices.
 - Shared: members, scores, wins, config/season, aliases.
 
 ## Status at hand-off

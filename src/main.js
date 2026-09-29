@@ -8,6 +8,7 @@ import { addDays, todayKey, weekStart, html } from "./util.js";
 import { HISTORY_DAYS, MEDLOG_DAYS } from "./constants.js";
 import { mountShell, render, patch, refreshAfterRemoteChange, setBanner, setWho, setStatus, showTabs, showScreen } from "./render.js";
 import { signInView } from "./views/join.js";
+import { fromGoals } from "./todos.js";
 import { bindEvents } from "./events.js";
 
 function subscribe() {
@@ -38,7 +39,21 @@ function subscribe() {
     state.days = keepUnsaved(`users/${uid}/days/`, docs, state.days);
     arrived("days");
   }, onError);
-  db.watchCollection(`users/${uid}/goals`, null, (docs) => { state.goals = keepUnsaved(`users/${uid}/goals/`, docs, state.goals); refreshAfterRemoteChange(); }, onError);
+  // To-dos: one list (lists/todos). The first time, carry over the old day/week/month lists (goals/*).
+  let goalsIn = false, todosIn = false;
+  const migrateTodos = () => {
+    if (!goalsIn || !todosIn || state.todos) return;
+    state.todos = fromGoals(state.goals);
+    save(paths.todos(uid), state.todos, 0);
+  };
+  db.watchCollection(`users/${uid}/goals`, null, (docs) => {
+    state.goals = keepUnsaved(`users/${uid}/goals/`, docs, state.goals);
+    goalsIn = true; migrateTodos(); refreshAfterRemoteChange();
+  }, onError);
+  db.watchDoc(paths.todos(uid), (doc) => {
+    if (!isPending(paths.todos(uid))) state.todos = doc;
+    todosIn = true; migrateTodos(); refreshAfterRemoteChange();
+  }, onError);
   db.watchCollection(`users/${uid}/weekly`, null, (docs) => { state.weekly = keepUnsaved(`users/${uid}/weekly/`, docs, state.weekly); refreshAfterRemoteChange(); }, onError);
   db.watchCollection(`users/${uid}/medlog`, ["date", ">=", addDays(todayKey(), -MEDLOG_DAYS)], (docs) => {
     state.medlog = keepUnsaved(`users/${uid}/medlog/`, docs, state.medlog);

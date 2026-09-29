@@ -1,45 +1,56 @@
-// To-do lists for today, this week, and this month. Private.
+// To-dos: add, tick off, date, and remove. One private list (users/{uid}/lists/todos).
 import { state } from "../state.js";
 import { save, paths } from "../store.js";
-import { clone } from "../util.js";
+import { clone, newId, todayKey } from "../util.js";
 import { ui, render } from "../render.js";
+import { normalizeTodos } from "../todos.js";
 import { todosView } from "../views/todos.js";
 
 const $ = (sel) => ui.view.querySelector(sel);
 
-function editGoals(key, fn) {
-  const goals = state.goals[key] ? clone(state.goals[key]) : { period: key, items: [] };
-  fn(goals.items);
-  state.goals[key] = goals;
-  save(paths.goals(state.uid, key), goals, 0);
+function edit(fn) {
+  const doc = normalizeTodos(state.todos ? clone(state.todos) : null);
+  fn(doc.items);
+  state.todos = { ...(state.todos || {}), items: doc.items };
+  save(paths.todos(state.uid), state.todos, 300);
 }
+const find = (items, id) => items.find((x) => x.id === id);
 
-function addGoal(key) {
-  const input = $(`[data-goal-input="${key}"]`), text = input?.value.trim();
+function addTodo(form) {
+  const input = $(`#${form}-t`), text = input?.value.trim();
   if (!text) return input?.focus(), "none";
-  editGoals(key, (items) => items.push({ t: text, done: false }));
+  const on = $(`#${form}-on`)?.value || "", due = $(`#${form}-due`)?.value || "";
+  edit((items) => items.push({ id: newId("t"), t: text, on, due, done: "", created: todayKey() }));
   render();
-  $(`[data-goal-input="${key}"]`)?.focus();
+  $(`#${form}-t`)?.focus();
   return "none";
 }
 
-// The handlers without the tab, so other pages (the Check-in dashboard) can show today's list.
+// The handlers without the tab, so the Check-in dashboard can use them too.
 export const todoHandlers = {
   actions: {
-    goalAdd: (el) => addGoal(el.dataset.goal),
-    goalRemove: (el) => editGoals(el.dataset.goal, (items) => items.splice(Number(el.dataset.index), 1)),
+    todoAdd: (el) => addTodo(el.dataset.form),
+    todoRemove: (el) => edit((items) => { const i = items.findIndex((x) => x.id === el.dataset.id); if (i >= 0) items.splice(i, 1); }),
+    todoDates: (el) => { state.editTodo = el.dataset.id || null; },
   },
   change(el) {
-    const key = el.dataset.goalDone;
-    if (!key) return false;
-    editGoals(key, (items) => { items[Number(el.dataset.index)].done = el.checked; });
-    return render(), true;
+    const d = el.dataset;
+    if (d.todoDone) {
+      edit((items) => { const x = find(items, d.todoDone); if (x) x.done = el.checked ? todayKey() : ""; });
+      return render(), true;
+    }
+    if (d.todoOn || d.todoDue) {
+      edit((items) => { const x = find(items, d.todoOn || d.todoDue); if (x) x[d.todoOn ? "on" : "due"] = el.value || ""; });
+      return render(), true;
+    }
+    return false;
   },
   keydown(event) {
-    const key = event.target.dataset.goalInput;
-    if (event.key !== "Enter" || !key) return false;
-    return addGoal(key), true;
+    const form = event.target.dataset.todoInput;
+    if (event.key !== "Enter" || !form) return false;
+    return addTodo(form), true;
   },
+  busy: () => Boolean(state.editTodo),
 };
 
 export default { tabs: [["todos", "To-dos", todosView]], ...todoHandlers };
