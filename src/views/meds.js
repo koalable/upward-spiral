@@ -1,10 +1,8 @@
-// Meds & substances: one-tap logging, the personal list, reminders, and history.
+// Meds & substances: one-tap logging, the personal list (with reminder times), and history.
 import { html, todayKey, addDays, longDate, clock, hhmmOf, atTime } from "../util.js";
 import { MED_KINDS, TOAST_MS } from "../constants.js";
 import { state, hasQuestion } from "../state.js";
 import { medList, activeMeds, logsOn, medStatus, doseLabel, substanceUnits } from "../meds.js";
-import { alertsSupported, alertsOn } from "../notifications.js";
-import { dailyReminderLink } from "../calendar.js";
 import { saveStatus } from "./components.js";
 
 export const toastVisible = () => state.toast && Date.now() - state.toast.when < TOAST_MS;
@@ -56,7 +54,7 @@ function medForm() {
     <label>Type<select class="field" id="med-kind">${Object.entries(MED_KINDS).map(([k, label]) => html`<option value="${k}" ${k === (e.kind || "rx") ? "selected" : ""}>${label}</option>`)}</select></label>
     <label>Usual dose<input class="field" id="med-dose" maxlength="20" value="${e.dose || ""}" placeholder="50"></label>
     <label>Unit<input class="field" id="med-unit" maxlength="20" value="${e.unit || ""}" placeholder="mg, pill, drink"></label>
-    <label class="full">Scheduled times (optional)<span class="timesrow">${times.map((t, i) => html`<input class="field" type="time" data-med-time value="${t}" aria-label="Time ${i + 1}">`)}</span></label>
+    <label class="full">Reminder times (optional, sends a phone notification)<span class="timesrow">${times.map((t, i) => html`<input class="field" type="time" data-med-time value="${t}" aria-label="Time ${i + 1}">`)}</span></label>
     <label>Hours between doses (optional)<input class="field" id="med-every" type="number" min="0" step="0.5" value="${e.every ?? ""}" placeholder="e.g. 6"></label>
     <label>Daily max (optional)<input class="field" id="med-max" type="number" min="0" step="1" value="${e.max ?? ""}" placeholder="e.g. 4"></label>
     <label class="full">Notes<input class="field" id="med-notes" maxlength="200" value="${e.notes || ""}" placeholder="With food, etc."></label>
@@ -69,12 +67,11 @@ function medForm() {
 
 function listItem(m, i) {
   const times = (m.times || []).filter(Boolean);
-  const reminder = (t) => dailyReminderLink({ title: `Take ${m.name}${m.dose ? " " + doseLabel(m.dose, m.unit) : ""}`, time: t, details: `Log it: ${location.href}` });
   return html`<li class="qrow">
     <div class="qmain"><b>${m.name}</b>${m.dose ? html`<span class="muted">${doseLabel(m.dose, m.unit)}</span>` : ""}
       <span class="tag">${MED_KINDS[m.kind] || ""}</span>${substanceUnits(m.counts) ? html`<span class="tag on">Counts as ${substanceUnits(m.counts) === 0.5 ? "½ unit" : "1 unit"}</span>` : ""}</div>
     <div class="qbtns"><button class="linkbtn" data-act="medEdit" data-index="${i}">Edit</button><button class="x" data-act="medRemove" data-index="${i}" aria-label="Remove ${m.name}">×</button></div>
-    ${times.length ? html`<div class="calrow small">Calendar reminders: ${times.map((t) => html`<a class="linkbtn" href="${reminder(t)}" target="_blank" rel="noopener">+ ${clock(atTime(todayKey(), t))}</a>`)}</div>` : ""}
+    ${times.length ? html`<div class="calrow small muted">Reminds at ${times.map((t) => clock(atTime(todayKey(), t))).join(", ")}</div>` : ""}
   </li>`;
 }
 
@@ -112,11 +109,7 @@ function otherForm() {
 }
 
 export function medsView() {
-  const alerts = alertsSupported()
-    ? alertsOn()
-      ? html`<p><span class="done">✓ Pop-up alerts are on for this device</span> <button class="linkbtn" data-act="alertsOff">Turn off</button></p>`
-      : html`<p><button class="btn ghost" data-act="alertsOn">Turn on pop-up alerts on this device</button></p>`
-    : html`<p class="muted small">This browser doesn't support pop-up alerts. Use the calendar links.</p>`;
+
   return html`
     <p class="privacy small muted">🔒 Private to you. The group never sees your medications or doses. If a substance counts toward your score, only the score changes.</p>
     <section class="panel"><h2>Log it</h2><div id="live-toast">${toast()}</div>
@@ -125,8 +118,8 @@ export function medsView() {
     <section class="panel"><h2>My list</h2><ul class="qlist">${medList().length ? medList().map(listItem) : html`<li class="muted small">Nothing yet.</li>`}</ul>
       <div class="formslot">${medForm()}</div></section>
     <section class="panel"><h2>Reminders</h2>
-      <p class="hint">Calendar reminders (the links under each item) work even when this page is closed. Pop-up alerts only work while the page is open in a tab.</p>
-      ${alerts}${saveStatus()}</section>
+      <p class="hint">Add scheduled times to an item and your phone reminds you then, unless that dose is already logged. Turn reminders on under Notifications.</p>
+      <p><button class="btn ghost" data-act="openTab" data-tab="notify">Notification settings</button></p>${saveStatus()}</section>
     <section class="panel"><h2>History</h2>${history()}</section>`;
 }
 
