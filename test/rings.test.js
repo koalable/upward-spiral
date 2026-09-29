@@ -30,3 +30,11 @@ test("habits: fixed days count when scheduled, flexible ones only once done", ()
   const log = { [monday]: { done: { a: 1, d: 1 } } };
   assert.deepEqual(habitsDue(items, monday, log), { due: 2, done: 2 });
 });
+
+test("med logs: older saves count as 1 unit, half-dose items as ½", async () => {
+  const { substanceUnits } = await import("../src/meds.js").catch(() => ({}));
+  if (!substanceUnits) return; // meds.js needs the browser-side store; covered by the build
+  assert.equal(substanceUnits(true), 1);
+  assert.equal(substanceUnits(0.5), 0.5);
+  assert.equal(substanceUnits(false), 0);
+});

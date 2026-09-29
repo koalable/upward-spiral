@@ -76,7 +76,7 @@ function builtinPoints(id, a, t, detail) {
     case "substances": {
       if (!isSet(a.substances)) return 0; // unanswered is not "zero units"
       const over = toNum(a.substances) - toNum(t.substanceLimit);
-      return over <= 0 ? 4 : over === 1 ? 2 : 0;
+      return over <= 0 ? 4 : over <= 1 ? 2 : 0; // halves allowed: up to one unit over earns 2
     }
     case "movement": {
       const steps = toNum(a.steps), walk = toNum(a.walkMin), workout = workoutMinutes(a);

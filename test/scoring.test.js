@@ -83,3 +83,13 @@ test("converted built-ins keep their id so streak settings survive", () => {
   assert.equal(q.id, "screen");
   assert.equal(q.items.length, 4);
 });
+
+test("substances: half units count, and up to one unit over still earns 2", () => {
+  const c = { ...cfg, targets: { ...cfg.targets, substanceLimit: 2 } };
+  const pts = (n) => scoreDay(day({ substances: n }), c).points.substances;
+  assert.equal(pts(1.5), 4);
+  assert.equal(pts(2), 4);
+  assert.equal(pts(2.5), 2);
+  assert.equal(pts(3), 2);
+  assert.equal(pts(3.5), 0);
+});

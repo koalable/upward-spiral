@@ -7,7 +7,8 @@
 //   https://purge.jsdelivr.net/gh/koalable/upward-spiral@main/dist/cdn/<file>
 // The Webflow boxes load @main, so they never need editing for a release.
 import * as esbuild from "esbuild";
-import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdirSync, copyFileSync, rmSync } from "node:fs";
+import { createHash } from "node:crypto";
 
 const REPO = "koalable/upward-spiral";
 const RELEASE = process.env.RELEASE || "main";
@@ -57,6 +58,49 @@ for (const [id] of PAGES) {
   ].join("\n") + "\n");
 }
 writeFileSync("webflow/CODE-EMBED.txt", `<div id="wlc"></div>\n`);
+
+// ---------- Home-screen app (app/) → Firebase Hosting at app.kstarr.com ----------
+// Same code as the Webflow pages, served from our own site so it can be installed and send notifications.
+// Pages: / (Check-in), /routines, /work, /progress. Deployed by .github/workflows/deploy-app.yml.
+const APP_PAGES = { checkin: "/", routines: "/routines", work: "/work", progress: "/progress" };
+rmSync("app", { recursive: true, force: true });
+mkdirSync("app/js", { recursive: true });
+const appJs = {};
+for (const [id] of PAGES) appJs[id] = readFileSync(`dist/cdn/${id}.js`, "utf8");
+const version = createHash("sha1").update(css + Object.values(appJs).join("")).digest("hex").slice(0, 10);
+writeFileSync("app/app.css", css);
+for (const [id, js] of Object.entries(appJs)) writeFileSync(`app/js/${id}.js`, js);
+for (const f of ["icon-180.png", "icon-192.png", "icon-512.png", "icon-maskable-512.png"]) copyFileSync(`app-src/${f}`, `app/${f}`);
+writeFileSync("app/sw.js", readFileSync("app-src/sw.js", "utf8").replaceAll("__VERSION__", version));
+writeFileSync("app/manifest.webmanifest", JSON.stringify({
+  name: "Upward Spiral of Awesomeness", short_name: "Spiral", id: "/", start_url: "/", scope: "/",
+  display: "standalone", background_color: "#09090b", theme_color: "#09090b",
+  icons: [
+    { src: "/icon-192.png", sizes: "192x192", type: "image/png" },
+    { src: "/icon-512.png", sizes: "512x512", type: "image/png" },
+    { src: "/icon-maskable-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
+  ],
+}, null, 2));
+for (const [id, , title] of PAGES) {
+  const file = id === "checkin" ? "app/index.html" : `app/${id}.html`;
+  writeFileSync(file, `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>${title} · Spiral</title>
+<meta name="theme-color" content="#09090b">
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Spiral">
+<link rel="manifest" href="/manifest.webmanifest"><link rel="apple-touch-icon" href="/icon-180.png"><link rel="icon" href="/icon-192.png">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="${INTER}"><link rel="stylesheet" href="${LUCIDE}">
+<link rel="stylesheet" href="/app.css?v=${version}">
+<style>html,body{margin:0;background:#09090b}</style></head><body class="app"><div id="wlc"></div>
+${["app", "auth", "firestore"].map((m) => `<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-${m}-compat.js"></script>`).join("\n")}
+<script>window.WLC_CONFIG={firebase:Object.assign(${JSON.stringify(FIREBASE)},{authDomain:location.hostname}),pages:${JSON.stringify(APP_PAGES)},app:true};
+if("serviceWorker" in navigator)navigator.serviceWorker.register("/sw.js").catch(function(){});</script>
+<script src="/js/${id}.js?v=${version}"></script></body></html>
+`);
+}
+report.app = version;
 
 // Offline previews (pretend data, every page in one bundle).
 const previewApp = await bundle("src/entries/preview.js");

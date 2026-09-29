@@ -2,7 +2,7 @@
 import { html, todayKey, addDays, longDate, clock, hhmmOf, atTime } from "../util.js";
 import { MED_KINDS, TOAST_MS } from "../constants.js";
 import { state, hasQuestion } from "../state.js";
-import { medList, activeMeds, logsOn, medStatus, doseLabel } from "../meds.js";
+import { medList, activeMeds, logsOn, medStatus, doseLabel, substanceUnits } from "../meds.js";
 import { alertsSupported, alertsOn } from "../notifications.js";
 import { dailyReminderLink } from "../calendar.js";
 import { saveStatus } from "./components.js";
@@ -61,7 +61,8 @@ function medForm() {
     <label>Daily max (optional)<input class="field" id="med-max" type="number" min="0" step="1" value="${e.max ?? ""}" placeholder="e.g. 4"></label>
     <label class="full">Notes<input class="field" id="med-notes" maxlength="200" value="${e.notes || ""}" placeholder="With food, etc."></label>
   </div>
-  ${hasQuestion("substances") ? html`<label class="inline"><input type="checkbox" id="med-counts" ${e.counts ? "checked" : ""}> Each log counts as 1 unit toward my Substances score</label>` : ""}
+  ${hasQuestion("substances") ? html`<div class="targets"><label class="full">Each log adds to my Substances score
+    <select class="field" id="med-counts">${[[0, "Nothing"], [1, "1 unit"], [0.5, "½ unit (split doses)"]].map(([v, label]) => html`<option value="${v}" ${substanceUnits(e.counts) === v ? "selected" : ""}>${label}</option>`)}</select></label></div>` : ""}
   <p class="hint small">Use the numbers your doctor or pharmacist gave you. The app keeps track; it doesn't check doses.</p>
   <div class="row"><button class="btn" data-act="medSave">Save</button><button class="btn ghost" data-act="medCancel">Cancel</button></div></div>`;
 }
@@ -71,7 +72,7 @@ function listItem(m, i) {
   const reminder = (t) => dailyReminderLink({ title: `Take ${m.name}${m.dose ? " " + doseLabel(m.dose, m.unit) : ""}`, time: t, details: `Log it: ${location.href}` });
   return html`<li class="qrow">
     <div class="qmain"><b>${m.name}</b>${m.dose ? html`<span class="muted">${doseLabel(m.dose, m.unit)}</span>` : ""}
-      <span class="tag">${MED_KINDS[m.kind] || ""}</span>${m.counts ? html`<span class="tag on">Counts as substance</span>` : ""}</div>
+      <span class="tag">${MED_KINDS[m.kind] || ""}</span>${substanceUnits(m.counts) ? html`<span class="tag on">Counts as ${substanceUnits(m.counts) === 0.5 ? "½ unit" : "1 unit"}</span>` : ""}</div>
     <div class="qbtns"><button class="linkbtn" data-act="medEdit" data-index="${i}">Edit</button><button class="x" data-act="medRemove" data-index="${i}" aria-label="Remove ${m.name}">×</button></div>
     ${times.length ? html`<div class="calrow small">Calendar reminders: ${times.map((t) => html`<a class="linkbtn" href="${reminder(t)}" target="_blank" rel="noopener">+ ${clock(atTime(todayKey(), t))}</a>`)}</div>` : ""}
   </li>`;
@@ -140,5 +141,5 @@ export function readMedForm(view) {
   const times = [...view.querySelectorAll("[data-med-time]")];
   if (times.length) e.times = times.map((x) => x.value).filter(Boolean);
   const counts = view.querySelector("#med-counts");
-  if (counts) e.counts = counts.checked;
+  if (counts) e.counts = Number(counts.value) || 0;
 }

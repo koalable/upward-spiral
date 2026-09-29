@@ -82,7 +82,10 @@ function saveLogDoc(key, doc) {
   save(paths.medlog(state.uid, key), doc, 0);
 }
 
-// Items marked "counts as substance" add one unit to the Substances question on that day.
+// How many Substances units one log adds: 1, ½, or 0. Older saves used `true` for 1.
+export const substanceUnits = (x) => (x === true ? 1 : Math.max(0, toNum(x)));
+
+// Items marked "counts as substance" add their units to the Substances question on that day.
 function adjustSubstances(delta, at) {
   const key = dateKey(new Date(at));
   const q = findQuestion("substances");
@@ -104,13 +107,13 @@ export function logMed({ med = null, name, dose, unit, at = Date.now(), note }) 
     at,
   };
   if (note) entry.note = note;
-  if (med?.counts) entry.counts = true;
+  if (substanceUnits(med?.counts)) entry.counts = substanceUnits(med.counts);
 
   const key = dateKey(new Date(at));
   const doc = state.medlog[key] ? clone(state.medlog[key]) : { date: key, items: [] };
   doc.items.push(entry);
   saveLogDoc(key, doc);
-  if (entry.counts) adjustSubstances(1, at);
+  if (entry.counts) adjustSubstances(substanceUnits(entry.counts), at);
   return { key, entry };
 }
 
@@ -120,7 +123,7 @@ export function deleteMedLog(key, id) {
   const entry = doc.items.find((x) => x.id === id);
   doc.items = doc.items.filter((x) => x.id !== id);
   saveLogDoc(key, doc);
-  if (entry?.counts) adjustSubstances(-1, entry.at);
+  if (entry?.counts) adjustSubstances(-substanceUnits(entry.counts), entry.at);
 }
 
 export function updateMedLog(key, id, { time, dose }) {

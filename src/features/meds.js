@@ -2,7 +2,7 @@
 import { state } from "../state.js";
 import { saveSettings } from "../day.js";
 import { clone, todayKey, addDays, newId, clock, atTime } from "../util.js";
-import { findMed, medList, logMed, deleteMedLog, updateMedLog, doseLabel } from "../meds.js";
+import { findMed, medList, logMed, deleteMedLog, updateMedLog, doseLabel, substanceUnits } from "../meds.js";
 import { enableAlerts, disableAlerts, scheduleAlerts } from "../notifications.js";
 import { ui, render } from "../render.js";
 import { medsView, readMedForm, patchMedStatus } from "../views/meds.js";
@@ -19,7 +19,7 @@ function saveMed() {
   readMedForm(ui.view);
   const e = state.editMed;
   if (!e.name) return $("#med-name").focus(), "none";
-  const med = { id: e.id || newId("m"), name: e.name, kind: e.kind || "rx", dose: e.dose || "", unit: e.unit || "", times: (e.times || []).slice(0, 4), notes: e.notes || "", counts: Boolean(e.counts), active: true };
+  const med = { id: e.id || newId("m"), name: e.name, kind: e.kind || "rx", dose: e.dose || "", unit: e.unit || "", times: (e.times || []).slice(0, 4), notes: e.notes || "", counts: substanceUnits(e.counts), active: true };
   if (e.every > 0) med.every = e.every;
   if (e.max > 0) med.max = e.max;
   const list = medList(), at = list.findIndex((m) => m.id === med.id);

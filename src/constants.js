@@ -43,7 +43,7 @@ export const BUILTINS = {
   reading: { name: "Reading", rule: "1 point per 15 minutes, up to an hour." },
   sleep: { name: "Sleep", rule: "Bedtime and wake time, 2 points each: within 30 min of target 2, within 60 min 1. Earlier is fine." },
   diet: { name: "Diet", rule: "Within 200 calories of target 2. Fruit and veg or protein goal 2. Processed sugar and food cost 1, or 2 if excess." },
-  substances: { name: "Substances", rule: "At or under your daily limit 4, one over 2." },
+  substances: { name: "Substances", rule: "At or under your daily limit 4, up to one over 2. Half units are fine." },
   movement: { name: "Movement", rule: "Walking: 5k steps or 15 min 1, 8k or 30 min 2. Workout: 15 min 1, over 20 min 2." },
   screen: { name: "Screen time", rule: "1 point for each of four phone and screen habits." },
   practices: { name: "Healthy practices", rule: "Log what you did, then grade your own effort 0 to 4." },

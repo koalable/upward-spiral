@@ -45,7 +45,7 @@ function builtinCard(id, a, t) {
     }
     case "substances": return html`${hint}
       ${t.substanceRule ? html`<p class="hint">Yours: ${t.substanceRule}</p>` : html`<p class="hint">Set what counts under Targets &amp; rules.</p>`}
-      <div class="row"><span class="lbl">Units today</span>${stepper("substances", a.substances, 1, "Units today")}<span class="muted small">limit ${t.substanceLimit}</span></div>`;
+      <div class="row"><span class="lbl">Units today</span>${stepper("substances", a.substances, 0.5, "Units today")}<span class="muted small">limit ${t.substanceLimit}</span></div>`;
     case "movement": return html`${hint}
       <div class="sub"><span>Walking</span><span class="pts" id="live-walk"></span></div>
       <div class="row"><label class="lbl" for="wlc-steps">Steps</label><input class="field" id="wlc-steps" type="number" inputmode="numeric" min="0" step="500" data-answer="steps" value="${fieldValue(a.steps)}"></div>

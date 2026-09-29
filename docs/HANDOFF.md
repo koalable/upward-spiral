@@ -52,4 +52,7 @@ Words: **habit** = one recurring action; **ritual** = a saved sequence of habits
 - The Check-in dashboard could also show today's rituals with Start buttons (offered, not asked for yet).
 - Sharing "tasks done today" with the group: off, not built. It needs a Firestore rules change.
 - The season week ("Season 1, week 2 of 6") was removed from Check-in. It could go on the Group tab if wanted.
-- **Next:** an iPhone app with notifications. Propose a plan first (likely an installable web app with web push, which may need a different host than Webflow).
+- **Home-screen app (in progress):** agreed plan = installable web app on Firebase Hosting at **app.kstarr.com** (Karla OK'd the domain, the pay-as-you-go plan with a card, and the app for all three). Built: `app/` output from `build.mjs`, icons (`app-src/`), service worker, bottom tab bar in standalone mode, redirect sign-in, deploy workflow. Setup steps she still has to do: `docs/APP-SETUP.md`.
+- **Next: notifications.** Each person chooses their own. Show Karla the list of choices before building (needs Cloud Functions + FCM on the Blaze plan).
+- Not wanted: sharing tasks with the group; season week on Group; rituals on Check-in (for now).
+- Substances accept half units: a med can count as 1 or ½ unit per log; the stepper moves by ½; up to 1 unit over the limit earns 2.

@@ -84,11 +84,15 @@ function startFirebase(config) {
   useStore(firestoreAdapter(firebase.firestore()), { status: setStatus });
   auth.signIn = () => {
     const provider = new firebase.auth.GoogleAuthProvider();
+    // In the home-screen app a pop-up has nowhere to go, so sign in by redirect (same site, see authDomain).
+    const standalone = window.matchMedia?.("(display-mode: standalone)").matches || navigator.standalone;
+    if (standalone) return fbAuth.signInWithRedirect(provider);
     fbAuth.signInWithPopup(provider).catch((err) => {
       if (["auth/popup-blocked", "auth/operation-not-supported-in-this-environment"].includes(err?.code)) return fbAuth.signInWithRedirect(provider);
       setBanner(`Sign-in didn't finish: ${err?.message || "unknown error"}`, "bad");
     });
   };
+  fbAuth.getRedirectResult().catch((err) => setBanner(`Sign-in didn't finish: ${err?.message || "unknown error"}`, "bad"));
   auth.signOut = () => fbAuth.signOut().then(() => location.reload());
   fbAuth.onAuthStateChanged((user) => {
     if (!user) { showTabs(false); setWho(""); showScreen(signInView()); return; }

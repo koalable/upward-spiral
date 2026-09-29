@@ -1,0 +1,25 @@
+# Publishes the home-screen app (app/) to Firebase Hosting whenever it changes on main.
+# Needs one repository secret, FIREBASE_SERVICE_ACCOUNT (see docs/APP-SETUP.md).
+name: Deploy app
+on:
+  push:
+    branches: [main]
+    paths: ["app/**", "firebase.json", ".github/workflows/deploy-app.yml"]
+  workflow_dispatch:
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check the deploy key is set up
+        id: key
+        env: { KEY: "${{ secrets.FIREBASE_SERVICE_ACCOUNT }}" }
+        run: if [ -n "$KEY" ]; then echo "ok=1" >> "$GITHUB_OUTPUT"; else echo "::notice::FIREBASE_SERVICE_ACCOUNT isn't set yet, so the app wasn't published. See docs/APP-SETUP.md."; fi
+      - uses: actions/checkout@v4
+        if: steps.key.outputs.ok
+      - uses: FirebaseExtended/action-hosting-deploy@v0
+        if: steps.key.outputs.ok
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          projectId: upward-spiral-of-awesomeness
+          channelId: live
