@@ -1,10 +1,11 @@
-# Publishes the home-screen app (app/) to Firebase Hosting whenever it changes on main.
+# Publishes the home-screen app (app/) to Firebase Hosting, and the notification server (functions/),
+# whenever either changes on main.
 # Needs one repository secret, FIREBASE_SERVICE_ACCOUNT (see docs/APP-SETUP.md).
 name: Deploy app
 on:
   push:
     branches: [main]
-    paths: ["app/**", "firebase.json", ".github/workflows/deploy-app.yml"]
+    paths: ["app/**", "functions/**", "firebase.json", ".github/workflows/deploy-app.yml"]
   workflow_dispatch:
 jobs:
   deploy:
@@ -23,3 +24,15 @@ jobs:
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
           projectId: upward-spiral-of-awesomeness
           channelId: live
+      - uses: actions/setup-node@v4
+        if: steps.key.outputs.ok
+        with: { node-version: 22 }
+      - name: Deploy notification server
+        if: steps.key.outputs.ok
+        env: { KEY: "${{ secrets.FIREBASE_SERVICE_ACCOUNT }}" }
+        run: |
+          printf '%s' "$KEY" > "$RUNNER_TEMP/sa.json"
+          export GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/sa.json"
+          (cd functions && npm ci --omit=dev)
+          npx --yes firebase-tools@14 deploy --only functions --project upward-spiral-of-awesomeness --non-interactive --force
+          rm -f "$RUNNER_TEMP/sa.json"

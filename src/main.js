@@ -54,6 +54,10 @@ function subscribe() {
     if (!isPending(paths.work(uid))) state.work = doc;
     refreshAfterRemoteChange();
   }, onError);
+  db.watchDoc(paths.notify(uid), (doc) => {
+    if (!isPending(paths.notify(uid))) state.notify = doc;
+    refreshAfterRemoteChange();
+  }, onError);
   db.watchCollection(`users/${uid}/routinelog`, ["date", ">=", state.historyStart], (docs) => {
     state.routinelog = keepUnsaved(`users/${uid}/routinelog/`, docs, state.routinelog);
     refreshAfterRemoteChange();

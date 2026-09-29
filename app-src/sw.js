@@ -1,5 +1,10 @@
 // Service worker for the home-screen app. Network first, so a release shows up on the next open;
-// the last good copy is used only when offline. Push notifications will be handled here too.
+// the last good copy is used only when offline.
+// Push: Firebase Messaging shows each reminder and opens its link when tapped.
+importScripts("https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js", "https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging-compat.js");
+firebase.initializeApp(__FIREBASE__);
+firebase.messaging();
+
 const CACHE = "spiral-__VERSION__";
 const SHELL = ["/", "/routines", "/work", "/progress", "/app.css?v=__VERSION__", "/manifest.webmanifest", "/icon-192.png"];
 

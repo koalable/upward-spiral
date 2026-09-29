@@ -15,7 +15,7 @@ export const PAGES = [
   ["progress", "Progress", "/challenge-progress"],
 ];
 
-export const CHECKIN_TABS = ["today", "meds", "journal", "setup", "targets"];
+export const CHECKIN_TABS = ["today", "meds", "journal", "setup", "targets", "notify"];
 
 export const page = { id: "checkin", features: [], tabs: [] };
 

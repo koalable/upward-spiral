@@ -1,7 +1,12 @@
 // Service worker for the home-screen app. Network first, so a release shows up on the next open;
-// the last good copy is used only when offline. Push notifications will be handled here too.
-const CACHE = "spiral-47b9d35690";
-const SHELL = ["/", "/routines", "/work", "/progress", "/app.css?v=47b9d35690", "/manifest.webmanifest", "/icon-192.png"];
+// the last good copy is used only when offline.
+// Push: Firebase Messaging shows each reminder and opens its link when tapped.
+importScripts("https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js", "https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging-compat.js");
+firebase.initializeApp({"apiKey":"AIzaSyCSXKB82V0RtKBV8f6IM7AA7wp1gsPcwYQ","authDomain":"upward-spiral-of-awesomeness.firebaseapp.com","projectId":"upward-spiral-of-awesomeness","appId":"1:445813281061:web:8982a5466586bce7828acc","messagingSenderId":"445813281061"});
+firebase.messaging();
+
+const CACHE = "spiral-b42f37d7ff";
+const SHELL = ["/", "/routines", "/work", "/progress", "/app.css?v=b42f37d7ff", "/manifest.webmanifest", "/icon-192.png"];
 
 self.addEventListener("install", (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).catch(() => {}));

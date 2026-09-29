@@ -407,3 +407,23 @@
   #wlc.ui nav.pages .chip.fill{background:none;color:var(--fg)}
   #wlc.ui nav.pages .chip.fill i{color:var(--fg)}
 }
+
+/* ---------- Notifications tab ---------- */
+#wlc.ui .nlist{display:flex;flex-direction:column}
+#wlc.ui .nrow{display:flex;align-items:center;gap:12px;padding:12px 0;border-top:1px solid var(--border)}
+#wlc.ui .nlist .nrow:first-child{border-top:0}
+#wlc.ui .nrow .max{flex:1;min-width:0}
+#wlc.ui .nico{background:var(--accent);color:var(--fg)}
+#wlc.ui .field.time{width:auto;min-width:0;padding:6px 8px}
+#wlc.ui .switch{position:relative;display:inline-block;width:44px;height:26px;flex:none}
+#wlc.ui .switch input{position:absolute;opacity:0;inset:0;margin:0;cursor:pointer;z-index:1}
+#wlc.ui .switch span{position:absolute;inset:0;border-radius:999px;background:var(--border);transition:background .2s}
+#wlc.ui .switch span::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:transform .2s}
+#wlc.ui .switch input:checked+span{background:var(--good)}
+#wlc.ui .switch input:checked+span::after{transform:translateX(18px)}
+#wlc.ui .switch input:focus-visible+span{outline:2px solid var(--fg);outline-offset:2px}
+#wlc.ui ol.steps{margin:6px 0 10px;padding-left:22px;line-height:1.7}
+#wlc.ui .onrow{display:flex;align-items:center;gap:8px;color:var(--good)}
+#wlc.ui .hint.bad{color:var(--bad)}
+#wlc.ui .ntime{display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap}
+#wlc.ui .nrow{align-items:flex-start}#wlc.ui .nrow .switch,#wlc.ui .nrow .nico{margin-top:2px}

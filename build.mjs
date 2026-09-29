@@ -28,7 +28,10 @@ const FIREBASE = {
   authDomain: "upward-spiral-of-awesomeness.firebaseapp.com",
   projectId: "upward-spiral-of-awesomeness",
   appId: "1:445813281061:web:8982a5466586bce7828acc",
+  messagingSenderId: "445813281061",
 };
+// Public key for web push (Firebase → Project settings → Cloud Messaging → Web Push certificates).
+const VAPID_KEY = "BF-Bh-rXeeTNPsZLW8PPM-pu8T7fjI3tqR8My_rSmJFmu_cmdeKb-Ncg5ObwPmnqNBW5XIeFZqRnvINAFVCdsdw";
 
 const bundle = async (entry) => (await esbuild.build({
   entryPoints: [entry], bundle: true, minify: true, format: "iife", target: ["es2019"], write: false, legalComments: "none",
@@ -71,7 +74,7 @@ const version = createHash("sha1").update(css + Object.values(appJs).join("")).d
 writeFileSync("app/app.css", css);
 for (const [id, js] of Object.entries(appJs)) writeFileSync(`app/js/${id}.js`, js);
 for (const f of ["icon-180.png", "icon-192.png", "icon-512.png", "icon-maskable-512.png"]) copyFileSync(`app-src/${f}`, `app/${f}`);
-writeFileSync("app/sw.js", readFileSync("app-src/sw.js", "utf8").replaceAll("__VERSION__", version));
+writeFileSync("app/sw.js", readFileSync("app-src/sw.js", "utf8").replaceAll("__VERSION__", version).replace("__FIREBASE__", JSON.stringify(FIREBASE)));
 writeFileSync("app/manifest.webmanifest", JSON.stringify({
   name: "Upward Spiral of Awesomeness", short_name: "Spiral", id: "/", start_url: "/", scope: "/",
   display: "standalone", background_color: "#09090b", theme_color: "#09090b",
@@ -94,13 +97,19 @@ for (const [id, , title] of PAGES) {
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="${INTER}"><link rel="stylesheet" href="${LUCIDE}">
 <link rel="stylesheet" href="/app.css?v=${version}">
 <style>html,body{margin:0;background:#09090b}</style></head><body class="app"><div id="wlc"></div>
-${["app", "auth", "firestore"].map((m) => `<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-${m}-compat.js"></script>`).join("\n")}
-<script>window.WLC_CONFIG={firebase:Object.assign(${JSON.stringify(FIREBASE)},{authDomain:location.hostname}),pages:${JSON.stringify(APP_PAGES)},app:true};
+${["app", "auth", "firestore", "messaging", "functions"].map((m) => `<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-${m}-compat.js"></script>`).join("\n")}
+<script>window.WLC_CONFIG={firebase:Object.assign(${JSON.stringify(FIREBASE)},{authDomain:location.hostname}),pages:${JSON.stringify(APP_PAGES)},app:true,vapidKey:${JSON.stringify(VAPID_KEY)}};
 if("serviceWorker" in navigator)navigator.serviceWorker.register("/sw.js").catch(function(){});</script>
 <script src="/js/${id}.js?v=${version}"></script></body></html>
 `);
 }
 report.app = version;
+
+// Notification server (functions/index.js): the pure planner bundled in, Firebase libraries left external.
+await esbuild.build({
+  entryPoints: ["functions/src/index.js"], bundle: true, platform: "node", format: "cjs", target: "node22",
+  outfile: "functions/index.js", external: ["firebase-functions", "firebase-functions/*", "firebase-admin", "firebase-admin/*"], legalComments: "none",
+});
 
 // Offline previews (pretend data, every page in one bundle).
 const previewApp = await bundle("src/entries/preview.js");
