@@ -138,6 +138,24 @@ function startPreview(seed) {
   subscribe();
 }
 
+// iPhone home-screen app: the keyboard drags the bottom tab bar up with it, and after it closes iOS can leave
+// the page shifted so the bar floats above the bottom. Hide the bar while typing; nudge the page back after.
+const TYPES = /^(text|search|email|url|tel|number|password|date|time|datetime-local|month|week)$/;
+const typingIn = (el) => el && (el.tagName === "TEXTAREA" || el.tagName === "SELECT" || (el.tagName === "INPUT" && TYPES.test(el.type)) || el.isContentEditable);
+const settle = () => { window.scrollBy(0, 1); window.scrollBy(0, -1); };
+function keepTabBarDown() {
+  document.addEventListener("focusin", (e) => { if (typingIn(e.target)) document.body.classList.add("typing"); });
+  document.addEventListener("focusout", () => setTimeout(() => {
+    if (typingIn(document.activeElement)) return;
+    document.body.classList.remove("typing");
+    settle();
+  }, 50));
+  // Also after the keyboard's close animation, and whenever the visible area settles.
+  window.visualViewport?.addEventListener("resize", () => {
+    if (!document.body.classList.contains("typing") && window.visualViewport.offsetTop) settle();
+  });
+}
+
 export function start({ page: id, features, order, seed }) {
   const root = document.getElementById("wlc");
   if (!root) return;
@@ -145,6 +163,7 @@ export function start({ page: id, features, order, seed }) {
   state.tab = page.tabs[0][0];
   mountShell(root);
   bindEvents(root);
+  keepTabBarDown();
   const config = window.WLC_CONFIG?.firebase;
   if (config?.apiKey && typeof firebase !== "undefined") startFirebase(config);
   else startPreview(seed);

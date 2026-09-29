@@ -216,7 +216,8 @@ function normalizeWork(doc) {
     milestones: Array.isArray(doc?.milestones) ? doc.milestones : [],
     tasks: Array.isArray(doc?.tasks) ? doc.tasks : [],
     today: doc?.today || {},
-    perDay: Math.min(5, Math.max(3, Number(doc?.perDay) || 3))
+    perDay: Math.min(5, Math.max(3, Number(doc?.perDay) || 3)),
+    ...doc?.timer ? { timer: doc.timer } : {}
   };
 }
 var todayState = (w, key) => w.today?.date === key ? w.today : { date: key, pins: [], skips: [], extra: 0 };
@@ -231,13 +232,14 @@ function todayPicks(w, key) {
   const doneToday = w.tasks.filter((x) => x.done === key);
   const open = w.tasks.filter((x) => !x.done && !blocker(x, w.tasks));
   const pinned = (t.pins || []).map((id) => open.find((x) => x.id === id)).filter(Boolean);
-  const rest = open.filter((x) => !pinned.includes(x) && !(t.skips || []).includes(x.id)).sort(urgency);
-  const picks = [...doneToday, ...pinned];
+  const timed = open.filter((x) => x.at && x.due === key && !pinned.includes(x));
+  const rest = open.filter((x) => !pinned.includes(x) && !timed.includes(x) && !(t.skips || []).includes(x.id)).sort(urgency);
+  const picks = [...doneToday, ...pinned, ...timed];
   for (const x of rest) {
     if (picks.length >= size) break;
     picks.push(x);
   }
-  return picks;
+  return picks.map((x, i) => [x, i]).sort(([a, i], [b, j]) => (a.at || "99").localeCompare(b.at || "99") || i - j).map(([x]) => x);
 }
 
 // src/rings.js
@@ -356,6 +358,10 @@ var markSent = (prefs, date, ids) => ({
   date,
   ids: [.../* @__PURE__ */ new Set([...prefs?.sent?.date === date ? prefs.sent.ids || [] : [], ...ids])]
 });
+function timerMessage(tm, nowMs, links = {}) {
+  if (!tm?.end || tm.sent === tm.end || nowMs < tm.end || nowMs - tm.end > CATCH_UP_MIN * 6e4) return null;
+  return { id: `timer:${tm.id}`, title: "Time's up", body: tm.name ? `${tm.name}: done, or a bit longer?` : "Done, or a bit longer?", link: links.work || "/" };
+}
 
 // functions/src/index.js
 (0, import_app.initializeApp)();
@@ -401,8 +407,22 @@ async function userData(uid, date) {
   const [settings, day, routines, routinelog, work, medlog, medlogPrev] = (await db.getAll(...refs)).map((s) => s.exists ? s.data() : null);
   return { settings, day, routines, routinelog, work, medlog, medlogPrev };
 }
-var notifyTick = (0, import_scheduler.onSchedule)({ schedule: "every 15 minutes", timeZone: "UTC", region: "us-central1", memory: "256MiB" }, async () => {
+var notifyTick = (0, import_scheduler.onSchedule)({ schedule: "every 1 minutes", timeZone: "UTC", region: "us-central1", memory: "256MiB" }, async () => {
   const snap = await db.collectionGroup("notify").get();
+  const settingsOf = new Map(snap.docs.filter((d) => d.id === "settings").map((d) => [d.ref.parent.parent.id, d.data()]));
+  for (const doc of snap.docs) {
+    if (doc.id !== "timer") continue;
+    const tm = doc.data(), msg = timerMessage(tm, Date.now(), LINKS);
+    if (!msg) continue;
+    const tokens = (settingsOf.get(doc.ref.parent.parent.id)?.tokens || []).map((x) => x.t).filter(Boolean);
+    try {
+      if (tokens.length) await push(tokens, [msg]);
+      await doc.ref.update({ sent: tm.end });
+    } catch (err) {
+      console.error(`timer ${doc.ref.path}`, err);
+    }
+  }
+  if ((/* @__PURE__ */ new Date()).getUTCMinutes() % 15) return;
   for (const doc of snap.docs) {
     if (doc.id !== "settings") continue;
     const uid = doc.ref.parent.parent.id;

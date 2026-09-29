@@ -1,5 +1,5 @@
 // Check-in → Today as a daily dashboard: today's to-dos and today's Work tasks, above the check-in.
-import { html, todayKey, shortDate } from "../util.js";
+import { html, todayKey, shortDate, clock, atTime } from "../util.js";
 import { pageUrl } from "../page.js";
 import { dashboardTodos } from "./todos.js";
 import { workData } from "./work.js";
@@ -15,7 +15,7 @@ function workCard() {
   return html`<section class="panel themed ember"><div class="cat-head"><h2>Work today</h2><span class="pts">${done}/${picks.length}</span></div>
     ${picks.length ? html`<ul class="list dash">${picks.map((t) => html`<li class="tagged ${goalTheme(w, t.goal)}${t.done ? " done" : ""}">
       <button class="circle ${t.done ? "" : "border"}" data-act="wToggle" data-id="${t.id}" aria-pressed="${pressed(Boolean(t.done))}" aria-label="${t.done ? "Done" : "Mark done"}: ${t.name}">${t.done ? icon("check") : ""}</button>
-      <div class="max"><div class="rname">${t.name}</div><div class="small-text">${goal(t)}${t.due ? ` · ${t.due < key && !t.done ? "overdue, " : "due "}${shortDate(t.due)}` : ""}</div></div></li>`)}</ul>`
+      <div class="max"><div class="rname">${t.at ? html`<span class="wat">${clock(atTime(key, t.at))}</span> ` : ""}${t.name}</div><div class="small-text">${goal(t)}${t.due ? ` · ${t.due < key && !t.done ? "overdue, " : "due "}${shortDate(t.due)}` : ""}</div></div></li>`)}</ul>`
       : html`<p class="hint">Nothing open right now.</p>`}
     <p class="small">${link}</p></section>`;
 }

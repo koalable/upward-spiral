@@ -2,7 +2,9 @@
 // One doc, users/{uid}/lists/work:
 //   goals:      [{ id, name, due }]
 //   milestones: [{ id, goal, name, due }]
-//   tasks:      [{ id, goal, ms, name, due, hours, after, done, created }]   done = date finished, or ""
+//   tasks:      [{ id, goal, ms, name, due, at, hours, spent, after, done, created }]
+//               done = date finished, or ""; at = start time "HH:MM" (optional); spent = minutes on the timer
+//   timer:      the one running or paused task timer (src/timer.js)
 //   today:      { date, pins: [ids], skips: [ids], extra }                   resets each day
 //   perDay:     how many tasks Today shows (3–5)
 import { daysBetween } from "./util.js";
@@ -14,6 +16,7 @@ export function normalizeWork(doc) {
     tasks: Array.isArray(doc?.tasks) ? doc.tasks : [],
     today: doc?.today || {},
     perDay: Math.min(5, Math.max(3, Number(doc?.perDay) || 3)),
+    ...(doc?.timer ? { timer: doc.timer } : {}),
   };
 }
 
@@ -29,17 +32,19 @@ export function blocker(t, tasks) {
 // Most urgent first: overdue, then soonest due, then undated, then oldest.
 const urgency = (a, b) => (a.due || "9999").localeCompare(b.due || "9999") || String(a.created || "").localeCompare(String(b.created || ""));
 
-// Today's list: pinned tasks, then the most urgent unblocked open tasks.
+// Today's list: pinned tasks and tasks with a start time due today, then the most urgent unblocked open tasks.
 // Tasks finished today stay on the list (checked), so finishing doesn't pull in more until you ask.
+// Anything with a start time goes to the top, earliest first.
 export function todayPicks(w, key) {
   const t = todayState(w, key), size = w.perDay + (t.extra || 0);
   const doneToday = w.tasks.filter((x) => x.done === key);
   const open = w.tasks.filter((x) => !x.done && !blocker(x, w.tasks));
   const pinned = (t.pins || []).map((id) => open.find((x) => x.id === id)).filter(Boolean);
-  const rest = open.filter((x) => !pinned.includes(x) && !(t.skips || []).includes(x.id)).sort(urgency);
-  const picks = [...doneToday, ...pinned];
+  const timed = open.filter((x) => x.at && x.due === key && !pinned.includes(x));
+  const rest = open.filter((x) => !pinned.includes(x) && !timed.includes(x) && !(t.skips || []).includes(x.id)).sort(urgency);
+  const picks = [...doneToday, ...pinned, ...timed];
   for (const x of rest) { if (picks.length >= size) break; picks.push(x); }
-  return picks;
+  return picks.map((x, i) => [x, i]).sort(([a, i], [b, j]) => (a.at || "99").localeCompare(b.at || "99") || i - j).map(([x]) => x);
 }
 
 // Progress for a set of tasks. Behind = anything overdue.
@@ -47,7 +52,8 @@ export function progress(tasks, key) {
   const total = tasks.length, done = tasks.filter((x) => x.done).length;
   const overdue = tasks.filter((x) => !x.done && x.due && x.due < key).length;
   const hoursLeft = tasks.filter((x) => !x.done).reduce((s, x) => s + (Number(x.hours) || 0), 0);
-  return { total, done, pct: total ? Math.round((100 * done) / total) : 0, overdue, hoursLeft };
+  const spent = tasks.reduce((s, x) => s + (Number(x.spent) || 0), 0);
+  return { total, done, pct: total ? Math.round((100 * done) / total) : 0, overdue, hoursLeft, spent };
 }
 
 export const daysLeft = (due, key) => (due ? daysBetween(key, due) : null);

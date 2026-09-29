@@ -129,3 +129,10 @@ export function dueNotifications(prefs, data, now, links = {}) {
 export const markSent = (prefs, date, ids) => ({
   date, ids: [...new Set([...(prefs?.sent?.date === date ? prefs.sent.ids || [] : []), ...ids])],
 });
+
+// Work task timer: users/{uid}/notify/timer = { id, name, end, sent }. Written by the app when a timer
+// starts, resumes or stops; checked every minute. Fires once, even in quiet hours (you started it).
+export function timerMessage(tm, nowMs, links = {}) {
+  if (!tm?.end || tm.sent === tm.end || nowMs < tm.end || nowMs - tm.end > CATCH_UP_MIN * 60_000) return null;
+  return { id: `timer:${tm.id}`, title: "Time's up", body: tm.name ? `${tm.name}: done, or a bit longer?` : "Done, or a bit longer?", link: links.work || "/" };
+}

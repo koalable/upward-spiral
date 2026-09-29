@@ -14,6 +14,7 @@ export const paths = {
   work: (uid) => `users/${uid}/lists/work`,
   todos: (uid) => `users/${uid}/lists/todos`,
   notify: (uid) => `users/${uid}/notify/settings`,
+  timer: (uid) => `users/${uid}/notify/timer`,
   alias: (email) => `aliases/${email.toLowerCase()}`,
   member: (uid) => `members/${uid}`,
   score: (uid, d) => `scores/${uid}_${d}`,

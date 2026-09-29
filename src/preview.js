@@ -36,11 +36,11 @@ export function seedPreview(db) {
     milestones: [{ id: "m1", goal: "g1", name: "Build email list", due: at(20) }, { id: "m2", goal: "g1", name: "Pitch podcasts", due: at(50) }],
     tasks: [
       { id: "t1", goal: "g1", ms: "m1", name: "Set up Substack welcome email", due: at(-2), hours: 2, done: at(-3), created: 1 },
-      { id: "t2", goal: "g1", ms: "m1", name: "Write lead magnet", due: at(-1), hours: 4, after: "t1", done: "", created: 2 },
+      { id: "t2", goal: "g1", ms: "m1", name: "Write lead magnet", due: at(-1), hours: 4, spent: 70, after: "t1", done: "", created: 2 },
       { id: "t3", goal: "g1", ms: "m1", name: "Add signup form to kstarr.com", due: at(3), hours: 1, after: "t2", done: "", created: 3 },
       { id: "t4", goal: "g1", ms: "m1", name: "Draft 3 welcome posts", due: at(5), hours: 3, done: "", created: 4 },
       { id: "t5", goal: "g1", ms: "m2", name: "List 30 target podcasts", due: at(10), hours: 3, done: "", created: 5 },
-      { id: "t6", goal: "g1", ms: "m2", name: "Write pitch template", due: at(14), hours: 1, done: "", created: 6 },
+      { id: "t6", goal: "g1", ms: "m2", name: "Write pitch template", due: at(0), at: "14:00", hours: 1, done: "", created: 6 },
       { id: "t7", goal: "g1", ms: "", name: "Update author bio", due: "", hours: 0.5, done: "", created: 7 },
     ],
   };

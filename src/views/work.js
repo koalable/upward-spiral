@@ -1,7 +1,8 @@
 // Work: Today (a few tasks, picked for you) and Goals (goal → milestones → tasks, with progress).
-import { html, shortDate, longDate } from "../util.js";
+import { html, shortDate, longDate, clock, atTime } from "../util.js";
 import { state } from "../state.js";
 import { normalizeWork, todayState, todayPicks, blocker, progress, countdown, goalTheme } from "../work.js";
+import { timerFor, isRunning, isUp, msLeft, minutesLeft, countdownText, durationText } from "../timer.js";
 import { pressed, saveStatus, icon } from "./components.js";
 
 export const workData = () => normalizeWork(state.work);
@@ -17,19 +18,51 @@ function dueLabel(t, key) {
   return `due ${shortDate(t.due)}`;
 }
 
+const startAt = (t) => (t.at ? clock(atTime("2000-01-01", t.at)) : "");
+// "1h 10m of 2h", "40m", "2h"
+function timeText(t) {
+  const spent = Number(t.spent) || 0;
+  if (spent && t.hours) return `${durationText(spent)} of ${durationText(t.hours * 60)}`;
+  if (spent) return `${durationText(spent)} spent`;
+  return t.hours ? `${t.hours}h` : "";
+}
+
+// Bits of text joined with " · ", then the due date.
+const meta = (bits, t, key) => html`${bits.filter(Boolean).join(" · ")}${bits.some(Boolean) && t.due ? " · " : ""}${dueLabel(t, key)}`;
+
 function check(t, open = true) {
   return html`<button class="circle ${t.done ? "" : "border"}" data-act="wToggle" data-id="${t.id}" aria-pressed="${pressed(Boolean(t.done))}" ${open ? "" : "disabled"}
     aria-label="${t.done ? "Done" : "Mark done"}: ${t.name}">${t.done ? icon("check") : ""}</button>`;
 }
 
 // ---------- today ----------
+// The timer strip under a task: countdown, then pause/resume and stop; when it runs out, done or a bit longer.
+function timerStrip(w, t) {
+  const tm = timerFor(w, t.id), now = Date.now();
+  if (!tm || t.done) return "";
+  if (isUp(tm, now)) {
+    return html`<div class="wtimer up" role="status">${icon("alarm")}<b class="max">Time's up</b>
+      <button class="small" data-act="wTimerDone" data-id="${t.id}">${icon("check")}<span>Done</span></button>
+      <button class="border small" data-act="wTimerMore">${icon("add")}<span>10 min</span></button>
+      <button class="transparent small" data-act="wTimerStop" aria-label="Stop timer">${icon("stop")}</button></div>`;
+  }
+  const running = isRunning(tm);
+  return html`<div class="wtimer${running ? " on" : ""}">${icon("timer")}
+    <b class="max count" data-countdown="${tm.end || ""}" aria-label="Time left">${countdownText(msLeft(tm, now))}</b>
+    ${running ? html`<button class="border small" data-act="wTimerPause">${icon("pause")}<span>Pause</span></button>`
+      : html`<button class="border small" data-act="wTimerStart" data-id="${t.id}">${icon("play_arrow")}<span>Resume</span></button>`}
+    <button class="transparent small" data-act="wTimerStop" aria-label="Stop timer">${icon("stop")}</button></div>`;
+}
+
 function todayRow(w, t, key, pinned) {
-  const g = goalOf(w, t.goal), m = msOf(w, t.ms);
-  return html`<li class="tagged ${goalTheme(w, t.goal)}${t.done ? " done" : ""}">${check(t)}
-    <div class="max"><div class="rname">${t.name}</div>
-      <div class="small-text">${[g?.name, m?.name].filter(Boolean).join(" › ")}${t.hours ? ` · ${t.hours}h` : ""}${t.due ? " · " : ""}${dueLabel(t, key)}</div></div>
+  const g = goalOf(w, t.goal), m = msOf(w, t.ms), tm = timerFor(w, t.id);
+  return html`<li class="tagged ${goalTheme(w, t.goal)}${t.done ? " done" : ""}${tm ? " timing" : ""}">${check(t)}
+    <div class="max"><div class="rname">${t.at ? html`<span class="wat">${startAt(t)}</span> ` : ""}${t.name}</div>
+      <div class="small-text">${meta([[g?.name, m?.name].filter(Boolean).join(" › "), timeText(t)], t, key)}</div></div>
+    ${t.done || tm ? "" : html`<button class="circle transparent" data-act="wTimerStart" data-id="${t.id}" aria-label="Start a ${minutesLeft(t)}-minute timer: ${t.name}" title="Timer (${durationText(minutesLeft(t))})">${icon("play_arrow")}</button>`}
     ${t.done ? "" : html`<button class="circle transparent${pinned ? " on" : ""}" data-act="wPin" data-id="${t.id}" aria-pressed="${pressed(pinned)}" aria-label="${pinned ? "Unpin" : "Pin to today"}: ${t.name}" title="Pin">${icon("pin")}</button>
-      ${pinned ? "" : html`<button class="circle transparent" data-act="wSwap" data-id="${t.id}" aria-label="Swap out: ${t.name}" title="Not today">${icon("swap")}</button>`}`}</li>`;
+      ${pinned ? "" : html`<button class="circle transparent" data-act="wSwap" data-id="${t.id}" aria-label="Swap out: ${t.name}" title="Not today">${icon("swap")}</button>`}`}
+    ${timerStrip(w, t)}</li>`;
 }
 
 export function workTodayView() {
@@ -51,7 +84,7 @@ export function workTodayView() {
       ${all && open.length > blocked ? html`<nav class="padding"><span class="max">Nice work. That's today handled.</span><button class="border" data-act="wMore">${icon("add")}<span>One more</span></button></nav>` : ""}
     </article>
     <nav class="wrap tasksday"><span class="small-text">Tasks a day:</span>${[3, 4, 5].map((n) => html`<button class="chip ${n === w.perDay ? "fill" : "border"}" data-act="wPerDay" data-n="${n}" aria-pressed="${pressed(n === w.perDay)}">${n}</button>`)}</nav>
-    <p class="small-text workhint">Picked for you: overdue first, then whatever's due soonest. Unfinished tasks carry over. ${icon("pin")} keeps a task on today's list; ${icon("swap")} swaps it for the next one. Tasks waiting on another task stay hidden until that one's done.</p>
+    <p class="small-text workhint">Picked for you: overdue first, then whatever's due soonest. Unfinished tasks carry over. ${icon("pin")} keeps a task on today's list; ${icon("swap")} swaps it for the next one. Tasks waiting on another task stay hidden until that one's done. Tasks with a start time go to the top. ${icon("play_arrow")} starts a timer for what's left of the estimate (25 minutes if there isn't one).</p>
     ${goalCards(w, key, true)}`;
 }
 
@@ -71,7 +104,7 @@ function taskRow(w, t, key) {
   const b = blocker(t, w.tasks);
   return html`<li class="${t.done ? "done" : ""}">${b ? html`<span class="circle lockd" title="Waiting on: ${b.name}">${icon("lock")}</span>` : check(t)}
     <div class="max"><div class="rname">${t.name}</div>
-      <div class="small-text">${t.hours ? `${t.hours}h${t.due ? " · " : ""}` : ""}${dueLabel(t, key)}${b ? ` · after “${b.name}”` : ""}${t.done ? ` · done ${shortDate(t.done)}` : ""}</div></div>
+      <div class="small-text">${meta([startAt(t), timeText(t)], t, key)}${b ? ` · after “${b.name}”` : ""}${t.done ? ` · done ${shortDate(t.done)}` : ""}</div></div>
     <button class="circle transparent" data-act="wEdit" data-kind="task" data-id="${t.id}" aria-label="Edit ${t.name}">${icon("edit")}</button></li>`;
 }
 
@@ -81,7 +114,7 @@ function milestoneBlock(w, g, m, key) {
   const p = progress(tasks, key);
   return html`<div class="ms">
     <nav class="padding">${icon("flag")}<div class="max"><b>${m ? m.name : "Other tasks"}</b>
-      <div class="small-text">${m?.due ? `${shortDate(m.due)} · ${countdown(m.due, key)} · ` : ""}${p.done}/${p.total} done</div>
+      <div class="small-text">${m?.due ? `${shortDate(m.due)} · ${countdown(m.due, key)} · ` : ""}${p.done}/${p.total} done${p.spent ? ` · ${durationText(p.spent)} spent` : ""}</div>
       ${m ? html`<div class="stat">${status(p, m.due, key)}</div>` : ""}</div>
       ${m ? html`<button class="circle transparent" data-act="wEdit" data-kind="ms" data-id="${m.id}" aria-label="Edit ${m.name}">${icon("edit")}</button>` : ""}</nav>
     ${tasks.length ? bar(p) : ""}
@@ -95,7 +128,7 @@ function goalCards(w, key, compact) {
     const ms = w.milestones.filter((m) => m.goal === g.id).sort((a, b) => (a.due || "9999").localeCompare(b.due || "9999"));
     return html`<article class="round no-padding goal ${goalTheme(w, g.id)}">
       <nav class="padding ghband"><span class="gchip">${icon("target")}</span><div class="max"><h6>${g.name}</h6>
-        <div class="small-text">${g.due ? `${shortDate(g.due)} · ${countdown(g.due, key)} · ` : ""}${p.pct}% · ${p.done}/${p.total} tasks${p.hoursLeft ? ` · ${p.hoursLeft}h left` : ""}</div>
+        <div class="small-text">${g.due ? `${shortDate(g.due)} · ${countdown(g.due, key)} · ` : ""}${p.pct}% · ${p.done}/${p.total} tasks${p.hoursLeft ? ` · ${p.hoursLeft}h left` : ""}${p.spent ? ` · ${durationText(p.spent)} spent` : ""}</div>
         <div class="stat">${status(p, g.due, key)}</div></div>
         ${compact ? "" : html`<button class="circle transparent" data-act="wEdit" data-kind="goal" data-id="${g.id}" aria-label="Edit ${g.name}">${icon("edit")}</button>`}</nav>
       ${bar(p)}
@@ -118,6 +151,7 @@ function workForm(w) {
       <div class="s12 m8">${field("Name", html`<input placeholder=" " id="w-name" maxlength="120" value="${e.name || ""}">`)}</div>
       <div class="s6 m4">${field(e.kind === "task" ? "Due" : "Deadline", html`<input id="w-due" type="date" value="${e.due || ""}">`)}</div>
       ${e.kind === "task" ? html`
+        <div class="s6 m4">${field("Start time (optional)", html`<input id="w-at" type="time" value="${e.at || ""}">`)}</div>
         <div class="s6 m4">${field("Time estimate (hours)", html`<input id="w-hours" type="number" min="0" max="200" step="0.25" value="${e.hours || ""}">`)}</div>
         <div class="s12 m4">${field("Milestone", html`<select id="w-ms"><option value="">None</option>${goalMs.map((m) => html`<option value="${m.id}" ${m.id === e.ms ? "selected" : ""}>${m.name}</option>`)}</select>`)}</div>
         <div class="s12 m4">${field("Can't start until", html`<select id="w-after"><option value="">Nothing, start any time</option>${goalTasks.map((t) => html`<option value="${t.id}" ${t.id === e.after ? "selected" : ""}>${t.name}</option>`)}</select>`)}</div>` : ""}
@@ -132,6 +166,7 @@ export function readWorkForm(view) {
   const val = (id) => view.querySelector(id)?.value;
   const name = val("#w-name"); if (name !== undefined) e.name = name.trim();
   const due = val("#w-due"); if (due !== undefined) e.due = due;
+  const at = val("#w-at"); if (at !== undefined) e.at = at;
   const hours = val("#w-hours"); if (hours !== undefined) e.hours = hours === "" ? "" : Math.max(0, Number(hours));
   const ms = val("#w-ms"); if (ms !== undefined) e.ms = ms;
   const after = val("#w-after"); if (after !== undefined) e.after = after;

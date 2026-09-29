@@ -1,12 +1,13 @@
-// Server side of notifications. Every 15 minutes: for each person who turned notifications on,
-// work out what's due in their own time zone (src/notify.js) and push it to their devices.
+// Server side of notifications. Every minute: Work task timers that just ran out.
+// Every 15 minutes: for each person who turned notifications on, work out what's due in their own
+// time zone (src/notify.js) and push it to their devices.
 // Built into functions/index.js by build.mjs; deployed by .github/workflows/deploy-app.yml.
 import { onSchedule } from "firebase-functions/v2/scheduler";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { initializeApp } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
 import { getMessaging } from "firebase-admin/messaging";
-import { dueNotifications, localNow, markSent, normalizeNotify } from "../../src/notify.js";
+import { dueNotifications, localNow, markSent, normalizeNotify, timerMessage } from "../../src/notify.js";
 
 initializeApp();
 const db = getFirestore();
@@ -44,8 +45,26 @@ async function userData(uid, date) {
   return { settings, day, routines, routinelog, work, medlog, medlogPrev };
 }
 
-export const notifyTick = onSchedule({ schedule: "every 15 minutes", timeZone: "UTC", region: "us-central1", memory: "256MiB" }, async () => {
+export const notifyTick = onSchedule({ schedule: "every 1 minutes", timeZone: "UTC", region: "us-central1", memory: "256MiB" }, async () => {
   const snap = await db.collectionGroup("notify").get();
+  const settingsOf = new Map(snap.docs.filter((d) => d.id === "settings").map((d) => [d.ref.parent.parent.id, d.data()]));
+
+  // Timers: every run.
+  for (const doc of snap.docs) {
+    if (doc.id !== "timer") continue;
+    const tm = doc.data(), msg = timerMessage(tm, Date.now(), LINKS);
+    if (!msg) continue;
+    const tokens = (settingsOf.get(doc.ref.parent.parent.id)?.tokens || []).map((x) => x.t).filter(Boolean);
+    try {
+      if (tokens.length) await push(tokens, [msg]);
+      await doc.ref.update({ sent: tm.end });
+    } catch (err) {
+      console.error(`timer ${doc.ref.path}`, err);
+    }
+  }
+
+  // Everything else: every 15 minutes.
+  if (new Date().getUTCMinutes() % 15) return;
   for (const doc of snap.docs) {
     if (doc.id !== "settings") continue;
     const uid = doc.ref.parent.parent.id;

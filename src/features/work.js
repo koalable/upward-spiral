@@ -2,19 +2,44 @@
 import { state } from "../state.js";
 import { save, paths } from "../store.js";
 import { clone, newId, todayKey } from "../util.js";
-import { ui } from "../render.js";
+import { ui, refreshAfterRemoteChange } from "../render.js";
 import { todayState, removeTask, removeMilestone, removeGoal } from "../work.js";
+import { startTimer, pauseTimer, stopTimer, addTime, isUp, msLeft, countdownText } from "../timer.js";
 import { workTodayView, workGoalsView, workData, readWorkForm } from "../views/work.js";
 import { parsePlan, PLAN_PROMPT } from "../workimport.js";
 
 const LIST = { goal: "goals", ms: "milestones", task: "tasks" };
 
 function edit(fn) {
+  const before = workData().timer;
   const w = clone(workData());
   fn(w);
   state.work = w;
   save(paths.work(state.uid), w, 400);
+  if (JSON.stringify(before) !== JSON.stringify(w.timer)) tellServer(w);
 }
+
+// The server pushes "Time's up" to your phone, so it needs to know when the running timer ends.
+function tellServer(w) {
+  const tm = w.timer, t = tm && w.tasks.find((x) => x.id === tm.id);
+  save(paths.timer(state.uid), tm?.end ? { id: tm.id, name: t?.name || "", end: tm.end } : { id: "", end: 0 }, 0);
+}
+
+// Every second: the countdown on screen ticks, and the strip switches to "Time's up" when it runs out.
+let rang = null;
+setInterval(() => {
+  const tm = state.work?.timer;
+  if (!tm?.end || !ui.view) return;
+  const now = Date.now();
+  ui.view.querySelectorAll("[data-countdown]").forEach((el) => { el.textContent = countdownText(msLeft(tm, now)); });
+  if (isUp(tm, now) && rang !== tm.end) {
+    rang = tm.end;
+    navigator.vibrate?.([200, 100, 200]);
+    refreshAfterRemoteChange(); // redraws unless you're mid-typing
+  }
+}, 1000);
+
+const withTimer = (fn) => () => { edit((w) => fn(w, Date.now())); };
 const editToday = (fn) => edit((w) => { w.today = clone(todayState(w, state.date)); fn(w.today); });
 
 function saveItem() {
@@ -23,7 +48,7 @@ function saveItem() {
   if (!e.name) return ui.view.querySelector("#w-name").focus(), "none";
   const item = { id: e.id || newId(e.kind === "ms" ? "m" : e.kind[0]), name: e.name, due: e.due || "" };
   if (e.kind !== "goal") item.goal = e.goal;
-  if (e.kind === "task") Object.assign(item, { ms: e.ms || "", hours: e.hours || "", after: e.after || "", done: e.done || "", created: e.created || Date.now() });
+  if (e.kind === "task") Object.assign(item, { ms: e.ms || "", at: e.at || "", hours: e.hours || "", spent: e.spent || 0, after: e.after || "", done: e.done || "", created: e.created || Date.now() });
   edit((w) => {
     const list = w[LIST[e.kind]], at = list.findIndex((x) => x.id === item.id);
     if (at >= 0) list[at] = item; else list.push(item);
@@ -37,7 +62,20 @@ export default {
     wToggle(el) {
       edit((w) => {
         const t = w.tasks.find((x) => x.id === el.dataset.id);
-        if (t) t.done = t.done ? "" : state.date;
+        if (!t) return;
+        if (!t.done && w.timer?.id === t.id) stopTimer(w, Date.now());
+        t.done = t.done ? "" : state.date;
+      });
+    },
+    wTimerStart(el) { edit((w) => startTimer(w, el.dataset.id, Date.now())); },
+    wTimerPause: withTimer(pauseTimer),
+    wTimerStop: withTimer(stopTimer),
+    wTimerMore: withTimer((w, now) => addTime(w, now)),
+    wTimerDone(el) {
+      edit((w) => {
+        stopTimer(w, Date.now());
+        const t = w.tasks.find((x) => x.id === el.dataset.id);
+        if (t) t.done = state.date;
       });
     },
     wPin(el) {
