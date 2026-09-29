@@ -1,5 +1,5 @@
 // To-dos: add, tick off, date, and remove. One private list (users/{uid}/lists/todos).
-import { state } from "../state.js";
+import { state, openSheet, closeSheet } from "../state.js";
 import { save, paths } from "../store.js";
 import { clone, newId, todayKey } from "../util.js";
 import { ui, render } from "../render.js";
@@ -26,7 +26,7 @@ export const todoHandlers = {
   actions: {
     todoAdd: (el) => addTodo(el.dataset.form),
     todoRemove: (el) => edit((items) => { const i = items.findIndex((x) => x.id === el.dataset.id); if (i >= 0) items.splice(i, 1); }),
-    todoDates: (el) => { state.editTodo = el.dataset.id || null; },
+    todoDates: (el) => { if (el.dataset.id) openSheet("todo", { id: el.dataset.id }); else closeSheet(); },
   },
   change(el) {
     const d = el.dataset;
@@ -45,7 +45,6 @@ export const todoHandlers = {
     if (event.key !== "Enter" || !form) return false;
     return addTodo(form), true;
   },
-  busy: () => Boolean(state.editTodo),
 };
 
 export default { tabs: [["todos", "To-dos", todosView]], ...todoHandlers };

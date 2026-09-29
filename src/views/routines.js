@@ -2,6 +2,7 @@
 import { read } from "../docs.js";
 import { html, todayKey, addDays, longDate, atTime, clock } from "../util.js";
 import { APP_NAME } from "../constants.js";
+import { sheet } from "../state.js";
 import { state, isEditable } from "../state.js";
 import {
   DAY_LETTERS, EVERY_DAY, WEEKDAYS, normalizeRoutines, inRitual, doneCount, target, isDone, isScheduled,
@@ -113,30 +114,30 @@ export const modeOf = (r) => (r.perWeek ? "perweek" : !r.days || r.days.length =
 const field = (label, input) => html`<label class="field"><span>${label}</span>${input}</label>`;
 
 function routineForm() {
-  const e = state.editRoutine;
+  const e = sheet("routine");
   if (!e) return html`<nav class="wrap"><button data-act="rNew">${icon("add")}<span>Add a habit</span></button>
     <button class="border" data-act="ritNew">${icon("playlist_add")}<span>New ritual</span></button></nav>`;
   const mode = e.mode || modeOf(e), days = e.days || EVERY_DAY;
   return html`<article class="border round padding"><h6>${e.id ? "Edit habit" : "New habit"}</h6>
     <div class="grid">
-      <div class="s12 m6">${field("Name", html`<input placeholder=" " id="r-name" maxlength="60" value="${e.name || ""}">`)}</div>
-      <div class="s6 m3">${field("Emoji", html`<input placeholder=" " id="r-icon" maxlength="4" value="${e.icon || ""}">`)}</div>
-      <div class="s6 m3">${field("Ritual", html`<select id="r-group">${routineData().rituals.map((r) => html`<option value="${r.id}" ${r.id === (e.group || "morning") ? "selected" : ""}>${r.name}</option>`)}</select>`)}</div>
-      <div class="s6 m3">${field("Times a day", html`<input placeholder=" " id="r-times" type="number" min="1" max="20" value="${e.times || 1}">`)}</div>
-      <div class="s6 m3">${field("Timer (min)", html`<input placeholder=" " id="r-minutes" type="number" min="0" max="240" value="${e.minutes || ""}">`)}</div>
+      <div class="s12 m6">${field("Name", html`<input placeholder=" " id="r-name" data-draft="name" maxlength="60" value="${e.name || ""}">`)}</div>
+      <div class="s6 m3">${field("Emoji", html`<input placeholder=" " id="r-icon" data-draft="icon" maxlength="4" value="${e.icon || ""}">`)}</div>
+      <div class="s6 m3">${field("Ritual", html`<select id="r-group" data-draft="group">${routineData().rituals.map((r) => html`<option value="${r.id}" ${r.id === (e.group || "morning") ? "selected" : ""}>${r.name}</option>`)}</select>`)}</div>
+      <div class="s6 m3">${field("Times a day", html`<input placeholder=" " id="r-times" data-draft="times" data-num type="number" min="1" max="20" value="${e.times || 1}">`)}</div>
+      <div class="s6 m3">${field("Timer (min)", html`<input placeholder=" " id="r-minutes" data-draft="minutes" data-num type="number" min="0" max="240" value="${e.minutes || ""}">`)}</div>
     </div>
     <nav class="wrap no-space">${MODES.map(([m, label]) => html`<button class="${m === mode ? "fill" : "border"} chip" data-act="rMode" data-mode="${m}">${label}</button>`)}</nav>
     ${mode === "days" ? html`<nav class="wrap no-space">${DAY_LETTERS.map((l, d) => html`<button class="chip ${days.includes(d) ? "fill" : "border"}" data-act="rDay" data-day="${d}" aria-pressed="${pressed(days.includes(d))}">${l}</button>`)}</nav>` : ""}
-    ${mode === "perweek" ? field("Times a week (any days)", html`<input placeholder=" " id="r-perweek" type="number" min="1" max="7" value="${e.perWeek || 3}">`) : ""}
+    ${mode === "perweek" ? field("Times a week (any days)", html`<input placeholder=" " id="r-perweek" data-draft="perWeek" data-num type="number" min="1" max="7" value="${e.perWeek || 3}">`) : ""}
     <nav><button data-act="rSave">Save</button><button class="transparent" data-act="rCancel">Cancel</button></nav></article>`;
 }
 
 function ritualForm() {
-  const e = state.editRitual;
+  const e = sheet("ritual");
   if (!e) return "";
   return html`<article class="border round padding"><h6>${e.id ? "Edit ritual" : "New ritual"}</h6>
-    <div class="grid"><div class="s12 m8">${field("Name", html`<input placeholder=" " id="rit-name" maxlength="40" value="${e.name || ""}" placeholder="Workday shutdown">`)}</div>
-      <div class="s12 m4">${field("Time (optional)", html`<input placeholder=" " id="rit-time" type="time" value="${e.time || ""}">`)}</div></div>
+    <div class="grid"><div class="s12 m8">${field("Name", html`<input placeholder=" " id="rit-name" data-draft="name" maxlength="40" value="${e.name || ""}" placeholder="Workday shutdown">`)}</div>
+      <div class="s12 m4">${field("Time (optional)", html`<input placeholder=" " id="rit-time" data-draft="time" type="time" value="${e.time || ""}">`)}</div></div>
     <nav><button data-act="ritSave">Save</button><button class="transparent" data-act="ritCancel">Cancel</button>
       ${e.id && e.custom ? html`<button class="transparent error-text" data-act="ritRemove">Delete ritual</button>` : ""}</nav></article>`;
 }
@@ -167,21 +168,6 @@ export function routineSetupView() {
     <p class="small-text">Steps run in this order. A ritual with a start time sends a phone notification then (turn it on under Check-in → Notifications). ${saveStatus()}</p>`;
 }
 
-// Reads the open routine form into state.editRoutine so a redraw doesn't lose typing.
-export function readRoutineForm(view) {
-  const val = (id) => view.querySelector(`#${id}`)?.value;
-  const e = state.editRoutine;
-  if (e && val("r-name") !== undefined) {
-    Object.assign(e, {
-      name: val("r-name").trim(), icon: val("r-icon").trim(), group: val("r-group"),
-      times: Math.max(1, Math.min(20, Number(val("r-times")) || 1)),
-      minutes: Math.max(0, Math.min(240, Number(val("r-minutes")) || 0)),
-    });
-    if (val("r-perweek") !== undefined) e.perWeek = Math.max(1, Math.min(7, Number(val("r-perweek")) || 1));
-  }
-  const r = state.editRitual;
-  if (r && val("rit-name") !== undefined) Object.assign(r, { name: val("rit-name").trim(), time: val("rit-time") || "" });
-}
 
 export function patchRoutines(view) {
   const t = state.timer, el = t && view.querySelector("#run-timer");

@@ -2,7 +2,7 @@
 // and a "due" date (deadline). Check-in → Today shows today's items plus the rest of this week.
 import { read } from "../docs.js";
 import { html, todayKey } from "../util.js";
-import { state } from "../state.js";
+import { state, sheet } from "../state.js";
 import { normalizeTodos, buckets, dashboard, isOverdue, dayLabel } from "../todos.js";
 import { icon } from "./components.js";
 
@@ -23,7 +23,7 @@ function dateEditor(x) {
 }
 
 export function todoRow(x, today) {
-  const editing = state.editTodo === x.id;
+  const editing = sheet("todo")?.id === x.id;
   return html`<li class="todo${x.done ? " done" : ""}${isOverdue(x, today) ? " late" : ""}">
     <input type="checkbox" data-todo-done="${x.id}" ${x.done ? "checked" : ""} aria-label="Mark “${x.t}” done">
     <div class="tmain"><span class="ttext">${x.t}</span>${(x.on && x.on > today && !x.done) || x.due ? html`<div class="tmeta">${chips(x, today)}</div>` : ""}</div>
@@ -65,6 +65,6 @@ export function dashboardTodos() {
   const open = d.week.length;
   return html`<div class="plateblock"><h3 class="platehead">${icon("checklist")} To-dos</h3>
     ${list(d.today, today, "Nothing planned or due today.")}
-    ${open ? html`<details class="tweek" ${state.editTodo && d.week.some((x) => x.id === state.editTodo) ? "open" : ""}><summary>${open} more this week</summary>${list(d.week, today)}</details>` : ""}
+    ${open ? html`<details class="tweek" ${d.week.some((x) => x.id === sheet("todo")?.id) ? "open" : ""}><summary>${open} more this week</summary>${list(d.week, today)}</details>` : ""}
     ${addForm("tdash", { on: today, label: "Add a to-do for today" })}</div>`;
 }

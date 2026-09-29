@@ -1,5 +1,5 @@
 // The daily check-in: answering questions, editing my questions, level-ups, journal, and targets.
-import { state, settings, targets, isEditable, findQuestion } from "../state.js";
+import { state, settings, targets, isEditable, findQuestion, sheet, openSheet, closeSheet } from "../state.js";
 import { answers, commitDay, saveSettings, saveMember } from "../day.js";
 import { builtinAsCustom, scoredQuestions } from "../scoring.js";
 import { clone, getPath, setPath, isSet, toNum, todayKey, newId } from "../util.js";
@@ -15,7 +15,7 @@ import { suggest, newBreathing, pauseFor, itemKey, moveDueTasks } from "../breat
 import { edit as docEdit } from "../docs.js";
 import { pausable } from "../views/breathing.js";
 import { weekStart } from "../util.js";
-import { questionsView, readQuestionForm } from "../views/questions.js";
+import { questionsView, parseQuestionDraft } from "../views/questions.js";
 import { targetsView, reminderLink, reminderOpts } from "../views/targets.js";
 import { openIcs } from "../calendar.js";
 
@@ -45,8 +45,7 @@ function tidyStreakAndFloor() {
 }
 
 function saveQuestion() {
-  readQuestionForm(ui.view);
-  const e = state.editQuestion;
+  const e = parseQuestionDraft(sheet("question"));
   if (!e.name) return $("#q-name").focus(), "none";
   if (e.kind === "check" && !e.items?.length) return $("#q-items").focus(), "none";
   if (e.kind === "number" && e.scored !== false && !isSet(e.target)) return $("#q-target").focus(), "none";
@@ -69,7 +68,7 @@ function saveQuestion() {
 
   const cats = settings().cats, at = cats.findIndex((x) => x.id === q.id);
   if (at >= 0) cats[at] = q; else cats.push(q);
-  state.editQuestion = null;
+  closeSheet();
   tidyStreakAndFloor();
 }
 
@@ -83,16 +82,16 @@ async function loadAliases() {
 const editLayout = (fn) => { settings().layout = fn(normalizeLayout(settings().layout)); saveSettings(); };
 
 // Breathing room: a draft while the sheet is open, saved into settings.breathing.
-const draft = () => state.breath;
+const draft = () => sheet("breath");
 const toggleItem = (list, x) => (list.some((y) => itemKey(y) === itemKey(x)) ? list.filter((y) => itemKey(y) !== itemKey(x)) : [...list, x]);
 
 const actions = {
   brOpen() {
     const b = pauseFor(settings(), todayKey());
-    state.breath = b ? { level: "", items: [...b.items, ...b.tiny], tiny: [...b.tiny], why: b.why, note: b.note, moved: [...(b.moved || [])] }
-      : { level: "", items: [], tiny: [], why: "", note: "", moved: [] };
+    openSheet("breath", b ? { level: "", items: [...b.items, ...b.tiny], tiny: [...b.tiny], why: b.why, note: b.note, moved: [...(b.moved || [])] }
+      : { level: "", items: [], tiny: [], why: "", note: "", moved: [] });
   },
-  brCancel() { state.breath = null; },
+  brCancel: closeSheet,
   brLevel(el) { Object.assign(draft(), { level: el.dataset.level, items: suggest(el.dataset.level, pausable()), tiny: [] }); },
   brItem(el) {
     const x = { kind: el.dataset.kind, id: el.dataset.id };
@@ -113,7 +112,7 @@ const actions = {
     if (toMove.length) {
       docEdit("work", (w) => moveDueTasks(w, toMove, todayKey()), 0);
     }
-    state.breath = null;
+    closeSheet();
     saveSettings();
     window.scrollTo({ top: 0, behavior: "smooth" });
   },
@@ -196,22 +195,22 @@ const actions = {
   },
 
   // my questions
-  qNew() { state.editQuestion = { kind: "check", scored: true, items: [] }; },
+  qNew() { openSheet("question", { kind: "check", scored: true, items: [] }); },
   qEdit(el) {
     const q = settings().cats[Number(el.dataset.index)];
-    state.editQuestion = q.kind === "builtin" ? builtinAsCustom(q.id, targets()) : clone(q);
+    openSheet("question", q.kind === "builtin" ? builtinAsCustom(q.id, targets()) : clone(q));
   },
-  qCancel() { state.editQuestion = null; },
+  qCancel: closeSheet,
   qTemplate(el) {
-    readQuestionForm(ui.view);
     const t = LADDER_TEMPLATES[el.dataset.template];
-    state.editQuestion = { ...state.editQuestion, kind: "ladder", name: state.editQuestion.name || t.name, mode: t.mode, levels: clone(t.levels) };
+    const e = sheet("question");
+    openSheet("question", { ...e, kind: "ladder", name: e.name || t.name, mode: t.mode, levels: clone(t.levels), levelsText: undefined, perWeek: undefined });
   },
   qSave: saveQuestion,
   qRevert() {
-    const cats = settings().cats, i = cats.findIndex((q) => q.id === state.editQuestion.id);
-    if (i >= 0) cats[i] = { id: state.editQuestion.id, kind: "builtin", scored: true };
-    state.editQuestion = null;
+    const cats = settings().cats, i = cats.findIndex((q) => q.id === sheet("question").id);
+    if (i >= 0) cats[i] = { id: sheet("question").id, kind: "builtin", scored: true };
+    closeSheet();
     tidyStreakAndFloor();
   },
   qMove(el) {
@@ -244,14 +243,11 @@ export default {
   actions,
   liveTab: (tab) => tab === "today",
   data(name) { if (name === "loaded" && !state.preview && !state.linkedTo) loadAliases(); },
-  busy: () => Boolean(state.editQuestion),
-  leave: (tab, view) => { if (tab === "setup") readQuestionForm(view); },
   patch: (tab, view) => { if (tab === "today") patchToday(view); },
 
   input(el) {
     const d = el.dataset;
     if ("search" in d) return filterJournal(ui.view, el.value), true;
-    if ("brNote" in d) { if (state.breath) state.breath.note = el.value; return true; }
     if (d.layoutName) {
       const l = normalizeLayout(settings().layout);
       l.names[d.layoutName] = el.value.slice(0, 16);
@@ -285,7 +281,6 @@ export default {
   change(el) {
     const d = el.dataset;
     if (d.layoutIcon) return editLayout((l) => ({ ...l, icons: { ...l.icons, [d.layoutIcon]: el.value } })), render(), true;
-    if (el.id === "q-kind" || el.id === "q-mode") return readQuestionForm(ui.view), render(), true;
     if (el.id === "q-lead") return (settings().lead = el.value || null), saveSettings(), render(), true;
     if (d.floor) {
       const s = settings();

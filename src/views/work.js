@@ -1,6 +1,6 @@
 // Work: Today (a few tasks, picked for you) and Goals (goal → milestones → tasks, with progress).
 import { html, shortDate, longDate, clock, atTime } from "../util.js";
-import { state } from "../state.js";
+import { state, sheet } from "../state.js";
 import { normalizeWork, todayState, todayPicks, blocker, progress, countdown, goalTheme, milestoneTheme, msIcon, goalIcon, MS_ICONS, saturation, staleTasks, PUSH_WHYS, ARCHIVE_WHYS } from "../work.js";
 import { timerFor, isRunning, isUp, msLeft, minutesLeft, countdownText, durationText } from "../timer.js";
 import { pressed, saveStatus, icon } from "./components.js";
@@ -73,7 +73,7 @@ function todayRow(w, t, key, pinned) {
 function tidyCard(w, key) {
   const stale = staleTasks(w, key);
   if (!stale.length) return "";
-  const t = stale[0], d = state.tidy?.id === t.id ? state.tidy : { id: t.id };
+  const t = stale[0], d = sheet("tidy")?.id === t.id ? state.sheet : { id: t.id };
   const g = goalOf(w, t.goal), m = msOf(w, t.ms), late = Math.round((new Date(`${key}T12:00:00`) - new Date(`${t.due}T12:00:00`)) / 86400000);
   const whys = d.action === "pushed" ? PUSH_WHYS : d.action === "archived" ? ARCHIVE_WHYS : [];
   const plus = (n) => { const x = new Date(`${key}T12:00:00`); x.setDate(x.getDate() + n); return x.toISOString().slice(0, 10); };
@@ -86,10 +86,10 @@ function tidyCard(w, key) {
       html`<button class="chip ${d.action === a ? "fill" : "border"}" data-act="tidyAction" data-id="${t.id}" data-action="${a}" aria-pressed="${pressed(d.action === a)}">${icon(ic)}${label}</button>`)}</div>
     ${d.action === "pushed" ? html`<div class="tidystep"><span class="tlabel">New due date</span><div class="tidyacts">
       ${[[7, "+1 week"], [14, "+2 weeks"]].map(([n, label]) => html`<button class="chip ${d.to === plus(n) ? "fill" : "border"}" data-act="tidyTo" data-to="${plus(n)}">${label}</button>`)}
-      <input class="field tidydate" type="date" data-tidy-to min="${key}" value="${d.to || ""}" aria-label="Pick a date"></div></div>` : ""}
+      <input class="field tidydate" type="date" data-draft="to" data-redraw min="${key}" value="${d.to || ""}" aria-label="Pick a date"></div></div>` : ""}
     ${whys.length ? html`<div class="tidystep"><span class="tlabel">Why?</span><div class="tidyacts">${whys.map(([id, label]) =>
       html`<button class="chip ${d.why === id ? "fill" : "border"}" data-act="tidyWhy" data-why="${id}" aria-pressed="${pressed(d.why === id)}">${label}</button>`)}</div>
-      <input class="field" data-tidy-note maxlength="200" placeholder="A note for later (optional)" value="${d.note || ""}" aria-label="Note"></div>` : ""}
+      <input class="field" data-draft="note" maxlength="200" placeholder="A note for later (optional)" value="${d.note || ""}" aria-label="Note"></div>` : ""}
     ${d.action ? html`<nav class="wrap tidysave"><button data-act="tidySave" ${ready ? "" : "disabled"}>Save${stale.length > 1 ? " and next" : ""}</button>
       <button class="transparent" data-act="tidyCancel">Cancel</button></nav>` : ""}
   </section>`;
@@ -156,7 +156,7 @@ function milestoneTabs(w, g, key) {
   if (!secs.length) return html`<p class="small-text mhint">No milestones or tasks yet.</p>`;
   const themed = secs.map((x, n) => ({ ...x, theme: milestoneTheme(w, g.id, n) }));
   const firstOpen = themed.find((x) => x.tasks.some((t) => !t.done)) || themed[0];
-  const x = themed.find((y) => y.id === state.openMs?.[g.id]) || firstOpen;
+  const x = themed.find((y) => y.id === state.route.ms) || firstOpen;
   const p = progress(x.tasks, key), m = x.m;
   const tasks = [...x.tasks].sort((a, b) => Boolean(a.done) - Boolean(b.done) || (a.due || "9999").localeCompare(b.due || "9999"));
   return html`<div class="folder">
@@ -215,11 +215,11 @@ function goalPage(w, g, key) {
   </section>`;
 }
 
-const pageGoal = (w) => (state.goalPage ? w.goals.find((g) => g.id === state.goalPage) : null);
+const pageGoal = (w) => (state.route.goal ? w.goals.find((g) => g.id === state.route.goal) : null);
 
 // One task, on a card that slides up: when, time, timer, what it waits on, and actions.
 function taskSheet(w, key) {
-  const t = state.taskCard && w.tasks.find((x) => x.id === state.taskCard);
+  const t = sheet("task") && w.tasks.find((x) => x.id === state.sheet.id);
   if (!t) return "";
   const g = goalOf(w, t.goal), m = msOf(w, t.ms), b = blocker(t, w.tasks), tm = timerFor(w, t.id);
   const next = w.tasks.filter((x) => x.after === t.id && !x.done);
@@ -250,39 +250,27 @@ function taskSheet(w, key) {
 const KIND = { goal: "goal", ms: "milestone", task: "task" };
 
 function workForm(w) {
-  const e = state.editWork;
+  const e = sheet("work");
   if (!e) return html`<nav class="wrap addgoal"><button data-act="wNew" data-kind="goal">${icon("add")}<span>Add a goal</span></button></nav>`;
   const goalTasks = w.tasks.filter((t) => t.goal === e.goal && t.id !== e.id);
   const goalMs = w.milestones.filter((m) => m.goal === e.goal);
   return html`<article class="border round padding" id="wform"><h6>${e.id ? "Edit" : "New"} ${KIND[e.kind]}</h6>
     <div class="grid">
-      <div class="s12 m8">${field("Name", html`<input placeholder=" " id="w-name" maxlength="120" value="${e.name || ""}">`)}</div>
-      <div class="s6 m4">${field(e.kind === "task" ? "Due" : "Deadline", html`<input id="w-due" type="date" value="${e.due || ""}">`)}</div>
+      <div class="s12 m8">${field("Name", html`<input placeholder=" " id="w-name" data-draft="name" maxlength="120" value="${e.name || ""}">`)}</div>
+      <div class="s6 m4">${field(e.kind === "task" ? "Due" : "Deadline", html`<input id="w-due" data-draft="due" type="date" value="${e.due || ""}">`)}</div>
       ${e.kind !== "task" ? html`
-        <div class="s12 m4">${field("Icon", html`<select id="w-icon"><option value="">Automatic (${MS_ICONS.find(([k]) => k === (e.kind === "goal" ? goalIcon : msIcon)({ name: e.name }))?.[1] || "Target"})</option>
+        <div class="s12 m4">${field("Icon", html`<select id="w-icon" data-draft="icon"><option value="">Automatic (${MS_ICONS.find(([k]) => k === (e.kind === "goal" ? goalIcon : msIcon)({ name: e.name }))?.[1] || "Target"})</option>
           ${MS_ICONS.map(([k, label]) => html`<option value="${k}" ${k === e.icon ? "selected" : ""}>${label}</option>`)}</select>`)}</div>` : ""}
       ${e.kind === "task" ? html`
-        <div class="s6 m4">${field("Start time (optional)", html`<input id="w-at" type="time" value="${e.at || ""}">`)}</div>
-        <div class="s6 m4">${field("Time estimate (hours)", html`<input id="w-hours" type="number" min="0" max="200" step="0.25" value="${e.hours || ""}">`)}</div>
-        <div class="s12 m4">${field("Milestone", html`<select id="w-ms"><option value="">None</option>${goalMs.map((m) => html`<option value="${m.id}" ${m.id === e.ms ? "selected" : ""}>${m.name}</option>`)}</select>`)}</div>
-        <div class="s12 m4">${field("Can't start until", html`<select id="w-after"><option value="">Nothing, start any time</option>${goalTasks.map((t) => html`<option value="${t.id}" ${t.id === e.after ? "selected" : ""}>${t.name}</option>`)}</select>`)}</div>` : ""}
+        <div class="s6 m4">${field("Start time (optional)", html`<input id="w-at" data-draft="at" type="time" value="${e.at || ""}">`)}</div>
+        <div class="s6 m4">${field("Time estimate (hours)", html`<input id="w-hours" data-draft="hours" data-num type="number" min="0" max="200" step="0.25" value="${e.hours || ""}">`)}</div>
+        <div class="s12 m4">${field("Milestone", html`<select id="w-ms" data-draft="ms"><option value="">None</option>${goalMs.map((m) => html`<option value="${m.id}" ${m.id === e.ms ? "selected" : ""}>${m.name}</option>`)}</select>`)}</div>
+        <div class="s12 m4">${field("Can't start until", html`<select id="w-after" data-draft="after"><option value="">Nothing, start any time</option>${goalTasks.map((t) => html`<option value="${t.id}" ${t.id === e.after ? "selected" : ""}>${t.name}</option>`)}</select>`)}</div>` : ""}
     </div>
     <nav class="wrap"><button data-act="wSave">Save</button><button class="transparent" data-act="wCancel">Cancel</button>
       ${e.id ? html`<button class="transparent error-text" data-act="wRemove">Delete</button>` : ""}</nav></article>`;
 }
 
-export function readWorkForm(view) {
-  const e = state.editWork;
-  if (!e) return;
-  const val = (id) => view.querySelector(id)?.value;
-  const name = val("#w-name"); if (name !== undefined) e.name = name.trim();
-  const due = val("#w-due"); if (due !== undefined) e.due = due;
-  const at = val("#w-at"); if (at !== undefined) e.at = at;
-  const ic = val("#w-icon"); if (ic !== undefined) e.icon = ic;
-  const hours = val("#w-hours"); if (hours !== undefined) e.hours = hours === "" ? "" : Math.max(0, Number(hours));
-  const ms = val("#w-ms"); if (ms !== undefined) e.ms = ms;
-  const after = val("#w-after"); if (after !== undefined) e.after = after;
-}
 
 function importBox(open) {
   const msg = state.workImport;
@@ -298,7 +286,7 @@ function importBox(open) {
 
 export function workGoalsView() {
   const w = workData(), key = state.date, g = pageGoal(w);
-  if (g) return html`${state.editWork ? workForm(w) : ""}${goalPage(w, g, key)}${taskSheet(w, key)}<p class="small-text">${saveStatus()}</p>`;
+  if (g) return html`${sheet("work") ? workForm(w) : ""}${goalPage(w, g, key)}${taskSheet(w, key)}<p class="small-text">${saveStatus()}</p>`;
   return html`${workForm(w)}${importBox(!w.goals.length)}${goalDeck(w, key)}${taskSheet(w, key)}
     <p class="small-text">Private to you. Tap a goal to open it, and a task for its details. A lock means a task is waiting on another one. ${saveStatus()}</p>`;
 }

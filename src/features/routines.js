@@ -1,11 +1,11 @@
 // Routines: check off recurring tasks, run timers, and set routines up.
-import { state, isEditable } from "../state.js";
+import { state, isEditable, sheet, openSheet, closeSheet } from "../state.js";
 import { save, paths } from "../store.js";
 import { edit as docEdit } from "../docs.js";
 import { clone, newId, todayKey } from "../util.js";
 import { ui, render } from "../render.js";
 import { doneCount, target, EVERY_DAY, WEEKDAYS } from "../routines.js";
-import { routinesView, routineSetupView, patchRoutines, readRoutineForm, modeOf, routineData, ritualSteps, reminderOpts } from "../views/routines.js";
+import { routinesView, routineSetupView, patchRoutines, modeOf, routineData, ritualSteps, reminderOpts } from "../views/routines.js";
 import { openIcs } from "../calendar.js";
 
 const $ = (sel) => ui.view.querySelector(sel);
@@ -51,9 +51,13 @@ const STARTERS = {
 };
 
 function saveRoutine() {
-  readRoutineForm(ui.view);
-  const e = state.editRoutine;
+  const e = sheet("routine");
+  e.name = String(e.name || "").trim();
   if (!e.name) return $("#r-name").focus(), "none";
+  const clampNum = (v, lo, hi, dflt) => Math.max(lo, Math.min(hi, Number(v) || dflt));
+  e.times = clampNum(e.times, 1, 20, 1); e.minutes = clampNum(e.minutes, 0, 240, 0);
+  if (e.perWeek !== undefined) e.perWeek = clampNum(e.perWeek, 1, 7, 1);
+  if (typeof e.icon === "string") e.icon = e.icon.trim();
   const mode = e.mode || modeOf(e);
   const r = { id: e.id || newId("r"), name: e.name, group: e.group || "morning", times: e.times || 1, since: e.since || todayKey() };
   if (e.icon) r.icon = e.icon;
@@ -64,7 +68,7 @@ function saveRoutine() {
     const at = items.findIndex((x) => x.id === r.id);
     if (at >= 0) items[at] = r; else items.push(r);
   });
-  state.editRoutine = null;
+  closeSheet();
 }
 
 export default {
@@ -83,28 +87,28 @@ export default {
     },
     runSkip() { if (state.timer) stopTimer(); state.run.index++; },
     runExit() { if (state.timer) stopTimer(); state.run = null; },
-    ritNew() { state.editRitual = { custom: true }; },
-    ritEdit(el) { state.editRitual = clone(routineData().rituals.find((r) => r.id === el.dataset.id)); },
-    ritCancel() { state.editRitual = null; },
+    ritNew() { openSheet("ritual", { custom: true }); },
+    ritEdit(el) { openSheet("ritual", clone(routineData().rituals.find((r) => r.id === el.dataset.id))); },
+    ritCancel: closeSheet,
     ritSave() {
-      readRoutineForm(ui.view);
-      const e = state.editRitual;
+      const { what, ...e } = sheet("ritual");
+      e.name = String(e.name || "").trim();
       if (!e.name) return $("#rit-name").focus(), "none";
       editList((items, data) => {
         const rituals = data.rituals, at = rituals.findIndex((r) => r.id === e.id);
         const rit = { ...e, id: e.id || newId("rit"), icon: e.icon || "checklist" };
         if (at >= 0) rituals[at] = rit; else rituals.push(rit);
       });
-      state.editRitual = null;
+      closeSheet();
     },
     ritRemove() {
-      const e = state.editRitual;
+      const e = sheet("ritual");
       if (!confirm(`Delete the "${e.name}" ritual? Its steps move to Anytime.`)) return "none";
       editList((items, data) => {
         data.rituals = data.rituals.filter((r) => r.id !== e.id);
         items.forEach((r) => { if (r.group === e.id) r.group = "anytime"; });
       });
-      state.editRitual = null;
+      closeSheet();
     },
     rToggle(el) {
       const r = findRoutine(el.dataset.id);
@@ -130,14 +134,13 @@ export default {
         id: newId("r"), name, icon, group, times: 1, since, days: days || EVERY_DAY, ...(minutes ? { minutes } : {}),
       })));
     },
-    rNew() { state.editRoutine = { group: "morning", times: 1, mode: "daily" }; state.tab = "rsetup"; },
-    rEdit(el) { state.editRoutine = clone(routineData().items[Number(el.dataset.index)]); },
-    rCancel() { state.editRoutine = null; },
+    rNew() { openSheet("routine", { group: "morning", times: 1, mode: "daily" }); state.tab = "rsetup"; },
+    rEdit(el) { openSheet("routine", clone(routineData().items[Number(el.dataset.index)])); },
+    rCancel: closeSheet,
     rSave: saveRoutine,
-    rMode(el) { readRoutineForm(ui.view); state.editRoutine.mode = el.dataset.mode; },
+    rMode(el) { sheet("routine").mode = el.dataset.mode; },
     rDay(el) {
-      readRoutineForm(ui.view);
-      const e = state.editRoutine, d = Number(el.dataset.day);
+      const e = sheet("routine"), d = Number(el.dataset.day);
       const days = new Set(e.days && e.days.length < 7 ? e.days : []);
       if (days.has(d)) days.delete(d); else days.add(d);
       e.days = [...days].sort();
@@ -158,7 +161,6 @@ export default {
       editList((items) => items.splice(Number(el.dataset.index), 1));
     },
   },
-  busy: () => Boolean(state.editRoutine || state.editRitual || state.run),
-  leave: (tab, view) => { if (tab === "rsetup") readRoutineForm(view); },
+  busy: () => Boolean(state.run),
   patch: (tab, view) => { if (tab === "routines") patchRoutines(view); },
 };

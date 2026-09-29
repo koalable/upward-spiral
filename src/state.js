@@ -9,17 +9,31 @@ export const state = {
   // who
   uid: null, authUid: null, email: "", userName: "", preview: false, linkedTo: "", aliases: null,
   // what's on screen
-  tab: "", date: todayKey(), board: "week",
+  route: { tab: "" }, date: todayKey(), board: "week",
   // data (shared)
   members: {}, scores: {}, wins: {}, season: null,
   // data (private to this person)
   settings: null, days: {}, weekly: {}, medlog: {}, routines: null, routinelog: {}, work: null, notify: null, todos: null,
-  // open forms and transient UI
-  editQuestion: null, editMed: null, editLog: null, editRoutine: null, editRitual: null, editWork: null, workImport: "", run: null, toast: null, timer: null,
-  area: "checkins", calMonth: null, pushStatus: "", editTodo: null,
+  // what's open: one form, card or sheet at a time (see sheet() below), plus a few status messages
+  sheet: null, workImport: "", run: null, toast: null, timer: null,
+  area: "checkins", calMonth: null, pushStatus: "",
   loaded: false,
   historyStart: addDays(todayKey(), -HISTORY_DAYS),
 };
+
+// Where you are: state.route = { tab, goal?, ms? } (see route.js). state.tab reads and sets just the tab;
+// setting it leaves any goal page.
+Object.defineProperty(state, "tab", { get: () => state.route.tab, set: (tab) => { state.route = { tab }; }, enumerable: true });
+
+// ---------- what's open ----------
+// One thing open at a time: { what: "work" | "question" | "med" | "log" | "routine" | "ritual" | "todo" | "task" | "breath" | "tidy", ...draft }.
+// Form fields marked data-draft="key" write into it as you type (features/core.js), so nothing is read back off the screen.
+export const sheet = (what) => (state.sheet?.what === what ? state.sheet : null);
+export const openSheet = (what, draft = {}) => { state.sheet = { ...draft, what }; return state.sheet; };
+export const closeSheet = () => { state.sheet = null; };
+// Forms (as opposed to cards and sheets): while one is open, remote changes don't redraw the screen.
+export const FORMS = ["work", "question", "med", "log", "routine", "ritual", "todo"];
+export const formOpen = () => FORMS.includes(state.sheet?.what);
 
 // ---------- my settings ----------
 export const settings = () => (state.settings = normalizeSettings(state.settings));

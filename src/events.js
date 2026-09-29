@@ -10,7 +10,6 @@ function run(result) {
 }
 
 export function switchTab(tab) {
-  everyFeature("leave", state.tab, ui.view); // keep half-finished edits
   state.tab = tab;
   render();
 }

@@ -1,6 +1,6 @@
 // Breathing room: the banner on Today, and the sheet that sets one up.
 import { html, shortDate, todayKey } from "../util.js";
-import { state, settings } from "../state.js";
+import { state, settings, sheet } from "../state.js";
 import { questionName, isScored } from "../scoring.js";
 import { isLadder } from "../ladder.js";
 import { read } from "../docs.js";
@@ -52,7 +52,7 @@ function pick(x, label, on, sub = "") {
 }
 
 export function breathingSheet() {
-  const d = state.breath;
+  const d = sheet("breath");
   if (!d) return "";
   const p = pausable(), s = settings(), today = todayKey();
   const on = (kind, id) => d.items.some((x) => x.kind === kind && x.id === id);
@@ -76,7 +76,7 @@ export function breathingSheet() {
 
     <div class="brstep"><div class="brnum">3</div><div class="max"><h3>Why?</h3>
       <div class="brwhys">${WHYS.map(([id, label]) => html`<button class="chip ${d.why === id ? "fill" : "border"}" data-act="brWhy" data-why="${id}" aria-pressed="${pressed(d.why === id)}">${label}</button>`)}</div>
-      <label class="field"><span>Anything to remember about this week? (optional)</span><input data-br-note maxlength="300" value="${d.note || ""}" placeholder="e.g. Portland → Tokyo, back Sunday"></label></div></div>
+      <label class="field"><span>Anything to remember about this week? (optional)</span><input data-draft="note" maxlength="300" value="${d.note || ""}" placeholder="e.g. Portland → Tokyo, back Sunday"></label></div></div>
 
     ${d.items.length ? html`<div class="brstep"><div class="brnum">4</div><div class="max"><h3>Would a smaller version do?</h3>
       <p class="hint">Keeping a thread going is often easier than restarting. Tap any that could shrink instead of stopping.</p>

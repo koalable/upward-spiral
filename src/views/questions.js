@@ -6,28 +6,28 @@ const LINE_BREAK = /\r?\n/;
 import { BUILTIN_ORDER, BUILTINS, QUESTION_KINDS, MAX_DAILY, DEFAULT_WEEKS_TO_LEVEL } from "../constants.js";
 import { isLadder, levelOf, levelLabel } from "../ladder.js";
 import { isScored, scoredQuestions, questionName } from "../scoring.js";
-import { state, settings, hasQuestion } from "../state.js";
+import { state, settings, hasQuestion, sheet } from "../state.js";
 import { saveStatus, icon } from "./components.js";
 import { GROUPS, groupOf, iconOf } from "../energy.js";
 
 function editor() {
-  const e = state.editQuestion;
+  const e = sheet("question");
   if (!e) return html`<p><button class="btn" data-act="qNew">Add a category</button></p>`;
   const kind = e.kind || "check";
   const canRevert = e.origin && settings().cats.some((q) => q.id === e.id && q.kind !== "builtin");
   return html`<div class="qform"><h3>${e.id ? "Edit category" : "New category"}</h3><div class="targets">
-    <label>Name<input class="field" id="q-name" maxlength="60" value="${e.name || ""}" placeholder="e.g. Water"></label>
-    <label>Energy group<select class="field" id="q-group">${GROUPS.filter((g) => g.id !== "show").map((g) => html`<option value="${g.id}" ${g.id === groupOf(e).id ? "selected" : ""}>${g.name} (${g.themeName})</option>`)}</select></label>
-    <label>Type<select class="field" id="q-kind">${Object.entries(QUESTION_KINDS).map(([k, label]) => html`<option value="${k}" ${k === kind ? "selected" : ""}>${label}</option>`)}</select></label>
-    ${kind === "check" ? html`<label class="full">Items, one per line (up to 4)<textarea class="field" id="q-items" rows="4" placeholder="Took vitamins">${(e.items || []).join("\n")}</textarea></label>` : ""}
+    <label>Name<input class="field" id="q-name" data-draft="name" maxlength="60" value="${e.name || ""}" placeholder="e.g. Water"></label>
+    <label>Energy group<select class="field" id="q-group" data-draft="group">${GROUPS.filter((g) => g.id !== "show").map((g) => html`<option value="${g.id}" ${g.id === groupOf(e).id ? "selected" : ""}>${g.name} (${g.themeName})</option>`)}</select></label>
+    <label>Type<select class="field" id="q-kind" data-draft="kind" data-redraw>${Object.entries(QUESTION_KINDS).map(([k, label]) => html`<option value="${k}" ${k === kind ? "selected" : ""}>${label}</option>`)}</select></label>
+    ${kind === "check" ? html`<label class="full">Items, one per line (up to 4)<textarea class="field" id="q-items" data-draft="itemsText" rows="4" placeholder="Took vitamins">${e.itemsText ?? (e.items || []).join("\n")}</textarea></label>` : ""}
     ${kind === "number" ? html`
-      <label>Unit<input class="field" id="q-unit" maxlength="20" value="${e.unit || ""}" placeholder="glasses"></label>
-      <label>Goal<select class="field" id="q-dir"><option value="min" ${e.dir !== "max" ? "selected" : ""}>At least</option><option value="max" ${e.dir === "max" ? "selected" : ""}>At most</option></select></label>
-      <label>Target<input class="field" id="q-target" type="number" min="0" step="any" value="${e.target ?? ""}"></label>
-      <label>Step for + / −<input class="field" id="q-step" type="number" min="0" step="any" value="${e.step ?? 1}"></label>` : ""}
+      <label>Unit<input class="field" id="q-unit" data-draft="unit" maxlength="20" value="${e.unit || ""}" placeholder="glasses"></label>
+      <label>Goal<select class="field" id="q-dir" data-draft="dir"><option value="min" ${e.dir !== "max" ? "selected" : ""}>At least</option><option value="max" ${e.dir === "max" ? "selected" : ""}>At most</option></select></label>
+      <label>Target<input class="field" id="q-target" data-draft="target" data-num type="number" min="0" step="any" value="${e.target ?? ""}"></label>
+      <label>Step for + / −<input class="field" id="q-step" data-draft="step" data-num type="number" min="0" step="any" value="${e.step ?? 1}"></label>` : ""}
     ${kind === "ladder" ? ladderFields(e) : ""}
   </div>
-  ${kind !== "text" && kind !== "ladder" ? html`<label class="inline"><input type="checkbox" id="q-scored" ${e.scored !== false ? "checked" : ""}> Counts toward my score (worth 4 points)</label>` : ""}
+  ${kind !== "text" && kind !== "ladder" ? html`<label class="inline"><input type="checkbox" id="q-scored" data-draft="scored" ${e.scored !== false ? "checked" : ""}> Counts toward my score (worth 4 points)</label>` : ""}
   ${e.origin ? html`<p class="hint small">This swaps the built-in version for your own editable one. Anything already logged in this category today starts fresh.</p>` : ""}
   <p class="hint small">Changes apply from today. Past days keep the questions they were scored with.</p>
   <div class="row"><button class="btn" data-act="qSave">Save question</button><button class="btn ghost" data-act="qCancel">Cancel</button>
@@ -37,42 +37,37 @@ function editor() {
 function ladderFields(e) {
   const mode = e.mode || "days";
   const levels = e.levels || [];
-  const list = mode === "minutes" ? levels.map((l) => l.minutes).join(", ") : levels.map((l) => l.days).join(", ");
+  const list = e.levelsText ?? levelsText(e);
   return html`
     <div class="full chips">Start from: <button class="chip" data-act="qTemplate" data-template="weekly">2× → 3× → 4× a week</button>
       <button class="chip" data-act="qTemplate" data-template="minutes">5 → 10 → 15 min a day</button></div>
-    <label>Goal type<select class="field" id="q-mode">
+    <label>Goal type<select class="field" id="q-mode" data-draft="mode" data-redraw>
       <option value="days" ${mode === "days" ? "selected" : ""}>Days per week</option>
       <option value="minutes" ${mode === "minutes" ? "selected" : ""}>Minutes a day</option></select></label>
     <label>${mode === "minutes" ? "Minutes a day, one number per level" : "Days per week, one number per level"}
-      <input class="field" id="q-levels" value="${list}" placeholder="${mode === "minutes" ? "5, 10, 15" : "2, 3, 4"}"></label>
-    ${mode === "minutes" ? html`<label>Days per week<input class="field" id="q-perweek" type="number" min="1" max="7" value="${levels[0]?.days ?? 5}"></label>` : ""}
-    <label>Weeks in a row to level up<input class="field" id="q-weeks" type="number" min="1" max="12" value="${e.weeksToLevel ?? DEFAULT_WEEKS_TO_LEVEL}"></label>
+      <input class="field" id="q-levels" data-draft="levelsText" value="${list}" placeholder="${mode === "minutes" ? "5, 10, 15" : "2, 3, 4"}"></label>
+    ${mode === "minutes" ? html`<label>Days per week<input class="field" id="q-perweek" data-draft="perWeek" data-num type="number" min="1" max="7" value="${e.perWeek ?? levels[0]?.days ?? 5}"></label>` : ""}
+    <label>Weeks in a row to level up<input class="field" id="q-weeks" data-draft="weeksToLevel" data-num type="number" min="1" max="12" value="${e.weeksToLevel ?? DEFAULT_WEEKS_TO_LEVEL}"></label>
     ${e.id && e.levels?.length ? html`<p class="hint small full">Currently on level ${levelOf(e).number}: ${levelLabel(e)}.</p>` : ""}`;
 }
 
-export function readQuestionForm(view) {
-  const e = state.editQuestion;
-  if (!e) return;
-  const val = (id) => view.querySelector(`#${id}`)?.value;
-  const name = val("q-name"); if (name !== undefined) e.name = name.trim();
-  const kind = val("q-kind"); if (kind) e.kind = kind;
-  const group = val("q-group"); if (group) e.group = group;
-  const items = val("q-items"); if (items !== undefined) e.items = items.split(LINE_BREAK).map((s) => s.trim()).filter(Boolean).slice(0, 4);
-  const unit = val("q-unit"); if (unit !== undefined) e.unit = unit.trim();
-  const dir = val("q-dir"); if (dir) e.dir = dir;
-  const target = val("q-target"); if (target !== undefined) e.target = target === "" ? undefined : Math.max(0, Number(target));
-  const step = val("q-step"); if (step !== undefined) e.step = step === "" ? 1 : Math.max(0, Number(step));
-  const scored = view.querySelector("#q-scored"); if (scored) e.scored = scored.checked;
-  const mode = val("q-mode"); if (mode) e.mode = mode;
-  const levels = val("q-levels");
-  if (levels !== undefined) {
-    const nums = levels.split(/[,\s]+/).map(Number).filter((n) => n > 0).slice(0, 10);
-    const perWeek = Math.min(7, Math.max(1, Number(val("q-perweek")) || 5));
+// The typed-in text fields become the real values (the draft keeps what was typed while the form is open).
+export function parseQuestionDraft(e) {
+  if (typeof e.name === "string") e.name = e.name.trim();
+  if (e.itemsText !== undefined) e.items = e.itemsText.split(LINE_BREAK).map((x) => x.trim()).filter(Boolean).slice(0, 4);
+  if (typeof e.unit === "string") e.unit = e.unit.trim();
+  e.target = e.target === "" || e.target == null ? undefined : Math.max(0, Number(e.target));
+  e.step = e.step === "" || e.step == null ? 1 : Math.max(0, Number(e.step));
+  if (e.levelsText !== undefined || e.perWeek !== undefined) {
+    const nums = String(e.levelsText ?? levelsText(e)).split(/[,\s]+/).map(Number).filter((n) => n > 0).slice(0, 10);
+    const perWeek = Math.min(7, Math.max(1, Number(e.perWeek) || 5));
     e.levels = nums.map((n) => (e.mode === "minutes" ? { days: perWeek, minutes: n } : { days: Math.min(7, n) }));
   }
-  const weeks = val("q-weeks"); if (weeks !== undefined) e.weeksToLevel = Math.max(1, Math.min(12, Number(weeks) || DEFAULT_WEEKS_TO_LEVEL));
+  if (e.weeksToLevel !== undefined) e.weeksToLevel = Math.max(1, Math.min(12, Number(e.weeksToLevel) || DEFAULT_WEEKS_TO_LEVEL));
+  return e;
 }
+const levelsText = (e) => ((e.mode || "days") === "minutes" ? (e.levels || []).map((l) => l.minutes) : (e.levels || []).map((l) => l.days)).join(", ");
+
 
 export function questionsView() {
   const s = settings(), scored = scoredQuestions(s), last = s.cats.length - 1;

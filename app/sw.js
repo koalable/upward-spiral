@@ -5,8 +5,8 @@ importScripts("https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js
 firebase.initializeApp({"apiKey":"AIzaSyCSXKB82V0RtKBV8f6IM7AA7wp1gsPcwYQ","authDomain":"upward-spiral-of-awesomeness.firebaseapp.com","projectId":"upward-spiral-of-awesomeness","appId":"1:445813281061:web:8982a5466586bce7828acc","messagingSenderId":"445813281061"});
 firebase.messaging();
 
-const CACHE = "spiral-f176e13a18";
-const SHELL = ["/", "/routines", "/work", "/progress", "/app.css?v=f176e13a18", "/manifest.webmanifest", "/icon-192.png"];
+const CACHE = "spiral-a8d31d5d41";
+const SHELL = ["/", "/routines", "/work", "/progress", "/app.css?v=a8d31d5d41", "/manifest.webmanifest", "/icon-192.png"];
 
 self.addEventListener("install", (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).catch(() => {}));

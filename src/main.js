@@ -6,7 +6,8 @@ import core from "./features/core.js";
 import { auth } from "./auth.js";
 import { addDays, todayKey, weekStart, html } from "./util.js";
 import { HISTORY_DAYS, MEDLOG_DAYS } from "./constants.js";
-import { mountShell, render, patch, refreshAfterRemoteChange, setBanner, setWho, setStatus, showTabs, showScreen } from "./render.js";
+import { parseRoute } from "./route.js";
+import { mountShell, followAddress, render, patch, refreshAfterRemoteChange, setBanner, setWho, setStatus, showTabs, showScreen } from "./render.js";
 import { signInView } from "./views/join.js";
 import { fromGoals } from "./todos.js";
 import { bindEvents } from "./events.js";
@@ -147,8 +148,10 @@ export function start({ page: id, features, order, seed }) {
   const root = document.getElementById("wlc");
   if (!root) return;
   definePage(id, [core, ...features], order);
-  state.tab = page.tabs[0][0];
-  if (id === "checkin" && location.hash === "#settings") Object.assign(state, { settingsMode: true, tab: "customize" });
+  // Start where the address says (a tab on this page), or on the first tab.
+  const r = parseRoute(location.hash);
+  state.route = page.tabs.some(([t]) => t === r.tab) ? r : { tab: page.tabs[0][0] };
+  followAddress();
   mountShell(root);
   bindEvents(root);
   keepTabBarDown();

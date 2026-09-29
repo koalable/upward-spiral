@@ -2,6 +2,7 @@
 import { html, todayKey, addDays, longDate, clock, hhmmOf, atTime } from "../util.js";
 import { MED_KINDS, TOAST_MS } from "../constants.js";
 import { state, hasQuestion } from "../state.js";
+import { sheet } from "../state.js";
 import { medList, activeMeds, logsOn, medStatus, doseLabel, substanceUnits } from "../meds.js";
 import { saveStatus } from "./components.js";
 
@@ -46,21 +47,21 @@ export function patchMedStatus(view) {
 }
 
 function medForm() {
-  const e = state.editMed;
+  const e = sheet("med");
   if (!e) return html`<p><button class="btn" data-act="medNew">Add a medication or substance</button></p>`;
   const times = [...(e.times || []), "", "", "", ""].slice(0, 4);
   return html`<div class="qform"><h3>${e.id ? "Edit" : "New"}</h3><div class="targets">
-    <label>Name<input class="field" id="med-name" maxlength="60" value="${e.name || ""}" placeholder="e.g. Sertraline, Coffee, Wine"></label>
-    <label>Type<select class="field" id="med-kind">${Object.entries(MED_KINDS).map(([k, label]) => html`<option value="${k}" ${k === (e.kind || "rx") ? "selected" : ""}>${label}</option>`)}</select></label>
-    <label>Usual dose<input class="field" id="med-dose" maxlength="20" value="${e.dose || ""}" placeholder="50"></label>
-    <label>Unit<input class="field" id="med-unit" maxlength="20" value="${e.unit || ""}" placeholder="mg, pill, drink"></label>
-    <label class="full">Reminder times (optional, sends a phone notification)<span class="timesrow">${times.map((t, i) => html`<input class="field" type="time" data-med-time value="${t}" aria-label="Time ${i + 1}">`)}</span></label>
-    <label>Hours between doses (optional)<input class="field" id="med-every" type="number" min="0" step="0.5" value="${e.every ?? ""}" placeholder="e.g. 6"></label>
-    <label>Daily max (optional)<input class="field" id="med-max" type="number" min="0" step="1" value="${e.max ?? ""}" placeholder="e.g. 4"></label>
-    <label class="full">Notes<input class="field" id="med-notes" maxlength="200" value="${e.notes || ""}" placeholder="With food, etc."></label>
+    <label>Name<input class="field" id="med-name" data-draft="name" maxlength="60" value="${e.name || ""}" placeholder="e.g. Sertraline, Coffee, Wine"></label>
+    <label>Type<select class="field" id="med-kind" data-draft="kind">${Object.entries(MED_KINDS).map(([k, label]) => html`<option value="${k}" ${k === (e.kind || "rx") ? "selected" : ""}>${label}</option>`)}</select></label>
+    <label>Usual dose<input class="field" id="med-dose" data-draft="dose" maxlength="20" value="${e.dose || ""}" placeholder="50"></label>
+    <label>Unit<input class="field" id="med-unit" data-draft="unit" maxlength="20" value="${e.unit || ""}" placeholder="mg, pill, drink"></label>
+    <label class="full">Reminder times (optional, sends a phone notification)<span class="timesrow">${times.map((t, i) => html`<input class="field" type="time" data-draft="times.${i}" value="${t}" aria-label="Time ${i + 1}">`)}</span></label>
+    <label>Hours between doses (optional)<input class="field" id="med-every" data-draft="every" data-num type="number" min="0" step="0.5" value="${e.every ?? ""}" placeholder="e.g. 6"></label>
+    <label>Daily max (optional)<input class="field" id="med-max" data-draft="max" data-num type="number" min="0" step="1" value="${e.max ?? ""}" placeholder="e.g. 4"></label>
+    <label class="full">Notes<input class="field" id="med-notes" data-draft="notes" maxlength="200" value="${e.notes || ""}" placeholder="With food, etc."></label>
   </div>
   ${hasQuestion("substances") ? html`<div class="targets"><label class="full">Each log adds to my Substances score
-    <select class="field" id="med-counts">${[[0, "Nothing"], [1, "1 unit"], [0.5, "½ unit (split doses)"]].map(([v, label]) => html`<option value="${v}" ${substanceUnits(e.counts) === v ? "selected" : ""}>${label}</option>`)}</select></label></div>` : ""}
+    <select class="field" id="med-counts" data-draft="counts" data-num>${[[0, "Nothing"], [1, "1 unit"], [0.5, "½ unit (split doses)"]].map(([v, label]) => html`<option value="${v}" ${substanceUnits(e.counts) === v ? "selected" : ""}>${label}</option>`)}</select></label></div>` : ""}
   <p class="hint small">Use the numbers your doctor or pharmacist gave you. The app keeps track; it doesn't check doses.</p>
   <div class="row"><button class="btn" data-act="medSave">Save</button><button class="btn ghost" data-act="medCancel">Cancel</button></div></div>`;
 }
@@ -76,7 +77,7 @@ function listItem(m, i) {
 }
 
 function logRow(x, key) {
-  if (state.editLog === x.id) return html`<li class="logrow editing">
+  if (sheet("log")?.id === x.id) return html`<li class="logrow editing">
     <input class="field" type="time" id="log-time" value="${hhmmOf(x.at)}" aria-label="Time">
     <input class="field" id="log-dose" value="${x.dose || ""}" aria-label="Dose" placeholder="Dose"><span class="muted">${x.unit || ""}</span>
     <button class="btn" data-act="medSaveLog" data-day="${key}" data-id="${x.id}">Save</button><button class="linkbtn" data-act="medCancelLog">Cancel</button></li>`;
@@ -123,16 +124,3 @@ export function medsView() {
     <section class="panel"><h2>History</h2>${history()}</section>`;
 }
 
-export function readMedForm(view) {
-  const e = state.editMed;
-  if (!e) return;
-  const val = (id) => view.querySelector(`#${id}`)?.value;
-  for (const k of ["name", "kind", "dose", "unit", "notes"]) { const v = val(`med-${k}`); if (v !== undefined) e[k] = v.trim(); }
-  const every = val("med-every"), max = val("med-max");
-  if (every !== undefined) e.every = every === "" ? undefined : Math.max(0, Number(every));
-  if (max !== undefined) e.max = max === "" ? undefined : Math.max(0, Math.round(Number(max)));
-  const times = [...view.querySelectorAll("[data-med-time]")];
-  if (times.length) e.times = times.map((x) => x.value).filter(Boolean);
-  const counts = view.querySelector("#med-counts");
-  if (counts) e.counts = Number(counts.value) || 0;
-}

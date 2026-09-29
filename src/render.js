@@ -2,11 +2,12 @@
 // Remote data changes redraw only when it won't disrupt someone mid-edit.
 import { html, escapeText } from "./util.js";
 import { APP_NAME, TEXT_SIZES } from "./constants.js";
-import { state } from "./state.js";
+import { state, formOpen } from "./state.js";
 import { getPref, setPref } from "./prefs.js";
 import { icon } from "./views/components.js";
 import { page, PAGES, pageUrl, everyFeature, anyFeature, SETTINGS_TABS } from "./page.js";
 import { normalizeLayout, pageLabel, pageIcon, pageHidden, tabHidden } from "./layout.js";
+import { parseRoute, formatRoute } from "./route.js";
 import { joinView } from "./views/join.js";
 
 export const ui = { root: null, view: null };
@@ -74,7 +75,8 @@ export function showScreen(content) { ui.view.innerHTML = String(content); }
 // Which tabs show: the page's own tabs, or the Settings tabs, minus anything hidden under Customize.
 export const layoutNow = () => normalizeLayout(state.settings?.layout);
 const inSettings = (id) => SETTINGS_TABS.includes(id);
-export const tabShown = (id) => (state.settingsMode ? inSettings(id) : !inSettings(id)) && !tabHidden(layoutNow(), id);
+export const settingsOpen = () => inSettings(state.tab);
+export const tabShown = (id) => (settingsOpen() ? inSettings(id) : !inSettings(id)) && !tabHidden(layoutNow(), id);
 
 // Names, icons and hidden pages from Customize, on the page switcher.
 function applyLayout() {
@@ -85,8 +87,8 @@ function applyLayout() {
     a.querySelector("span").textContent = pageLabel(l, id, label);
     a.querySelector("i").className = `icon-${ICON_CLASS(pageIcon(l, id, PAGE_ICONS[id]))}`;
   }
-  ui.root.querySelector("#setbar").hidden = !state.settingsMode;
-  ui.root.classList.toggle("settings-mode", Boolean(state.settingsMode));
+  ui.root.querySelector("#setbar").hidden = !settingsOpen();
+  ui.root.classList.toggle("settings-mode", settingsOpen());
 }
 const ICON_CLASS = (name) => String(icon(name)).match(/icon-([\w-]+)/)[1];
 
@@ -104,8 +106,21 @@ function syncTabs() {
 }
 
 // ---------- rendering ----------
+// The address bar follows the route, so the back gesture steps back through screens.
+let drawn = false;
+function syncAddress() {
+  const hash = formatRoute(state.route);
+  if (location.hash === hash) return;
+  if (drawn) history.pushState(null, "", hash); else history.replaceState(null, "", hash);
+}
+export function followAddress() {
+  window.addEventListener("popstate", () => { state.route = parseRoute(location.hash); state.sheet = null; render(); });
+}
+
 export function render() {
   syncTabs();
+  syncAddress();
+  drawn = true;
   if (!state.loaded) return showScreen(`<p class="muted">${escapeText("Loading…")}</p>`);
   if (!state.members[state.uid] && state.tab !== "group") return showScreen(joinView());
   const view = (page.tabs.find(([id]) => id === state.tab) || page.tabs[0])[2];
@@ -122,7 +137,7 @@ export function patch() {
 function isBusy() {
   const active = document.activeElement;
   const typing = active && ui.view.contains(active) && ["INPUT", "TEXTAREA", "SELECT"].includes(active.tagName);
-  return typing || anyFeature("busy", ui.view);
+  return typing || formOpen() || anyFeature("busy", ui.view);
 }
 export function refreshAfterRemoteChange() {
   if (!state.loaded) return;
