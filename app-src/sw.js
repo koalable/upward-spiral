@@ -21,7 +21,8 @@ self.addEventListener("fetch", (e) => {
   const url = new URL(e.request.url);
   if (e.request.method !== "GET" || url.origin !== location.origin || url.pathname.startsWith("/__/")) return;
   e.respondWith(
-    fetch(e.request)
+    // Pages always check for a new release (never a stale HTML copy); versioned files may use the cache.
+    fetch(e.request, e.request.mode === "navigate" ? { cache: "no-cache" } : undefined)
       .then((res) => {
         if (res.ok) { const copy = res.clone(); caches.open(CACHE).then((c) => c.put(e.request, copy)); }
         return res;
