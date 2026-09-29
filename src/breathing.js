@@ -1,10 +1,10 @@
-// Breathing room: pause any mix of check-in categories, habits and Work goals for the rest of this week,
-// then make the time up over the next few weeks. Pure: data in, answers out.
+// Breathing room: pause any mix of check-in categories, habits and Work goals for the rest of this week.
+// Everything is either on track, late, or restarting after a break. Pure: data in, answers out.
 // Kept in the settings doc:
 //   breathing: [{ id, week (Monday key), items: [{ kind: "cat"|"habit"|"goal", id }], tiny: [same],
-//                 why, note, makeUp (weeks, 2–4), created }]
+//                 why, note, moved: [goal ids whose tasks due this week moved to next week], created }]
 // Paused = off the list this week, shown as "paused" rather than missed. Tiny = still on, but a small version counts.
-import { addDays, weekStart, toNum } from "./util.js";
+import { addDays, weekStart } from "./util.js";
 
 export const WHYS = [["travel", "Travelling"], ["sick", "Sick or run down"], ["overloaded", "Too much on"], ["hard", "A hard week"], ["rest", "I need rest"], ["other", "Something else"]];
 export const LEVELS = [
@@ -24,15 +24,12 @@ export const pauseFor = (s, date) => (s?.breathing || []).find((b) => b.week ===
 export const isPaused = (s, kind, id, date) => has(pauseFor(s, date)?.items, kind, id);
 export const isTiny = (s, kind, id, date) => has(pauseFor(s, date)?.tiny, kind, id);
 
-// Make-up weeks after a breathing room: which one (1-based) covers this date, or null.
-export function makeUpFor(s, date) {
-  const wk = weekStart(date);
-  for (const b of s?.breathing || []) {
-    const n = Math.round((new Date(`${wk}T12:00:00`) - new Date(`${b.week}T12:00:00`)) / 604800000);
-    if (n >= 1 && n <= (b.makeUp || 0) && b.items?.length) return { b, week: n, of: b.makeUp };
-  }
-  return null;
+// The week after a breathing room: what's restarting after the break.
+export function restartFor(s, date) {
+  const prev = addDays(weekStart(date), -7);
+  return (s?.breathing || []).find((b) => b.week === prev && b.items?.length) || null;
 }
+export const restartDate = (today) => addDays(weekStart(today), 7);
 
 // Suggested picks for each level; you can change them before saving.
 export function suggest(level, { cats = [], habits = [], goals = [] }) {
@@ -52,20 +49,24 @@ export function tinyVersion(kind, item) {
   return "one small task";
 }
 
-// How the paused time gets made up, one line per item, spread over `weeks` weeks.
-export function makeUpLines(items, weeks, { targets = {}, habitsById = {}, goalsById = {}, catName = (id) => id } = {}) {
-  const w = Math.max(2, Math.min(4, Number(weeks) || 3));
+// Coming back: habits and categories restart next Monday; each goal is on track or late.
+// A goal is late if any of its open tasks are due before the break ends (unless they're being moved).
+export function comingBack(items, { today, goalsById = {}, tasks = [], moved = [] }) {
+  const end = addDays(weekStart(today), 6);
   return items.map((x) => {
-    if (x.kind === "goal") return `${goalsById[x.id]?.name || "Goal"}: deadlines stay; this week's tasks come back next week.`;
-    if (x.kind === "habit") {
-      const h = habitsById[x.id] || {};
-      const perWeek = Array.isArray(h.days) ? h.days.length * Math.max(1, toNum(h.times) || 1) : Math.max(1, toNum(h.perWeek) || 1);
-      return `${h.name || "Habit"}: +${Math.ceil(perWeek / w)} a week for ${w} weeks.`;
-    }
-    const perDay = { writing: toNum(targets.writeMin), reading: toNum(targets.readMin) }[x.id];
-    if (perDay) return `${catName(x.id)}: +${Math.ceil(perDay / w)} min a day for ${w} weeks.`;
-    return `${catName(x.id)}: a little extra each week for ${w} weeks.`;
+    if (x.kind !== "goal") return { ...x, status: "restarting" };
+    const due = tasks.filter((t) => t.goal === x.id && !t.done && t.due && t.due <= end);
+    const g = goalsById[x.id] || {};
+    if (!due.length || moved.includes(x.id)) return { ...x, status: "on track", deadline: g.due || "", moving: due.length };
+    return { ...x, status: "late", count: due.length };
   });
+}
+
+// Moving a goal's tasks due during the break to the same day next week.
+export function moveDueTasks(w, goalIds, today) {
+  const end = addDays(weekStart(today), 6);
+  for (const t of w.tasks) if (goalIds.includes(t.goal) && !t.done && t.due && t.due <= end) t.due = addDays(t.due < today ? today : t.due, 7);
+  return w;
 }
 
 export function newBreathing(draft, today, id) {
@@ -73,7 +74,7 @@ export function newBreathing(draft, today, id) {
     id, week: weekStart(today), created: Date.now(),
     items: draft.items.filter((x) => !has(draft.tiny, x.kind, x.id)),
     tiny: draft.items.filter((x) => has(draft.tiny, x.kind, x.id)),
-    why: draft.why || "", note: String(draft.note || "").slice(0, 300), makeUp: Math.max(2, Math.min(4, Number(draft.makeUp) || 3)),
+    why: draft.why || "", note: String(draft.note || "").slice(0, 300), moved: [...(draft.moved || [])],
   };
 }
 

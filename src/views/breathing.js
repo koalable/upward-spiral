@@ -5,7 +5,7 @@ import { questionName, isScored } from "../scoring.js";
 import { isLadder } from "../ladder.js";
 import { normalizeRoutines } from "../routines.js";
 import { normalizeWork } from "../work.js";
-import { LEVELS, WHYS, pauseFor, makeUpFor, isPaused, makeUpLines, tinyVersion, weekEnds, itemKey } from "../breathing.js";
+import { LEVELS, WHYS, pauseFor, restartFor, restartDate, isPaused, comingBack, tinyVersion, weekEnds, itemKey } from "../breathing.js";
 import { icon, pressed } from "./components.js";
 
 export const isPausedCat = (id, date) => isPaused(settings(), "cat", id, date);
@@ -22,21 +22,23 @@ const nameOf = (x, p) => (x.kind === "cat" ? questionName(p.cats.find((q) => q.i
 const whyLabel = (id) => WHYS.find(([k]) => k === id)?.[1] || "";
 
 export function breathingBanner() {
-  const s = settings(), today = todayKey(), b = pauseFor(s, today), m = makeUpFor(s, today), p = pausable();
+  const s = settings(), today = todayKey(), b = pauseFor(s, today), back = restartFor(s, today), p = pausable();
+  const names = (list) => list.map((x) => nameOf(x, p)).join(", ");
   if (b) {
-    const names = (list) => list.map((x) => nameOf(x, p)).join(", ");
     return html`<section class="panel breath on"><div class="bhead">${icon("leaf")}<div class="max"><b>Breathing room until ${shortDate(weekEnds(today))}</b>
-        <div class="small-text">${b.items.length ? html`Paused: ${names(b.items)}. ` : ""}${b.tiny.length ? html`Smaller: ${names(b.tiny)}. ` : ""}${b.why ? `(${whyLabel(b.why)})` : ""}</div></div></div>
+        <div class="small-text">${b.items.length ? html`Paused: ${names(b.items)}. ` : ""}${b.tiny.length ? html`Smaller: ${names(b.tiny)}. ` : ""}${b.why ? `(${whyLabel(b.why)})` : ""}</div>
+        <div class="small-text">Restarts ${longish(restartDate(today))}.</div></div></div>
       <nav class="wrap"><button class="border small" data-act="brOpen">${icon("edit")}<span>Change</span></button>
         <button class="transparent small" data-act="brEnd">End it early</button></nav></section>`;
   }
-  if (m) {
-    const lines = makeUpLines(m.b.items, m.b.makeUp, { targets: s.targets, habitsById: Object.fromEntries(p.habits.map((h) => [h.id, h])), goalsById: Object.fromEntries(p.goals.map((g) => [g.id, g])), catName: (id) => nameOf({ kind: "cat", id }, p) });
-    return html`<section class="panel breath makeup"><div class="bhead">${icon("sprout")}<div class="max"><b>Making up the time · week ${m.week} of ${m.of}</b>
-      <ul class="small-text">${lines.map((x) => html`<li>${x}</li>`)}</ul></div></div></section>`;
+  if (back) {
+    return html`<section class="panel breath restart"><div class="bhead">${icon("sprout")}<div class="max"><b>Restarting after a break</b>
+      <div class="small-text">${names(back.items)}${back.tiny.length ? `, and ${names(back.tiny)} back to full size` : ""}. Welcome back.</div></div></div></section>`;
   }
   return html`<button class="breathbtn" data-act="brOpen">${icon("leaf")}<span class="max">Need some breathing room this week?</span>${icon("chevron_right")}</button>`;
 }
+
+const longish = (key) => new Date(`${key}T12:00:00`).toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
 
 // Paused categories disappear from the check-in; this says where they went.
 export function pausedNote() {
@@ -57,14 +59,14 @@ export function breathingSheet() {
   const on = (kind, id) => d.items.some((x) => x.kind === kind && x.id === id);
   const tiny = (x) => d.tiny.some((y) => itemKey(y) === itemKey(x));
   const paused = d.items.filter((x) => !tiny(x));
-  const lines = makeUpLines(paused, d.makeUp, { targets: s.targets, habitsById: Object.fromEntries(p.habits.map((h) => [h.id, h])), goalsById: Object.fromEntries(p.goals.map((g) => [g.id, g])), catName: (id) => nameOf({ kind: "cat", id }, p) });
+  const back = comingBack(paused, { today, goalsById: Object.fromEntries(p.goals.map((g) => [g.id, g])), tasks: normalizeWork(state.work).tasks, moved: d.moved || [] });
   const group = (title, list, kind) => (list.length ? html`<h4 class="brgroup">${title}</h4>${list.map((x) => pick({ kind, id: x.id }, kind === "cat" ? questionName(x) : x.name, on(kind, x.id)))}` : "");
   return html`<div class="sheetbg" data-act="brCancel"></div>
   <section class="bsheet" role="dialog" aria-modal="true" aria-label="Breathing room">
     <div class="tgrip" aria-hidden="true"></div>
     <nav class="ttop"><span class="max tlabel">Breathing room · until ${shortDate(weekEnds(today))}</span><button class="circle transparent" data-act="brCancel" aria-label="Close">${icon("close")}</button></nav>
     <h2 class="brtitle">What would help this week?</h2>
-    <p class="hint">Taking a week off something isn't failing at it. The time gets made up later, so the long game stays on track.</p>
+    <p class="hint">Taking a week off something isn't failing at it. It all restarts next week, and you'll see which goals are still on track.</p>
 
     <div class="brstep"><div class="brnum">1</div><div class="max"><h3>How much room do you need?</h3>
       <div class="brlevels">${LEVELS.map(([id, name, hint]) => html`<button class="brlevel${d.level === id ? " on" : ""}" data-act="brLevel" data-level="${id}" aria-pressed="${pressed(d.level === id)}"><b>${name}</b><span class="small-text">${hint}</span></button>`)}</div></div></div>
@@ -85,9 +87,14 @@ export function breathingSheet() {
           <span class="brbox" aria-hidden="true">${tiny(x) ? icon("check") : ""}</span><span class="max">${nameOf(x, p)}<span class="small-text">${tiny(x) ? "Smaller: " : "Could be "}${tinyVersion(x.kind, item || {})}</span></span></button>`;
       })}</div></div>
 
-    <div class="brstep"><div class="brnum">5</div><div class="max"><h3>Making up the time</h3>
-      <div class="brwhys">${[2, 3, 4].map((n) => html`<button class="chip ${d.makeUp === n ? "fill" : "border"}" data-act="brMakeUp" data-n="${n}" aria-pressed="${pressed(d.makeUp === n)}">Over ${n} weeks</button>`)}</div>
-      ${lines.length ? html`<ul class="brplan">${lines.map((x) => html`<li>${x}</li>`)}</ul>` : html`<p class="hint">Everything you picked is staying on in a smaller form, so there's nothing to make up.</p>`}
+    <div class="brstep"><div class="brnum">5</div><div class="max"><h3>Coming back</h3>
+      ${paused.length ? html`<ul class="brback">${back.map((x) => html`<li class="${x.status.replace(" ", "")}">
+        <span class="bstat">${x.status === "late" ? "Late" : x.status === "on track" ? "On track" : "Restarting"}</span>
+        <span class="max"><b>${nameOf(x, p)}</b> ${x.status === "restarting" ? html`restarts ${longish(restartDate(today))}.`
+          : x.status === "late" ? html`${x.count} task${x.count === 1 ? "" : "s"} due this week.`
+          : html`${x.moving ? "Moved to next week. " : ""}${x.deadline ? `Still on track for ${shortDate(x.deadline)}.` : "No deadline."}`}</span>
+        ${x.kind === "goal" && (x.status === "late" || x.moving) ? html`<button class="chip ${x.moving ? "fill" : "border"} small" data-act="brMove" data-id="${x.id}" aria-pressed="${pressed(Boolean(x.moving))}">${x.moving ? "Moving" : "Move to next week"}</button>` : ""}</li>`)}</ul>`
+        : html`<p class="hint">Everything you picked stays on in a smaller form.</p>`}
       <p class="hint small">Paused days show as paused, not missed, so streaks and momentum don't drop.</p></div></div>` : ""}
 
     <nav class="wrap bracts"><button data-act="brSave" ${d.items.length ? "" : "disabled"}>${icon("leaf")}<span>Take the breathing room</span></button>

@@ -4,14 +4,15 @@ import { answers, commitDay, saveSettings, saveMember } from "../day.js";
 import { builtinAsCustom, scoredQuestions } from "../scoring.js";
 import { clone, getPath, setPath, isSet, toNum, todayKey, newId } from "../util.js";
 import { ui, render, patch } from "../render.js";
-import { store, paths } from "../store.js";
+import { store, paths, save } from "../store.js";
 import { isLadder, ladderStatus, levelOf } from "../ladder.js";
 import { LADDER_TEMPLATES, DEFAULT_WEEKS_TO_LEVEL } from "../constants.js";
 import { todayView, patchToday } from "../views/today.js";
 import { reflectView, filterJournal } from "../views/journal.js";
 import { customizeView, accountView } from "../views/settings.js";
 import { normalizeLayout, applyPreset, toggleIn } from "../layout.js";
-import { suggest, newBreathing, pauseFor, itemKey } from "../breathing.js";
+import { suggest, newBreathing, pauseFor, itemKey, moveDueTasks } from "../breathing.js";
+import { normalizeWork } from "../work.js";
 import { pausable } from "../views/breathing.js";
 import { weekStart } from "../util.js";
 import { questionsView, readQuestionForm } from "../views/questions.js";
@@ -88,8 +89,8 @@ const toggleItem = (list, x) => (list.some((y) => itemKey(y) === itemKey(x)) ? l
 const actions = {
   brOpen() {
     const b = pauseFor(settings(), todayKey());
-    state.breath = b ? { level: "", items: [...b.items, ...b.tiny], tiny: [...b.tiny], why: b.why, note: b.note, makeUp: b.makeUp }
-      : { level: "", items: [], tiny: [], why: "", note: "", makeUp: 3 };
+    state.breath = b ? { level: "", items: [...b.items, ...b.tiny], tiny: [...b.tiny], why: b.why, note: b.note, moved: [...(b.moved || [])] }
+      : { level: "", items: [], tiny: [], why: "", note: "", moved: [] };
   },
   brCancel() { state.breath = null; },
   brLevel(el) { Object.assign(draft(), { level: el.dataset.level, items: suggest(el.dataset.level, pausable()), tiny: [] }); },
@@ -100,10 +101,19 @@ const actions = {
   },
   brTiny(el) { draft().tiny = toggleItem(draft().tiny, { kind: el.dataset.kind, id: el.dataset.id }); },
   brWhy(el) { draft().why = draft().why === el.dataset.why ? "" : el.dataset.why; },
-  brMakeUp(el) { draft().makeUp = Number(el.dataset.n); },
+  brMove(el) { const id = el.dataset.id; draft().moved = draft().moved.includes(id) ? draft().moved.filter((x) => x !== id) : [...draft().moved, id]; },
   brSave() {
     const s = settings(), week = weekStart(todayKey());
-    s.breathing = [...(s.breathing || []).filter((b) => b.week !== week), newBreathing(draft(), todayKey(), `br${Date.now().toString(36)}`)];
+    const before = pauseFor(s, todayKey())?.moved || [];
+    const b = newBreathing(draft(), todayKey(), `br${Date.now().toString(36)}`);
+    b.moved = b.moved.filter((id) => b.items.some((x) => x.kind === "goal" && x.id === id));
+    s.breathing = [...(s.breathing || []).filter((x) => x.week !== week), b];
+    // Late goals you chose to move: their tasks due this week go to the same day next week (once).
+    const toMove = b.moved.filter((id) => !before.includes(id));
+    if (toMove.length) {
+      state.work = moveDueTasks(clone(normalizeWork(state.work)), toMove, todayKey());
+      save(paths.work(state.uid), state.work, 0);
+    }
     state.breath = null;
     saveSettings();
     window.scrollTo({ top: 0, behavior: "smooth" });

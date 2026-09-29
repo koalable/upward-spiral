@@ -73,5 +73,11 @@ Words: **habit** = one recurring action; **ritual** = a saved sequence of habits
 - Done and live: rings, streaks on Progress, half units, the app at app.kstarr.com, notifications server, linked accounts, redirects.
 - Waiting on people: Karla installs the app on her iPhone, turns on notifications and sends a test; Karla links hello@kstarr.com; Erik links mxfenrir@gmail.com (both may need to close and reopen the app once).
 
+## In progress (branch `checkin-reshuffle`, not released; preview only)
+- Settings behind a gear (Customize, Categories, Targets & scoring, Notifications, Account); `src/layout.js` renames/hides pages, tabs and Today sections (Everything / Simple presets).
+- Check-in = Today · Meds · Reflect. Today: rings, "On your plate" (to-dos + Work/House tasks), meds, fold-up energy groups with points, "Close the day".
+- **Breathing room** (`src/breathing.js`, `src/views/breathing.js`): pause any mix of categories, habits, goals for the rest of the week; asks how much room, what, why, and whether a smaller version would do. Language is only **on track / late / restarting after a break** (Karla: no "making it up"). Late goals can move this week's tasks to next week. Paused things leave Today, rings and today's picks. Still to do: streaks/momentum/calendars treat paused days as paused; habits page and notifications skip paused habits.
+- Rosa (pretend beta tester) in `dist/preview-rosa-*.html` (`seedRosa` in `src/preview.js`).
+
 ## Not wanted (for now)
 - Sharing "tasks done today" with the group; season week on Group; rituals on the Check-in page.

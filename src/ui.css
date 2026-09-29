@@ -682,3 +682,12 @@
 #wlc.ui .brplan{margin:6px 0;padding-left:18px}
 #wlc.ui .bracts{gap:8px;padding-top:12px;border-top:1px solid var(--border)}
 @media(max-width:420px){#wlc.ui .brlevels{grid-template-columns:1fr}}
+#wlc.ui .brback{list-style:none;margin:0 0 8px;padding:0}
+#wlc.ui .brback li{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;padding:10px 0;border-top:1px solid var(--border)}
+#wlc.ui .brback li:first-child{border-top:0}
+#wlc.ui .bstat{flex:none;font-size:.72em;font-weight:600;letter-spacing:.08em;text-transform:uppercase;padding:3px 8px;border-radius:99px;border:1px solid var(--control);color:var(--muted)}
+#wlc.ui .brback li.ontrack .bstat{color:var(--good);border-color:var(--good)}
+#wlc.ui .brback li.late .bstat{color:var(--bad);border-color:var(--bad)}
+#wlc.ui .breath.restart .bhead>i{color:var(--good)}
+#wlc.ui .brback li>.max{flex:1 1 170px}
+#wlc.ui .brback li>button{margin-left:auto}
