@@ -132,11 +132,6 @@ export const goalTheme = (w, goalId) => {
   const i = w.goals.findIndex((g) => g.id === goalId);
   return i < 0 ? GOAL_THEMES[0] : GOAL_THEMES[i % GOAL_THEMES.length];
 };
-// A goal's milestones take the next pastels along, so neighbouring bars differ.
-export const milestoneTheme = (w, goalId, n) => {
-  const i = Math.max(0, w.goals.findIndex((g) => g.id === goalId));
-  return GOAL_THEMES[(i + 1 + n) % GOAL_THEMES.length];
-};
 
 // Milestone tile icons (Lucide names). A milestone can pick one; otherwise it's guessed from its name.
 export const MS_ICONS = [

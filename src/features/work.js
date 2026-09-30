@@ -70,18 +70,19 @@ export default {
     wNew(el) {
       const d = el.dataset;
       openSheet("work", { kind: d.kind, goal: d.goal, ms: d.ms || "" });
-      state.route = { ...state.route, tab: "wgoals" }; // stay on the same goal page, if any
+      // Inside a goal the form opens right there; from the lists it opens on Goals.
+      if (!state.route.goal) state.route = { tab: "wgoals" };
       setTimeout(() => { ui.view.querySelector("#wform")?.scrollIntoView({ behavior: "smooth", block: "start" }); ui.view.querySelector("#w-name")?.focus(); }, 0);
     },
     wEdit(el) {
       const { kind, id } = el.dataset;
       openSheet("work", { kind, ...clone(workData()[LIST[kind]].find((x) => x.id === id)) });
-      state.route = { ...state.route, tab: "wgoals" }; // stay on the same goal page, if any
+      // Inside a goal the form opens right there; from the lists it opens on Goals.
+      if (!state.route.goal) state.route = { tab: "wgoals" };
             setTimeout(() => ui.view.querySelector("#wform")?.scrollIntoView({ behavior: "smooth", block: "start" }), 0);
     },
     wOpen(el) {
-      state.route = { tab: state.tab, goal: el.dataset.id };
-            setTimeout(() => window.scrollTo({ top: 0 }), 0);
+      state.route = { tab: state.tab, goal: el.dataset.id }; // opens over the list; the list keeps its place
     },
     wClose() { state.route = { tab: state.tab }; closeSheet(); },
     wTask(el) { openSheet("task", { id: el.dataset.id }); },

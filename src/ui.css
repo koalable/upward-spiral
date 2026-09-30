@@ -398,11 +398,11 @@
 #wlc.ui .folder{margin:4px 0 8px}
 #wlc.ui .ftabs{display:flex;align-items:flex-end;gap:4px;overflow-x:auto;padding:0 10px;scroll-padding-inline:10px;scrollbar-width:none}
 #wlc.ui .ftabs::-webkit-scrollbar{display:none}
-#wlc.ui .ftabs .ftab{flex:none;height:auto;display:flex;align-items:center;gap:7px;margin:0;padding:9px 12px 10px;border:0;border-radius:14px 14px 0 0;background:var(--p);color:var(--fg);font:inherit;white-space:nowrap;--bri:.85;box-shadow:inset 0 -6px 8px -6px rgb(0 0 0 / .3)}
+#wlc.ui .ftabs .ftab{flex:none;height:auto;display:flex;align-items:center;gap:7px;margin:0;padding:9px 12px 10px;border:0;border-radius:14px 14px 0 0;background:var(--p);color:var(--fg);font:inherit;white-space:nowrap;opacity:.55;box-shadow:inset 0 -6px 8px -6px rgb(0 0 0 / .3)}
 #wlc.ui .ftabs .ftab span{font:400 1.02em/1 var(--serif);text-transform:uppercase;letter-spacing:.05em}
 #wlc.ui .ftabs .ftab small{font-size:.78em;font-variant-numeric:tabular-nums;display:flex;align-items:center;gap:4px;opacity:.85}
 #wlc.ui .ftabs .ftab i{color:var(--pd)}
-#wlc.ui .ftabs .ftab.on{padding-top:13px;padding-bottom:12px;--bri:1;box-shadow:none;position:relative;z-index:1}
+#wlc.ui .ftabs .ftab.on{padding-top:13px;padding-bottom:12px;opacity:1;box-shadow:none;position:relative;z-index:1}
 #wlc.ui .ftab .late,#wlc.ui .fcard .late{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--bad)}
 #wlc.ui .fcard{background:var(--p);border-radius:20px;padding:14px 10px 10px;box-shadow:0 12px 24px -16px rgb(0 0 0 / .5);animation:wlc-front .22s ease-out}
 #wlc.ui .fhead{display:flex;align-items:flex-start;gap:12px;padding:0 4px 12px 6px}
@@ -436,11 +436,8 @@
 @keyframes wlc-up{from{transform:translateY(40%);opacity:.4}to{transform:none;opacity:1}}
 @keyframes wlc-fade{from{opacity:0}to{opacity:1}}
 /* Opening a goal: its page slides up a little. */
-#wlc.ui .gpage{animation:wlc-front .25s ease-out}
-@media(prefers-reduced-motion:reduce){#wlc.ui .fcard,#wlc.ui .tsheet,#wlc.ui .sheetbg,#wlc.ui .gpage{animation:none}}
+@media(prefers-reduced-motion:reduce){#wlc.ui .fcard,#wlc.ui .tsheet,#wlc.ui .sheetbg,#wlc.ui .gpanel{animation:none}}
 /* A goal's own page */
-#wlc.ui .gpage{margin-bottom:16px}
-#wlc.ui .gpnav{margin:0 0 4px -8px}
 #wlc.ui .gptop{display:flex;align-items:flex-end;gap:12px;margin-bottom:12px}
 #wlc.ui .gsun{flex:none;width:104px;height:104px;border-radius:50%;display:grid;place-items:center;background:var(--p);color:var(--pd);font-size:3.1em;box-shadow:0 10px 30px -18px rgb(0 0 0 / .6)}
 #wlc.ui .gptitle{flex:1;min-width:0;font:400 3em/.95 var(--serif);margin:0;overflow-wrap:anywhere}
@@ -694,3 +691,15 @@
 #wlc.ui .pgtop b{font:400 1.25em/1.1 var(--serif)}
 #wlc.ui .projprog .ptrack i{background:var(--p)}
 #wlc.ui .projprog .pbar{margin-bottom:4px}
+
+/* A goal opens as its own screen sliding in over the list (the list keeps its place underneath). */
+#wlc.ui .gpanel{position:fixed;inset:0;z-index:15;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;background:var(--bg);animation:wlc-push .24s cubic-bezier(.2,.8,.2,1)}
+#wlc.ui .gpanel .gpage{max-width:720px;margin:0 auto;padding:4px 16px 96px}
+#wlc.ui .gpbar{position:sticky;top:0;z-index:2;display:flex;align-items:center;gap:6px;padding:calc(env(safe-area-inset-top) + 6px) 8px 6px;background:color-mix(in srgb,var(--bg) 92%,transparent);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border-bottom:1px solid var(--border)}
+#wlc.ui .gpbar button{color:var(--fg);gap:2px;padding:0 10px 0 4px;font-size:1em}
+#wlc.ui .gpbar b{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:center;margin-right:84px}
+#wlc.ui .gpanel .gptop{margin-top:14px}
+#wlc.ui .gpanel .mcard.solo{border-radius:16px;border:1px solid var(--border);overflow:hidden;margin-bottom:8px}
+@keyframes wlc-push{from{transform:translateX(24%);opacity:.3}to{transform:none;opacity:1}}
+html:has(#wlc .gpanel){overflow:hidden}
+@media (display-mode: standalone){#wlc.ui .gpanel .gpage{padding-bottom:calc(env(safe-area-inset-bottom) + 110px)}}

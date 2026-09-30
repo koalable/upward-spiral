@@ -171,8 +171,8 @@ export function render() {
   if (!state.loaded) return showScreen(`<p class="muted">${escapeText("Loading…")}</p>`);
   if (!state.members[state.uid] && state.tab !== "group") return showScreen(joinView());
   const view = (page.tabs.find(([id]) => id === state.tab) || page.tabs[0])[2];
-  // Same tab and goal = same screen (switching milestone tabs just updates it).
-  showScreen(view(), `${page.id}|${state.route.tab}|${state.route.goal || ""}`);
+  // Same tab = same screen: opening a goal (it slides over the list) or switching milestones just updates it.
+  showScreen(view(), `${page.id}|${state.route.tab}`);
   if (moved) window.scrollTo(0, scrolled[page.id] || 0);
   patch();
 }

@@ -1,11 +1,12 @@
 // Work: Today (a few tasks, picked for you) and Goals (goal → milestones → tasks, with progress).
 import { html, shortDate, longDate, clock, atTime, addDays, daysBetween } from "../util.js";
 import { state, sheet } from "../state.js";
-import { normalizeWork, todayState, todayPicks, blocker, progress, countdown, goalTheme, milestoneTheme, msIcon, goalIcon, MS_ICONS, saturation, staleTasks, PUSH_WHYS, ARCHIVE_WHYS } from "../work.js";
+import { normalizeWork, todayState, todayPicks, blocker, progress, countdown, goalTheme, msIcon, goalIcon, MS_ICONS, saturation, staleTasks, PUSH_WHYS, ARCHIVE_WHYS } from "../work.js";
 import { timerFor, isRunning, isUp, msLeft, minutesLeft, countdownText, durationText } from "../timer.js";
 import { pressed, saveStatus, icon } from "./components.js";
 import { pausedIds } from "../breathing.js";
 import { read } from "../docs.js";
+import { normalizeLayout, pageLabel } from "../layout.js";
 
 export const workData = () => read("work");
 // Goals on a breathing-room pause this week: their tasks sit out of today's list.
@@ -103,7 +104,6 @@ export function workTodayView() {
       <nav><button data-act="wNew" data-kind="goal">${icon("add")}<span>Add a goal</span></button></nav></article>`;
   }
   const g = pageGoal(w);
-  if (g) return html`${goalPage(w, g, key)}${taskSheet(w, key)}`;
   const tidy = tidyCard(w, key);
   const t = todayState(w, key), picks = todayPicks(w, key, pausedGoals(key)), pins = t.pins || [];
   const done = picks.filter((x) => x.done).length, all = picks.length && done === picks.length;
@@ -119,7 +119,7 @@ export function workTodayView() {
     <nav class="wrap tasksday"><span class="small-text">Tasks a day:</span>${[3, 4, 5].map((n) => html`<button class="chip ${n === w.perDay ? "fill" : "border"}" data-act="wPerDay" data-n="${n}" aria-pressed="${pressed(n === w.perDay)}">${n}</button>`)}</nav>
     <p class="small-text workhint">Picked for you: overdue first, then whatever's due soonest. Unfinished tasks carry over. ${icon("pin")} keeps a task on today's list; ${icon("swap")} swaps it for the next one. Tasks waiting on another task stay hidden until that one's done. Tasks with a start time go to the top. ${icon("play_arrow")} starts a timer for what's left of the estimate (25 minutes if there isn't one).</p>
     <h3 class="gsection">Goals</h3>
-    ${goalDeck(w, key)}${taskSheet(w, key)}`;
+    ${goalDeck(w, key)}${g ? goalPage(w, g, key) : ""}${taskSheet(w, key)}`;
 }
 
 // ---------- goals ----------
@@ -150,11 +150,19 @@ function sectionsFor(w, g) {
   return out;
 }
 
-// Milestones as folder tabs. The picked tab's card comes to the front with that milestone's tasks.
+// Milestones as folder tabs, all in the goal's own colour (the picked one full, the rest quieter).
+// A goal with no milestones skips the tabs and shows its task list.
 function milestoneTabs(w, g, key) {
   const secs = sectionsFor(w, g);
   if (!secs.length) return html`<p class="small-text mhint">No milestones or tasks yet.</p>`;
-  const themed = secs.map((x, n) => ({ ...x, theme: milestoneTheme(w, g.id, n) }));
+  const theme = goalTheme(w, g.id);
+  const themed = secs.map((x) => ({ ...x, theme }));
+  if (themed.length === 1 && !themed[0].m) {
+    const tasks = [...themed[0].tasks].sort((a, b) => Boolean(a.done) - Boolean(b.done) || (a.due || "9999").localeCompare(b.due || "9999"));
+    return html`<div class="mcard plain solo">
+      <ul class="list">${tasks.map((t) => taskRow(w, t, key))}</ul>
+      <button class="transparent addtask" data-act="wNew" data-kind="task" data-goal="${g.id}" data-ms="">${icon("add")}<span>Add task</span></button></div>`;
+  }
   const firstOpen = themed.find((x) => x.tasks.some((t) => !t.done)) || themed[0];
   const x = themed.find((y) => y.id === state.route.ms) || firstOpen;
   const p = progress(x.tasks, key), m = x.m;
@@ -205,13 +213,17 @@ function goalDeck(w, key) {
 function goalPage(w, g, key) {
   const p = progress(w.tasks.filter((t) => t.goal === g.id), key);
   const extra = [p.hoursLeft ? `${p.hoursLeft}h left` : "", p.spent ? `${durationText(p.spent)} spent` : ""].filter(Boolean).join(" · ");
-  return html`<section class="gpage ${goalTheme(w, g.id)}">
-    <nav class="gpnav"><button class="transparent" data-act="wClose">${icon("arrow_back")}<span>All goals</span></button></nav>
+  const back = pageLabel(normalizeLayout(state.settings?.layout), "work", "Projects");
+  return html`<section class="gpanel ${goalTheme(w, g.id)}" role="dialog" aria-label="${g.name}">
+    <nav class="gpbar"><button class="transparent" data-act="wClose">${icon("chevron_left")}<span>${back}</span></button><b class="max">${g.name}</b></nav>
+    <div class="gpage">
+    ${sheet("work") ? workForm(w) : ""}
     <div class="gptop"><h2 class="gptitle">${g.name}</h2><span class="gsun satbg" style="--sat:${saturation(p.pct)}" aria-hidden="true">${icon(goalIcon(g))}</span></div>
     <div class="gpmeta">${g.due ? `${shortDate(g.due)} · ${countdown(g.due, key)}` : "Ongoing"} ${p.total ? status(p, g.due, key) : ""}</div>
     <div class="gpprog">${pbar(p)}<div class="gprow"><span>${p.done}/${p.total} tasks</span>${extra ? html`<span>${extra}</span>` : ""}</div></div>
     ${milestoneTabs(w, g, key)}
     ${goalButtons(g)}
+    <p class="small-text">${saveStatus()}</p></div>
   </section>`;
 }
 
@@ -226,7 +238,7 @@ function taskSheet(w, key) {
   const est = (Number(t.hours) || 0) * 60, spent = Number(t.spent) || 0;
   const when = [t.at ? html`<span class="tpill">${icon("timer")}${startAt(t)}</span>` : "", t.due ? html`<span class="tpill">${icon("event")}${dueLabel(t, key)}</span>` : ""];
   return html`<div class="sheetbg" data-act="wTaskClose"></div>
-  <section class="tsheet ink satbg ${m ? milestoneTheme(w, t.goal, sectionsFor(w, g || {}).findIndex((x) => x.id === t.ms)) : goalTheme(w, t.goal)}" style="--sat:${saturation(progress(w.tasks.filter((x) => (m ? x.ms === m.id : x.goal === t.goal)), key).pct)}" role="dialog" aria-modal="true" aria-label="${t.name}">
+  <section class="tsheet ink satbg ${goalTheme(w, t.goal)}" style="--sat:${saturation(progress(w.tasks.filter((x) => (m ? x.ms === m.id : x.goal === t.goal)), key).pct)}" role="dialog" aria-modal="true" aria-label="${t.name}">
     <div class="tgrip" aria-hidden="true"></div>
     <nav class="ttop"><span class="tpath small-text max">${[g?.name, m?.name].filter(Boolean).join(" › ")}</span>
       <button class="circle transparent" data-act="wTaskClose" aria-label="Close">${icon("close")}</button></nav>
@@ -286,7 +298,6 @@ function importBox(open) {
 
 export function workGoalsView() {
   const w = workData(), key = state.date, g = pageGoal(w);
-  if (g) return html`${sheet("work") ? workForm(w) : ""}${goalPage(w, g, key)}${taskSheet(w, key)}<p class="small-text">${saveStatus()}</p>`;
-  return html`${workForm(w)}${importBox(!w.goals.length)}${goalDeck(w, key)}${taskSheet(w, key)}
+  return html`${g ? "" : workForm(w)}${importBox(!w.goals.length)}${goalDeck(w, key)}${g ? goalPage(w, g, key) : ""}${taskSheet(w, key)}
     <p class="small-text">Private to you. Tap a goal to open it, and a task for its details. A lock means a task is waiting on another one. ${saveStatus()}</p>`;
 }
