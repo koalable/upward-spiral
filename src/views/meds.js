@@ -61,16 +61,18 @@ function medForm() {
     <label class="full">Notes<input class="field" id="med-notes" data-draft="notes" maxlength="200" value="${e.notes || ""}" placeholder="With food, etc."></label>
   </div>
   ${hasQuestion("substances") ? html`<div class="targets"><label class="full">Each log adds to my Substances score
-    <select class="field" id="med-counts" data-draft="counts" data-num>${[[0, "Nothing"], [1, "1 unit"], [0.5, "½ unit (split doses)"]].map(([v, label]) => html`<option value="${v}" ${substanceUnits(e.counts) === v ? "selected" : ""}>${label}</option>`)}</select></label></div>` : ""}
+    <select class="field" id="med-counts" data-draft="counts" data-num>${[[0, "Nothing"], [1, "1 unit"], [0.5, "½ unit (split doses)"], [0.25, "¼ unit"]].map(([v, label]) => html`<option value="${v}" ${substanceUnits(e.counts) === v ? "selected" : ""}>${label}</option>`)}</select></label></div>` : ""}
   <p class="hint small">Use the numbers your doctor or pharmacist gave you. The app keeps track; it doesn't check doses.</p>
   <div class="row"><button class="btn" data-act="medSave">Save</button><button class="btn ghost" data-act="medCancel">Cancel</button></div></div>`;
 }
+
+const UNIT_LABEL = { 1: "1 unit", 0.5: "½ unit", 0.25: "¼ unit" };
 
 function listItem(m, i) {
   const times = (m.times || []).filter(Boolean);
   return html`<li class="qrow">
     <div class="qmain"><b>${m.name}</b>${m.dose ? html`<span class="muted">${doseLabel(m.dose, m.unit)}</span>` : ""}
-      <span class="tag">${MED_KINDS[m.kind] || ""}</span>${substanceUnits(m.counts) ? html`<span class="tag on">Counts as ${substanceUnits(m.counts) === 0.5 ? "½ unit" : "1 unit"}</span>` : ""}</div>
+      <span class="tag">${MED_KINDS[m.kind] || ""}</span>${substanceUnits(m.counts) ? html`<span class="tag on">Counts as ${UNIT_LABEL[substanceUnits(m.counts)] || `${substanceUnits(m.counts)} unit`}</span>` : ""}</div>
     <div class="qbtns"><button class="linkbtn" data-act="medEdit" data-index="${i}">Edit</button><button class="x" data-act="medRemove" data-index="${i}" aria-label="Remove ${m.name}">×</button></div>
     ${times.length ? html`<div class="calrow small muted">Reminds at ${times.map((t) => clock(atTime(todayKey(), t))).join(", ")}</div>` : ""}
   </li>`;

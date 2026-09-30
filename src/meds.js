@@ -64,7 +64,7 @@ function saveLogDoc(key, doc) {
   save(paths.medlog(state.uid, key), doc, 0);
 }
 
-// How many Substances units one log adds: 1, ½, or 0. Older saves used `true` for 1.
+// How many Substances units one log adds: 1, ½, ¼, or 0. Older saves used `true` for 1.
 export const substanceUnits = (x) => (x === true ? 1 : Math.max(0, toNum(x)));
 
 // Items marked "counts as substance" add their units to the Substances question on that day.
