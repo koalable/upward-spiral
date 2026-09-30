@@ -2,7 +2,7 @@
 import { state, settings, findQuestion, isEditable } from "./state.js";
 import { dayFor, commitDay } from "./day.js";
 import { save, paths } from "./store.js";
-import { clone, newId, isSet, toNum, getPath, setPath, dateKey, todayKey, atTime, clock, duration } from "./util.js";
+import { clone, newId, isSet, toNum, getPath, setPath, dateKey, todayKey, atTime, hhmmOf, clock, duration } from "./util.js";
 import { HOUR_MS } from "./constants.js";
 
 export const medList = () => settings().meds;
@@ -108,11 +108,21 @@ export function deleteMedLog(key, id) {
   if (entry?.counts) adjustSubstances(-substanceUnits(entry.counts), entry.at);
 }
 
-export function updateMedLog(key, id, { time, dose }) {
+// Changing a log's date moves it to that day's log (and its substance units with it, where that day can
+// still be edited). Dates can't be in the future.
+export function updateMedLog(key, id, { date, time, dose }) {
   const doc = state.medlog[key] && clone(state.medlog[key]);
   const entry = doc?.items.find((x) => x.id === id);
   if (!entry) return;
-  if (time) entry.at = atTime(key, time);
+  const day = date && date <= todayKey() ? date : key;
+  const before = entry.at;
+  entry.at = atTime(day, time || hhmmOf(entry.at));
   entry.dose = dose;
+  if (day === key) return saveLogDoc(key, doc);
+  doc.items = doc.items.filter((x) => x.id !== id);
   saveLogDoc(key, doc);
+  const dest = state.medlog[day] ? clone(state.medlog[day]) : { date: day, items: [] };
+  dest.items.push(entry);
+  saveLogDoc(day, dest);
+  if (entry.counts) { adjustSubstances(-substanceUnits(entry.counts), before); adjustSubstances(substanceUnits(entry.counts), entry.at); }
 }

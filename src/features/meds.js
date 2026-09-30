@@ -55,7 +55,7 @@ export default {
     medEditLog(el) { openSheet("log", { id: el.dataset.id }); state.toast = null; state.tab = "meds"; },
     medCancelLog: closeSheet,
     medSaveLog(el) {
-      updateMedLog(el.dataset.day, el.dataset.id, { time: $("#log-time").value, dose: $("#log-dose").value.trim() });
+      updateMedLog(el.dataset.day, el.dataset.id, { date: $("#log-date").value, time: $("#log-time").value, dose: $("#log-dose").value.trim() });
       closeSheet();
      
     },

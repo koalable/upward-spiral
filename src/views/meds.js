@@ -1,6 +1,6 @@
 // Meds & substances: one-tap logging, the personal list (with reminder times), and history.
 import { html, todayKey, addDays, longDate, clock, hhmmOf, atTime } from "../util.js";
-import { MED_KINDS, TOAST_MS } from "../constants.js";
+import { MED_KINDS, TOAST_MS, MEDLOG_DAYS } from "../constants.js";
 import { state, hasQuestion } from "../state.js";
 import { sheet } from "../state.js";
 import { medList, activeMeds, logsOn, medStatus, doseLabel, substanceUnits } from "../meds.js";
@@ -78,6 +78,7 @@ function listItem(m, i) {
 
 function logRow(x, key) {
   if (sheet("log")?.id === x.id) return html`<li class="logrow editing">
+    <input class="field" type="date" id="log-date" value="${key}" max="${todayKey()}" min="${addDays(todayKey(), -MEDLOG_DAYS)}" aria-label="Date">
     <input class="field" type="time" id="log-time" value="${hhmmOf(x.at)}" aria-label="Time">
     <input class="field" id="log-dose" value="${x.dose || ""}" aria-label="Dose" placeholder="Dose"><span class="muted">${x.unit || ""}</span>
     <button class="btn" data-act="medSaveLog" data-day="${key}" data-id="${x.id}">Save</button><button class="linkbtn" data-act="medCancelLog">Cancel</button></li>`;
