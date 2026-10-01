@@ -5,7 +5,7 @@ import { dashboardTodos } from "./todos.js";
 import { todayPicks, goalTheme, staleTasks } from "../work.js";
 import { read } from "../docs.js";
 import { pausedIds } from "../breathing.js";
-import { pressed, icon } from "./components.js";
+import { pressed, icon, fold } from "./components.js";
 import { state } from "../state.js";
 import { normalizeLayout, pageLabel, pageIcon, pageHidden, tabHidden } from "../layout.js";
 
@@ -30,5 +30,5 @@ function workCard() {
 // Check-in → Today: one "On your plate" panel with today's to-dos and today's Work (or House) tasks.
 export function dashboardView() {
   const l = normalizeLayout(state.settings?.layout), todos = !pageHidden(l, "routines") && !tabHidden(l, "todos");
-  return html`<section class="panel plate"><h2>On your plate</h2>${todos ? dashboardTodos() : ""}${workCard()}</section>`;
+  return fold("plate", "panel plate", html`<h2>On your plate</h2>`, html`${todos ? dashboardTodos() : ""}${workCard()}`);
 }

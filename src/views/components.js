@@ -1,6 +1,7 @@
 // Reusable pieces of markup. Everything returns escaped Html via the html`` tag.
 import { html } from "../util.js";
 import { state, memberName } from "../state.js";
+import { getPref } from "../prefs.js";
 
 export const pressed = (on) => (on ? "true" : "false");
 
@@ -18,6 +19,14 @@ export const choices = (path, options, value, tone = "") => html`
   <span class="seg ${tone}">${options.map(([v, label]) => html`<button data-act="choose" data-answer="${path}" data-value="${v}" aria-pressed="${pressed(value !== undefined && value !== "" && String(value) === String(v))}">${label}</button>`)}</span>`;
 
 export const zeroToFour = [0, 1, 2, 3, 4].map((n) => [n, String(n)]);
+
+// A section whose heading folds it away. Folded ones are remembered on this device (pref "folded").
+// tag: "cat" (check-in card) or "panel". head: the heading row's contents. id: what's remembered.
+export const foldedSet = () => new Set(String(getPref("folded") || "").split(",").filter(Boolean));
+export function fold(id, cls, head, body) {
+  const open = !foldedSet().has(id);
+  return html`<details class="${cls} fold" data-fold="${id}" ${open ? "open" : ""}><summary class="cat-head foldhead">${head}<span class="foldchev" aria-hidden="true">${icon("expand_more")}</span></summary>${body}</details>`;
+}
 
 export const cardHead = (title, id) => html`<div class="cat-head"><h2>${title}</h2>${id ? html`<span class="pts" data-points="${id}"></span>` : ""}</div>`;
 

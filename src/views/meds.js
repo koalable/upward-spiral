@@ -4,7 +4,7 @@ import { MED_KINDS, TOAST_MS, MEDLOG_DAYS } from "../constants.js";
 import { state, hasQuestion } from "../state.js";
 import { sheet } from "../state.js";
 import { medList, activeMeds, logsOn, medStatus, doseLabel, substanceUnits } from "../meds.js";
-import { saveStatus } from "./components.js";
+import { saveStatus , fold } from "./components.js";
 
 export const toastVisible = () => state.toast && Date.now() - state.toast.when < TOAST_MS;
 
@@ -28,10 +28,8 @@ function logButtons() {
 // The compact card on Today.
 export function medQuickLog() {
   if (!medList().length) return "";
-  return html`<section class="cat medcard">
-    <div class="cat-head"><h2>Meds &amp; substances</h2><button class="linkbtn" data-act="openTab" data-tab="meds">Open</button></div>
-    <p class="hint">Tap to log it now. Private to you.</p>
-    <div id="live-toast">${toast()}</div>${logButtons()}</section>`;
+  return fold("meds", "cat medcard", html`<h2>Meds &amp; substances</h2><button class="linkbtn" data-act="openTab" data-tab="meds">Open</button>`,
+    html`<p class="hint">Tap to log it now. Private to you.</p><div id="live-toast">${toast()}</div>${logButtons()}`);
 }
 
 export function patchMedStatus(view) {

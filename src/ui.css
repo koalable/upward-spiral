@@ -703,3 +703,13 @@
 @keyframes wlc-push{from{transform:translateX(24%);opacity:.3}to{transform:none;opacity:1}}
 html:has(#wlc .gpanel){overflow:hidden}
 @media (display-mode: standalone){#wlc.ui .gpanel .gpage{padding-bottom:calc(env(safe-area-inset-bottom) + 110px)}}
+/* Foldable sections on Check-in → Today: tap the heading */
+#wlc.ui details.fold>summary{list-style:none;cursor:pointer}
+#wlc.ui details.fold>summary::-webkit-details-marker{display:none}
+#wlc.ui .foldhead{display:flex;align-items:center;gap:8px}
+#wlc.ui .foldhead h2{flex:1;margin:0}
+#wlc.ui .foldchev{color:var(--muted);transition:transform .2s;display:grid;place-items:center}
+#wlc.ui details.fold:not([open])>.foldhead .foldchev{transform:rotate(-90deg)}
+#wlc.ui details.fold:not([open]){padding-bottom:12px}
+#wlc.ui details.fold.cat:not([open])>.foldhead{margin-bottom:0}
+@media(prefers-reduced-motion:reduce){#wlc.ui .foldchev{transition:none}}

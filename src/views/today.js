@@ -5,7 +5,7 @@ import { isScored, questionRule, writingMinutes, workoutMinutes } from "../scori
 import { state, settings, isEditable, scoreOf } from "../state.js";
 import { ringsView, patchRings } from "./rings.js";
 import { answers } from "../day.js";
-import { toggle, stepper, choices, zeroToFour, cardHead, saveStatus, icon } from "./components.js";
+import { toggle, stepper, choices, zeroToFour, cardHead, saveStatus, icon, fold } from "./components.js";
 import { GROUPS, groupOf, iconOf, themeOf } from "../energy.js";
 import { dashboardView } from "./dashboard.js";
 import { medQuickLog, patchMedStatus } from "./meds.js";
@@ -81,7 +81,8 @@ function questionCard(q, a, t, lead, themed = false) {
   const name = q.kind === "builtin" ? BUILTINS[q.id].name : q.name;
   const title = themed ? html`<span class="tchip">${icon(iconOf(q))}</span>${name}` : name;
   const body = q.kind === "builtin" ? builtinCard(q.id, a, t) : html`${scored ? html`<p class="hint">${questionRule(q)}</p>` : ""}${customCard(q, a)}`;
-  return html`<section class="cat${lead ? " lead" : ""}${themed ? ` themed ${themeOf(q)}` : ""}">${cardHead(title, scored ? q.id : null)}${body}</section>`;
+  const head = html`<h2>${title}</h2>${scored ? html`<span class="pts" data-points="${q.id}"></span>` : ""}`;
+  return fold(`q-${q.id}`, `cat${lead ? " lead" : ""}${themed ? ` themed ${themeOf(q)}` : ""}`, head, body);
 }
 
 function ladderCard(q, a) {
@@ -153,11 +154,11 @@ export function todayView() {
       })}
       ${pausedNote()}
       ${extras.length ? html`<h3 class="also">Also tracking <span class="muted small">(not scored)</span></h3>${extras.map((q) => questionCard(q, a, t, false))}` : ""}
-      <section class="panel closeday"><h2>Close the day</h2>
+      ${fold("closeday", "panel closeday", html`<h2>Close the day</h2>`, html`
         <div class="row">${toggle("dayOff", "Intentional rest day", a.dayOff)}</div>
         <p class="hint">A planned rest day keeps your streak and counts as showing up.</p>
         ${reflectShown ? html`<button class="reflectlink" data-act="openTab" data-tab="reflect">${icon("edit_note")}<span class="max">${a.reflection ? html`<b>Reflection</b><span class="small-text">${String(a.reflection).slice(0, 80)}${String(a.reflection).length > 80 ? "…" : ""}</span>` : html`<b>Reflect on today</b><span class="small-text">A line or two, private.</span>`}</span>${icon("chevron_right")}</button>` : ""}
-        <div id="live-finish" class="finish"></div></section>
+        <div id="live-finish" class="finish"></div>`)}
     </fieldset>
     <p class="privacy small muted">🔒 Your questions and answers are private. The group sees only your score, streak, and check-in.</p>
     ${breathingSheet()}`;

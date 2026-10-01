@@ -2,6 +2,8 @@
 import { state } from "./state.js";
 import { page, findAction, anyFeature, hasPage } from "./page.js";
 import { ui, render, patch, goPage } from "./render.js";
+import { foldedSet } from "./views/components.js";
+import { setPref } from "./prefs.js";
 
 function run(result) {
   if (result === "none") return;
@@ -41,7 +43,17 @@ function onTabKey(event) {
   return true;
 }
 
+// Folding a section open or shut (details[data-fold]) is remembered on this device.
+function onToggle(event) {
+  const id = event.target.dataset?.fold;
+  if (!id) return;
+  const set = foldedSet();
+  if (event.target.open) set.delete(id); else set.add(id);
+  setPref("folded", [...set].join(","));
+}
+
 export function bindEvents(root) {
+  root.addEventListener("toggle", onToggle, true);
   root.addEventListener("click", onClick);
   root.addEventListener("input", (event) => anyFeature("input", event.target, event));
   root.addEventListener("change", (event) => anyFeature("change", event.target, event));
