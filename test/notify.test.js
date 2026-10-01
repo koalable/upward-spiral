@@ -71,3 +71,16 @@ test("next dose OK fires once the gap has passed, counting last night's dose", (
   const again = { items: [...medlog.items, { medId: "v", at: base }] };
   assert.deepEqual(ids(dueNotifications({}, { settings: cfg, medlog: again }, now(5))), []); // took another since
 });
+
+test("few-times-a-week nudge: only when a habit is due, at the pace time", async () => {
+  const { dueNotifications } = await import("../src/notify.js");
+  const routines = { items: [{ id: "sh", name: "Shower", perWeek: 3, group: "anytime" }] };
+  const now = { date: "2026-09-30", minutes: 18 * 60 + 5 };
+  const logs = (days) => Object.fromEntries(days.map((d) => [d, { date: d, done: { sh: 1 } }]));
+  const prefs = { checkin: { on: false }, rituals: { on: false }, streak: { on: false } };
+  const due = dueNotifications(prefs, { settings: {}, routines, routinelogs: logs(["2026-09-28"]) }, now, {});
+  assert.equal(due.find((m) => m.id === "pace")?.title, "Time for shower?");
+  assert.match(due.find((m) => m.id === "pace").body, /2 days ago · 1 of 3/);
+  const notDue = dueNotifications(prefs, { settings: {}, routines, routinelogs: logs(["2026-09-29"]) }, now, {});
+  assert.equal(notDue.find((m) => m.id === "pace"), undefined);
+});

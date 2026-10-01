@@ -61,7 +61,11 @@ function saveRoutine() {
   const r = { id: e.id || newId("r"), name: e.name, group: e.group || "morning", times: e.times || 1, since: e.since || todayKey() };
   if (e.icon) r.icon = e.icon;
   if (e.minutes) r.minutes = e.minutes;
-  if (mode === "perweek") r.perWeek = e.perWeek || 3;
+  if (mode === "perweek") {
+    r.perWeek = e.perWeek || 3;
+    const max = Math.round(Number(e.perWeekMax) || 0);
+    if (max > r.perWeek) r.perWeekMax = Math.min(7, max);
+  }
   else r.days = mode === "weekdays" ? WEEKDAYS : mode === "days" ? (e.days?.length ? [...e.days].sort() : EVERY_DAY) : EVERY_DAY;
   editList((items) => {
     const at = items.findIndex((x) => x.id === r.id);

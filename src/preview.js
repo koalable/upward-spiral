@@ -28,6 +28,7 @@ export function seedPreview(db) {
     { id: "r3", name: "Clear inbox", icon: "📥", group: "afternoon", days: [1, 2, 3, 4, 5], times: 1, since },
     { id: "r4", name: "Pitch or post", icon: "📣", group: "afternoon", perWeek: 3, times: 1, since },
     { id: "r5", name: "Take vitamins", icon: "💊", group: "evening", days: [0, 1, 2, 3, 4, 5, 6], times: 2, since },
+    { id: "r6", name: "Shower", icon: "🚿", group: "anytime", perWeek: 3, perWeekMax: 4, times: 1, since },
   ];
   db.docs["users/preview/lists/routines"] = { items };
   const at = (n) => addDays(today, n);
@@ -50,7 +51,8 @@ export function seedPreview(db) {
   };
   dateRange(since, addDays(today, -1)).forEach((d, j) => {
     const done = {};
-    items.forEach((r, k) => { if ((j * 3 + k * 5) % 11 > 2 + (k % 3)) done[r.id] = r.times; });
+    items.forEach((r, k) => { if (!r.perWeek && (j * 3 + k * 5) % 11 > 2 + (k % 3)) done[r.id] = r.times; });
+    if (d < addDays(today, -1) && j % 3 === 0) done.r6 = 1; // showers every few days, none yesterday or today
     db.docs[`users/preview/routinelog/${d}`] = { date: d, done };
   });
 }

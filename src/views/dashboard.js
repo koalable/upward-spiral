@@ -4,7 +4,9 @@ import { pageUrl } from "../page.js";
 import { dashboardTodos } from "./todos.js";
 import { todayPicks, goalTheme, staleTasks } from "../work.js";
 import { read } from "../docs.js";
-import { pausedIds } from "../breathing.js";
+import { pausedIds, isPaused } from "../breathing.js";
+import { pace } from "../routines.js";
+import { paceLine } from "./routines.js";
 import { pressed, icon, fold } from "./components.js";
 import { state } from "../state.js";
 import { normalizeLayout, pageLabel, pageIcon, pageHidden, tabHidden } from "../layout.js";
@@ -27,8 +29,19 @@ function workCard() {
     <p class="small">${link}</p></div>`;
 }
 
+// Few-times-a-week habits that are due today (e.g. it's been two days since a shower).
+function paceCard(key) {
+  const l = normalizeLayout(state.settings?.layout);
+  if (pageHidden(l, "routines")) return "";
+  const due = read("routines").items.filter((r) => r.perWeek && !(r.since && key < r.since) && !isPaused(state.settings, "habit", r.id, key) && pace(r, key, state.routinelog || {})?.due);
+  if (!due.length) return "";
+  return html`<div class="plateblock"><h3 class="platehead">${icon("checklist")} Habits due</h3>
+    <ul class="list dash">${due.map((r) => html`<li><button class="circle border" data-act="rToggle" data-id="${r.id}" aria-pressed="false" aria-label="Mark done: ${r.name}"></button>
+      <span class="remoji" aria-hidden="true">${r.icon || "•"}</span><div class="max"><div class="rname">${r.name}</div>${paceLine(r, key)}</div></li>`)}</ul></div>`;
+}
+
 // Check-in → Today: one "On your plate" panel with today's to-dos and today's Work (or House) tasks.
 export function dashboardView() {
   const l = normalizeLayout(state.settings?.layout), todos = !pageHidden(l, "routines") && !tabHidden(l, "todos");
-  return fold("plate", "panel plate", html`<h2>On your plate</h2>`, html`${todos ? dashboardTodos() : ""}${workCard()}`);
+  return fold("plate", "panel plate", html`<h2>On your plate</h2>`, html`${paceCard(todayKey())}${todos ? dashboardTodos() : ""}${workCard()}`);
 }

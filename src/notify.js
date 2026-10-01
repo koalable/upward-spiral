@@ -1,11 +1,11 @@
 // Notifications: which reminders are due for one person right now. Pure: data in, messages out.
 // The server (functions/) runs this every 15 minutes for everyone; the app only edits the choices.
 // Choices live in users/{uid}/notify/settings:
-//   { tz, tokens: [{ t, ua, at }], checkin: {on,time}, rituals: {on}, meds: {on}, work: {on,time},
+//   { tz, tokens: [{ t, ua, at }], checkin: {on,time}, rituals: {on}, pace: {on,time}, meds: {on}, work: {on,time},
 //     streak: {on,time}, quiet: {on,from,to}, sent: { date, ids: [] } }
 import { minutesOf } from "./util.js";
 import { scoreDay, scoredQuestions } from "./scoring.js";
-import { normalizeRoutines, inRitual } from "./routines.js";
+import { normalizeRoutines, inRitual, pace, lastLabel } from "./routines.js";
 import { normalizeWork, todayPicks } from "./work.js";
 import { pausedIds } from "./breathing.js";
 import { habitsDue } from "./rings.js";
@@ -14,6 +14,7 @@ import { BUILTINS } from "./constants.js";
 export const NOTIFY_DEFAULTS = {
   checkin: { on: true, time: "21:00" },
   rituals: { on: true },
+  pace: { on: true, time: "18:00" },
   meds: { on: true },
   work: { on: false, time: "08:30" },
   streak: { on: true, time: "22:00" },
@@ -90,6 +91,19 @@ export function dueNotifications(prefs, data, now, links = {}) {
       const on = inRitual(items, r.id).filter((h) => !pausedIds(cfg, "habit", date).includes(h.id));
       const { due, done } = habitsDue(on, date, log);
       if (due > done) add(`ritual:${r.id}`, `${r.name} ritual`, `${plural(due - done, "habit")} to go.`, links.routines || home);
+    }
+  }
+
+  // Few-times-a-week habits (e.g. showering 3–4×): one nudge at the pace time, only for the ones that are due
+  // (it's been a while, or the week is running out). Needs data.routinelogs: the last two weeks of logs by date.
+  if (p.pace.on && inWindow(p.pace.time, minutes) && data.routinelogs) {
+    const { items } = normalizeRoutines(data.routines);
+    const paused = pausedIds(cfg, "habit", date);
+    const due = items.filter((r) => r.perWeek && !(r.since && date < r.since) && !paused.includes(r.id)).map((r) => [r, pace(r, date, data.routinelogs)]).filter(([, x]) => x?.due);
+    if (due.length) {
+      const [r, x] = due[0];
+      const body = due.length === 1 ? `Last one ${lastLabel(x.last)} · ${x.done} of ${x.of} this week.` : due.map(([h]) => h.name).join(" · ");
+      add("pace", due.length === 1 ? `Time for ${r.name.toLowerCase()}?` : `${plural(due.length, "habit")} due today`, body, links.routines || home);
     }
   }
 

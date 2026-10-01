@@ -46,3 +46,20 @@ test("runs: rest days don't break a streak; today doesn't until it's over", () =
   assert.equal(r2.current, 0);
   assert.equal(r2.best, 2);
 });
+
+test("pace: a 3× a week habit is due after two days, or when the week is running out", async () => {
+  const { pace } = await import("../src/routines.js");
+  const r = { id: "sh", perWeek: 3 };
+  const log = (days) => Object.fromEntries(days.map((d) => [d, { done: { sh: 1 } }]));
+  // Week of Mon 2026-09-28. Done Mon; Tue: 1 day since → not due; Wed: 2 days → due.
+  assert.equal(pace(r, "2026-09-29", log(["2026-09-28"])).due, false);
+  assert.equal(pace(r, "2026-09-30", log(["2026-09-28"])).due, true);
+  assert.equal(pace(r, "2026-09-30", log(["2026-09-28"])).last, 2);
+  // Done today → not due
+  assert.equal(pace(r, "2026-09-30", log(["2026-09-28", "2026-09-30"])).due, false);
+  // Saturday with 1 of 3 and done yesterday: behind (2 needed, 2 days left) → due anyway
+  const p = pace(r, "2026-10-03", log(["2026-10-02"]));
+  assert.ok(p.due && p.behind);
+  // Week's number met → never due
+  assert.equal(pace(r, "2026-10-03", log(["2026-09-28", "2026-09-30", "2026-10-01"])).due, false);
+});

@@ -713,3 +713,10 @@ html:has(#wlc .gpanel){overflow:hidden}
 #wlc.ui details.fold:not([open]){padding-bottom:12px}
 #wlc.ui details.fold.cat:not([open])>.foldhead{margin-bottom:0}
 @media(prefers-reduced-motion:reduce){#wlc.ui .foldchev{transition:none}}
+/* Few-times-a-week habits: pace dots and last done */
+#wlc.ui .paceline{display:flex;align-items:center;gap:8px;font-size:.82em;color:var(--muted);margin-top:3px}
+#wlc.ui .paceline.due b{color:var(--fg)}
+#wlc.ui .pdots{display:inline-flex;gap:3px}
+#wlc.ui .pdots i{width:9px;height:9px;border-radius:50%;border:1.5px solid var(--control)}
+#wlc.ui .pdots i.on{background:var(--good);border-color:var(--good)}
+#wlc.ui .pdots i.extra{border-style:dashed}

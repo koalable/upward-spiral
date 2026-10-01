@@ -55,6 +55,7 @@ export function notifyView() {
       <div class="nlist">
         ${choice("checkin", "notebook-pen", "Check-in reminder", "Skipped once today's check-in is finished.", p)}
         ${choice("rituals", "list-checks", "Ritual start", "At each ritual's time (set under Habits), if it isn't done.", p, false)}
+        ${choice("pace", "repeat", "Few-times-a-week habits", "For habits like showering 3× a week: a nudge only when it's been a while, or the week is running out.", p)}
         ${choice("meds", "pill", "Meds", "At each reminder time unless that dose is logged, and when the next dose is OK (if you set hours between doses).", p, false)}
         ${choice("work", "briefcase", "Projects", "A morning list of today's tasks.", p)}
         ${choice("streak", "flame", "Streak saver", `Only if ${leadName().toLowerCase()} isn't logged yet.`, p)}

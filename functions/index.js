@@ -38,10 +38,25 @@ var parseKey = (key) => {
   const [y, m, d] = key.split("-").map(Number);
   return new Date(y, m - 1, d);
 };
+var addDays = (key, n) => {
+  const d = parseKey(key);
+  d.setDate(d.getDate() + n);
+  return dateKey(d);
+};
+var daysBetween = (a, b) => Math.round((parseKey(b) - parseKey(a)) / 864e5);
 var weekStart = (key) => {
   const d = parseKey(key);
   d.setDate(d.getDate() - (d.getDay() + 6) % 7);
   return dateKey(d);
+};
+function dateRange(from, to) {
+  const out = [];
+  for (let d = from; d <= to; d = addDays(d, 1)) out.push(d);
+  return out;
+}
+var weekOf = (key) => {
+  const w = weekStart(key);
+  return dateRange(w, addDays(w, 6));
 };
 var minutesOf = (hhmm) => {
   const [h, m] = hhmm.split(":").map(Number);
@@ -220,6 +235,25 @@ var inRitual = (items, id) => items.filter((r) => (r.group || "anytime") === id)
 var doneCount = (r, key, log) => toNum(log[key]?.done?.[r.id]);
 var target = (r) => Math.max(1, toNum(r.times) || 1);
 var isDone = (r, key, log) => doneCount(r, key, log) >= target(r);
+var doneThisWeek = (r, key, log) => weekOf(key).filter((d) => d <= key && isDone(r, d, log)).length;
+function pace(r, key, log) {
+  if (!r.perWeek) return null;
+  const done = doneThisWeek(r, key, log), need = Math.max(0, r.perWeek - done);
+  let last = null;
+  for (let n = 0; n <= 14; n++) {
+    const d = addDays(key, -n);
+    if (isDone(r, d, log)) {
+      last = n;
+      break;
+    }
+  }
+  const daysLeft = daysBetween(key, addDays(weekStart(key), 6)) + 1;
+  const gap = Math.max(1, Math.floor(7 / r.perWeek));
+  const today = last === 0;
+  const due = !today && need > 0 && (last === null || last >= gap || need >= daysLeft);
+  return { done, need, of: r.perWeek, last, due, behind: need >= daysLeft };
+}
+var lastLabel = (n) => n === null ? "not yet" : n === 0 ? "today" : n === 1 ? "yesterday" : `${n} days ago`;
 
 // src/work.js
 function normalizeWork(doc) {
@@ -273,6 +307,7 @@ function habitsDue(items, key, log) {
 var NOTIFY_DEFAULTS = {
   checkin: { on: true, time: "21:00" },
   rituals: { on: true },
+  pace: { on: true, time: "18:00" },
   meds: { on: true },
   work: { on: false, time: "08:30" },
   streak: { on: true, time: "22:00" },
@@ -342,6 +377,16 @@ function dueNotifications(prefs, data, now, links = {}) {
       if (due > done) add(`ritual:${r.id}`, `${r.name} ritual`, `${plural(due - done, "habit")} to go.`, links.routines || home);
     }
   }
+  if (p.pace.on && inWindow(p.pace.time, minutes) && data.routinelogs) {
+    const { items } = normalizeRoutines(data.routines);
+    const paused = pausedIds(cfg, "habit", date);
+    const due = items.filter((r) => r.perWeek && !(r.since && date < r.since) && !paused.includes(r.id)).map((r) => [r, pace(r, date, data.routinelogs)]).filter(([, x]) => x?.due);
+    if (due.length) {
+      const [r, x] = due[0];
+      const body = due.length === 1 ? `Last one ${lastLabel(x.last)} \xB7 ${x.done} of ${x.of} this week.` : due.map(([h]) => h.name).join(" \xB7 ");
+      add("pace", due.length === 1 ? `Time for ${r.name.toLowerCase()}?` : `${plural(due.length, "habit")} due today`, body, links.routines || home);
+    }
+  }
   if (p.meds.on) {
     const taken = (id) => (data.medlog?.items || []).filter((x) => x.medId === id).length;
     for (const m of (cfg.meds || []).filter((x) => x.active !== false)) {
@@ -403,12 +448,17 @@ async function push(tokens, messages) {
   }
   return tokens.filter((t) => !dead.has(t));
 }
+var addDaysKey = (date, n) => {
+  const d = /* @__PURE__ */ new Date(`${date}T12:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + n);
+  return d.toISOString().slice(0, 10);
+};
 var prevDate = (date) => {
   const d = /* @__PURE__ */ new Date(`${date}T12:00:00Z`);
   d.setUTCDate(d.getUTCDate() - 1);
   return d.toISOString().slice(0, 10);
 };
-async function userData(uid, date) {
+async function userData(uid, date, prefs) {
   const u = db.collection("users").doc(uid);
   const refs = [
     u,
@@ -420,7 +470,12 @@ async function userData(uid, date) {
     u.collection("medlog").doc(prevDate(date))
   ];
   const [settings, day, routines, routinelog, work, medlog, medlogPrev] = (await db.getAll(...refs)).map((s) => s.exists ? s.data() : null);
-  return { settings, day, routines, routinelog, work, medlog, medlogPrev };
+  let routinelogs = null;
+  if (prefs?.pace?.on !== false) {
+    const snap = await u.collection("routinelog").where("date", ">=", addDaysKey(date, -14)).get();
+    routinelogs = Object.fromEntries(snap.docs.map((d) => [d.id, d.data()]));
+  }
+  return { settings, day, routines, routinelog, work, medlog, medlogPrev, routinelogs };
 }
 var notifyTick = (0, import_scheduler.onSchedule)({ schedule: "every 1 minutes", timeZone: "UTC", region: "us-central1", memory: "256MiB" }, async () => {
   const snap = await db.collectionGroup("notify").get();
@@ -448,7 +503,7 @@ var notifyTick = (0, import_scheduler.onSchedule)({ schedule: "every 1 minutes",
     if (!tokens.length) continue;
     try {
       const now = localNow(Date.now(), prefs.tz);
-      const messages = dueNotifications(prefs, await userData(uid, now.date), now, LINKS);
+      const messages = dueNotifications(prefs, await userData(uid, now.date, prefs), now, LINKS);
       if (!messages.length) continue;
       const keep = await push(tokens, messages);
       await doc.ref.update({

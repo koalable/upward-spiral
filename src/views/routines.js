@@ -5,7 +5,7 @@ import { sheet } from "../state.js";
 import { state, isEditable } from "../state.js";
 import {
   DAY_LETTERS, EVERY_DAY, WEEKDAYS, normalizeRoutines, inRitual, doneCount, target, isDone, isScheduled,
-  scheduleLabel, doneThisWeek,
+  scheduleLabel, doneThisWeek, pace, lastLabel,
 } from "../routines.js";
 import { pressed, saveStatus, icon } from "./components.js";
 import { isPaused, pausedIds } from "../breathing.js";
@@ -31,12 +31,21 @@ function mark(r, key, open) {
     aria-label="${done ? "Done" : "Mark done"}: ${r.name}">${done ? icon("check") : ""}</button>`;
 }
 
+// "●●○ · last done 2 days ago · due today" for a few-times-a-week habit.
+export function paceLine(r, key) {
+  const p = pace(r, key, state.routinelog);
+  const max = Math.max(p.of, r.perWeekMax || 0, p.done);
+  return html`<div class="paceline${p.due ? " due" : ""}" aria-label="${p.done} of ${p.of} this week, last done ${lastLabel(p.last)}${p.due ? ", due today" : ""}">
+    <span class="pdots" aria-hidden="true">${Array.from({ length: max }, (_, i) => html`<i class="${i < p.done ? "on" : ""}${i >= p.of ? " extra" : ""}"></i>`)}</span>
+    <span>last ${lastLabel(p.last)}${p.due ? html` · <b>${p.behind ? "running out of week" : "due today"}</b>` : ""}</span></div>`;
+}
+
 function routineRow(r, key, open) {
   const done = isDone(r, key, state.routinelog);
-  const week = r.perWeek ? ` · ${doneThisWeek(r, key, state.routinelog)}/${r.perWeek} this week` : "";
   return html`<li class="${done ? "done" : ""}">
     <span class="remoji" aria-hidden="true">${r.icon || "•"}</span>
-    <div class="max"><div class="rname">${r.name}</div><div class="small-text">${scheduleLabel(r)}${r.minutes ? ` · ${r.minutes} min` : ""}${week}</div></div>
+    <div class="max"><div class="rname">${r.name}</div><div class="small-text">${scheduleLabel(r)}${r.minutes ? ` · ${r.minutes} min` : ""}</div>
+      ${r.perWeek ? paceLine(r, key) : ""}</div>
     ${mark(r, key, open)}</li>`;
 }
 
@@ -131,7 +140,10 @@ function routineForm() {
     </div>
     <nav class="wrap no-space">${MODES.map(([m, label]) => html`<button class="${m === mode ? "fill" : "border"} chip" data-act="rMode" data-mode="${m}">${label}</button>`)}</nav>
     ${mode === "days" ? html`<nav class="wrap no-space">${DAY_LETTERS.map((l, d) => html`<button class="chip ${days.includes(d) ? "fill" : "border"}" data-act="rDay" data-day="${d}" aria-pressed="${pressed(days.includes(d))}">${l}</button>`)}</nav>` : ""}
-    ${mode === "perweek" ? field("Times a week (any days)", html`<input placeholder=" " id="r-perweek" data-draft="perWeek" data-num type="number" min="1" max="7" value="${e.perWeek || 3}">`) : ""}
+    ${mode === "perweek" ? html`<div class="grid">
+      <div class="s6">${field("Times a week (any days)", html`<input placeholder=" " id="r-perweek" data-draft="perWeek" data-num type="number" min="1" max="7" value="${e.perWeek || 3}">`)}</div>
+      <div class="s6">${field("Up to (optional)", html`<input placeholder=" " id="r-perweekmax" data-draft="perWeekMax" data-num type="number" min="1" max="7" value="${e.perWeekMax || ""}">`)}</div></div>
+      <p class="small-text">You'll get a nudge only when it's been a while, or the week is running out.</p>` : ""}
     <nav><button data-act="rSave">Save</button><button class="transparent" data-act="rCancel">Cancel</button></nav></article>`;
 }
 
