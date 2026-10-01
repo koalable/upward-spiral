@@ -117,7 +117,7 @@ export function updateMedLog(key, id, { date, time, dose }) {
   const day = date && date <= todayKey() ? date : key;
   const before = entry.at;
   entry.at = atTime(day, time || hhmmOf(entry.at));
-  entry.dose = dose;
+  if (dose !== undefined) entry.dose = dose;
   if (day === key) return saveLogDoc(key, doc);
   doc.items = doc.items.filter((x) => x.id !== id);
   saveLogDoc(key, doc);
@@ -125,4 +125,16 @@ export function updateMedLog(key, id, { date, time, dose }) {
   dest.items.push(entry);
   saveLogDoc(day, dest);
   if (entry.counts) { adjustSubstances(-substanceUnits(entry.counts), before); adjustSubstances(substanceUnits(entry.counts), entry.at); }
+}
+
+// Bulk edit: several logged doses (picked as "date|id") all set to one date and time. Doses stay as they were.
+export function setLogsTime(picks, date, time) {
+  let n = 0;
+  for (const p of picks) {
+    const [key, id] = p.split("|");
+    if (!state.medlog[key]?.items.some((x) => x.id === id)) continue;
+    updateMedLog(key, id, { date, time });
+    n++;
+  }
+  return n;
 }

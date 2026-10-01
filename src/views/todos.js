@@ -16,7 +16,7 @@ function chips(x, today) {
 }
 
 function dateEditor(x) {
-  return html`<div class="tdates" data-todo-editor="${x.id}">
+  return html`<div class="tdates" data-todo-editor="${x.id}" data-open>
     <label>Do on<input class="field" type="date" data-todo-on="${x.id}" value="${x.on || ""}"></label>
     <label>Due<input class="field" type="date" data-todo-due="${x.id}" value="${x.due || ""}"></label>
     <button class="linkbtn" data-act="todoDates" data-id="">Done</button></div>`;

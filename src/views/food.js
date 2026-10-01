@@ -18,7 +18,7 @@ function mealRow(m, foods) {
 }
 
 function mealForm(d) {
-  return html`<div class="mealform">
+  return html`<div class="mealform" data-open>
     <input class="field wide" data-draft="name" maxlength="60" value="${d.name || ""}" placeholder="What did you eat?" aria-label="Meal" id="meal-name">
     <div class="row"><label class="lbl" for="meal-cal">Calories</label><input class="field" id="meal-cal" type="number" inputmode="numeric" min="0" data-draft="cal" data-num value="${d.cal ?? ""}" placeholder="rough is fine">
       <label class="lbl" for="meal-pro">Protein (g)</label><input class="field" id="meal-pro" type="number" inputmode="numeric" min="0" data-draft="pro" data-num value="${d.pro ?? ""}"></div>

@@ -32,7 +32,7 @@ export const sheet = (what) => (state.sheet?.what === what ? state.sheet : null)
 export const openSheet = (what, draft = {}) => { state.sheet = { ...draft, what }; return state.sheet; };
 export const closeSheet = () => { state.sheet = null; };
 // Forms (as opposed to cards and sheets): while one is open, remote changes don't redraw the screen.
-export const FORMS = ["work", "question", "med", "log", "routine", "ritual", "todo", "meal"];
+export const FORMS = ["work", "question", "med", "log", "routine", "ritual", "todo", "meal", "bulk"];
 export const formOpen = () => FORMS.includes(state.sheet?.what);
 
 // ---------- my settings ----------

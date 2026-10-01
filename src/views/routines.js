@@ -130,7 +130,7 @@ function routineForm() {
   if (!e) return html`<nav class="wrap"><button data-act="rNew">${icon("add")}<span>Add a habit</span></button>
     <button class="border" data-act="ritNew">${icon("playlist_add")}<span>New ritual</span></button></nav>`;
   const mode = e.mode || modeOf(e), days = e.days || EVERY_DAY;
-  return html`<article class="border round padding"><h6>${e.id ? "Edit habit" : "New habit"}</h6>
+  return html`<article class="border round padding" data-open><h6>${e.id ? "Edit habit" : "New habit"}</h6>
     <div class="grid">
       <div class="s12 m6">${field("Name", html`<input placeholder=" " id="r-name" data-draft="name" maxlength="60" value="${e.name || ""}">`)}</div>
       <div class="s6 m3">${field("Emoji", html`<input placeholder=" " id="r-icon" data-draft="icon" maxlength="4" value="${e.icon || ""}">`)}</div>
@@ -150,7 +150,7 @@ function routineForm() {
 function ritualForm() {
   const e = sheet("ritual");
   if (!e) return "";
-  return html`<article class="border round padding"><h6>${e.id ? "Edit ritual" : "New ritual"}</h6>
+  return html`<article class="border round padding" data-open><h6>${e.id ? "Edit ritual" : "New ritual"}</h6>
     <div class="grid"><div class="s12 m8">${field("Name", html`<input placeholder=" " id="rit-name" data-draft="name" maxlength="40" value="${e.name || ""}" placeholder="Workday shutdown">`)}</div>
       <div class="s12 m4">${field("Time (optional)", html`<input placeholder=" " id="rit-time" data-draft="time" type="time" value="${e.time || ""}">`)}</div></div>
     <nav><button data-act="ritSave">Save</button><button class="transparent" data-act="ritCancel">Cancel</button>

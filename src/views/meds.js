@@ -4,7 +4,7 @@ import { MED_KINDS, TOAST_MS, MEDLOG_DAYS } from "../constants.js";
 import { state, hasQuestion } from "../state.js";
 import { sheet } from "../state.js";
 import { medList, activeMeds, logsOn, medStatus, doseLabel, substanceUnits } from "../meds.js";
-import { saveStatus , fold } from "./components.js";
+import { saveStatus, fold, icon } from "./components.js";
 
 export const toastVisible = () => state.toast && Date.now() - state.toast.when < TOAST_MS;
 
@@ -48,7 +48,7 @@ function medForm() {
   const e = sheet("med");
   if (!e) return html`<p><button class="btn" data-act="medNew">Add a medication or substance</button></p>`;
   const times = [...(e.times || []), "", "", "", ""].slice(0, 4);
-  return html`<div class="qform"><h3>${e.id ? "Edit" : "New"}</h3><div class="targets">
+  return html`<div class="qform" data-open><h3>${e.id ? "Edit" : "New"}</h3><div class="targets">
     <label>Name<input class="field" id="med-name" data-draft="name" maxlength="60" value="${e.name || ""}" placeholder="e.g. Sertraline, Coffee, Wine"></label>
     <label>Type<select class="field" id="med-kind" data-draft="kind">${Object.entries(MED_KINDS).map(([k, label]) => html`<option value="${k}" ${k === (e.kind || "rx") ? "selected" : ""}>${label}</option>`)}</select></label>
     <label>Usual dose<input class="field" id="med-dose" data-draft="dose" maxlength="20" value="${e.dose || ""}" placeholder="50"></label>
@@ -77,7 +77,14 @@ function listItem(m, i) {
 }
 
 function logRow(x, key) {
-  if (sheet("log")?.id === x.id) return html`<li class="logrow editing">
+  const bulk = sheet("bulk");
+  if (bulk) {
+    const on = bulk.picks.includes(`${key}|${x.id}`);
+    return html`<li class="logrow pick${on ? " on" : ""}"><button class="pickbtn" data-act="medPick" data-day="${key}" data-id="${x.id}" aria-pressed="${on ? "true" : "false"}">
+      <span class="brbox" aria-hidden="true">${on ? icon("check") : ""}</span><span class="logtime">${clock(x.at)}</span>
+      <span class="logname">${x.name} ${x.dose ? html`<span class="muted">${doseLabel(x.dose, x.unit)}</span>` : ""}</span></button></li>`;
+  }
+  if (sheet("log")?.id === x.id) return html`<li class="logrow editing" data-open>
     <input class="field" type="date" id="log-date" value="${key}" max="${todayKey()}" min="${addDays(todayKey(), -MEDLOG_DAYS)}" aria-label="Date">
     <input class="field" type="time" id="log-time" value="${hhmmOf(x.at)}" aria-label="Time">
     <input class="field" id="log-dose" value="${x.dose || ""}" aria-label="Dose" placeholder="Dose"><span class="muted">${x.unit || ""}</span>
@@ -88,13 +95,26 @@ function logRow(x, key) {
     <button class="x" data-act="medDeleteLog" data-day="${key}" data-id="${x.id}" aria-label="Delete entry">×</button></li>`;
 }
 
+// Bulk edit: pick doses below, then set them all to one date and time.
+function bulkBar() {
+  const d = sheet("bulk");
+  if (!d) return "";
+  const n = d.picks.length;
+  return html`<div class="bulkbar" data-open>
+    <p class="small-text"><b>${n ? `${n} picked` : "Tap the doses to change"}</b>${n ? " · set them all to:" : ", then set one time for all of them."}</p>
+    <div class="row"><input class="field" type="date" data-draft="date" value="${d.date}" max="${todayKey()}" min="${addDays(todayKey(), -MEDLOG_DAYS)}" aria-label="Date">
+      <input class="field" type="time" data-draft="time" value="${d.time}" aria-label="Time">
+      <button class="btn" data-act="medBulkSave" ${n ? "" : "disabled"}>Save</button><button class="linkbtn" data-act="medBulkCancel">Cancel</button></div></div>`;
+}
+
 function history() {
   const today = todayKey();
   return [0, 1, 2, 3, 4, 5, 6].map((n) => addDays(today, -n)).map((key, n) => {
     const logs = logsOn(key);
     if (!logs.length && n) return "";
     const title = n === 0 ? "Today" : n === 1 ? "Yesterday" : longDate(key);
-    return html`<h3 class="rulehead">${title}</h3><ul class="loglist">${logs.length ? logs.map((x) => logRow(x, key)) : html`<li class="muted small">Nothing logged yet.</li>`}</ul>`;
+    const all = sheet("bulk") && logs.length ? html`<button class="linkbtn small" data-act="medPickDay" data-day="${key}">${logs.every((x) => sheet("bulk").picks.includes(`${key}|${x.id}`)) ? "Clear" : "Select all"}</button>` : "";
+    return html`<h3 class="rulehead loghead"><span class="max">${title}</span>${all}</h3><ul class="loglist">${logs.length ? logs.map((x) => logRow(x, key)) : html`<li class="muted small">Nothing logged yet.</li>`}</ul>`;
   });
 }
 
@@ -122,6 +142,6 @@ export function medsView() {
     <section class="panel"><h2>Reminders</h2>
       <p class="hint">Add scheduled times to an item and your phone reminds you then, unless that dose is already logged. Turn reminders on under Notifications.</p>
       <p><button class="btn ghost" data-act="openTab" data-tab="notify">Notification settings</button></p>${saveStatus()}</section>
-    <section class="panel"><h2>History</h2>${history()}</section>`;
+    <section class="panel"><div class="cat-head"><h2>History</h2>${sheet("bulk") ? "" : html`<button class="linkbtn" data-act="medBulk">Edit several times</button>`}</div>${bulkBar()}${history()}</section>`;
 }
 

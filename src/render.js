@@ -174,7 +174,19 @@ export function render() {
   // Same tab = same screen: opening a goal (it slides over the list) or switching milestones just updates it.
   showScreen(view(), `${page.id}|${state.route.tab}`);
   if (moved) window.scrollTo(0, scrolled[page.id] || 0);
+  revealOpened();
   patch();
+}
+
+// Opening an edit form (data-open) that's off screen, e.g. "Change time" on a dose in History, scrolls to it.
+let lastOpened = null;
+function revealOpened() {
+  if (!state.sheet || state.sheet === lastOpened) return void (lastOpened = state.sheet);
+  lastOpened = state.sheet;
+  const el = ui.view.querySelector("[data-open]");
+  if (!el) return;
+  const r = el.getBoundingClientRect();
+  if (r.top < 60 || r.bottom > window.innerHeight - 80) el.scrollIntoView({ behavior: "smooth", block: "center" });
 }
 
 // The page switcher: go to another page where you left it (same tab, same goal), without reloading.

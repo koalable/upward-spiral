@@ -15,7 +15,7 @@ function editor() {
   if (!e) return html`<p><button class="btn" data-act="qNew">Add a category</button></p>`;
   const kind = e.kind || "check";
   const canRevert = e.origin && settings().cats.some((q) => q.id === e.id && q.kind !== "builtin");
-  return html`<div class="qform"><h3>${e.id ? "Edit category" : "New category"}</h3><div class="targets">
+  return html`<div class="qform" data-open><h3>${e.id ? "Edit category" : "New category"}</h3><div class="targets">
     <label>Name<input class="field" id="q-name" data-draft="name" maxlength="60" value="${e.name || ""}" placeholder="e.g. Water"></label>
     <label>Energy group<select class="field" id="q-group" data-draft="group">${GROUPS.filter((g) => g.id !== "show").map((g) => html`<option value="${g.id}" ${g.id === groupOf(e).id ? "selected" : ""}>${g.name} (${g.themeName})</option>`)}</select></label>
     <label>Type<select class="field" id="q-kind" data-draft="kind" data-redraw>${Object.entries(QUESTION_KINDS).map(([k, label]) => html`<option value="${k}" ${k === kind ? "selected" : ""}>${label}</option>`)}</select></label>

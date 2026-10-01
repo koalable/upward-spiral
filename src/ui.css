@@ -751,3 +751,15 @@ html:has(#wlc .gpanel){overflow:hidden}
 #wlc.ui .row.counter .cof .muted{white-space:nowrap}
 #wlc.ui .row.counter .pdots{flex-wrap:nowrap}
 #wlc.ui .row.counter .pdots i{width:8px;height:8px}
+
+/* Meds: bulk edit of logged times */
+#wlc.ui .bulkbar{position:sticky;top:8px;z-index:5;background:var(--bg);border:1px solid var(--good);border-radius:12px;padding:10px;margin:6px 0 10px;box-shadow:0 4px 14px rgba(0,0,0,.18)}
+#wlc.ui .bulkbar .row{flex-wrap:wrap;gap:8px}
+#wlc.ui .bulkbar .field[type=date]{width:150px}
+#wlc.ui .bulkbar .field[type=time]{width:120px}
+#wlc.ui h3.loghead{display:flex;align-items:center;gap:8px}
+#wlc.ui li.logrow.pick{padding:0}
+#wlc.ui .pickbtn{display:flex;align-items:center;gap:10px;width:100%;background:transparent;color:var(--fg);border:0;padding:6px 2px;text-align:left;font:inherit;height:auto}
+#wlc.ui li.logrow.pick.on .pickbtn{background:color-mix(in srgb,var(--good) 14%,transparent);border-radius:8px}
+#wlc.ui .pickbtn .brbox{flex:none}
+#wlc.ui li.logrow.pick.on .brbox{background:var(--good);border-color:var(--good);color:#fff}
