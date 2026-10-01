@@ -30,7 +30,7 @@ export function targetsView() {
     html`<label>Display name<input class="field" data-display value="${me.display || me.name || ""}"></label>`,
     field("weekPts", "Weekly points goal"),
     hasBuiltin("sleep") && [field("bedTarget", "Bedtime target", "time"), field("wakeTarget", "Wake time target", "time")],
-    hasBuiltin("diet") && [field("calTarget", "Calorie target"), field("proteinTarget", "Protein goal (g)")],
+    hasBuiltin("diet") && [field("calTarget", "Calorie target"), field("proteinTarget", "Protein goal (g)"), field("fvTarget", "Fruit & veg servings a day"), field("waterTarget", "Glasses of water a day")],
     hasBuiltin("writing") && field("writeMin", "Writing minutes a day"),
     hasBuiltin("reading") && field("readMin", "Reading minutes a day"),
     hasBuiltin("practices") && field("customPractice", "My own practice", "text"),

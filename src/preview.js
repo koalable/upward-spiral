@@ -74,6 +74,7 @@ export function seedRosa(db) {
     ],
     lead: "diet", floor: ["diet"],
     targets: { calTarget: 1900, proteinTarget: 90, bedTarget: "22:30", wakeTarget: "06:15", weekPts: 60 },
+    foods: [{ name: "Greek yogurt & berries", cal: 220, pro: 18 }, { name: "Turkey sandwich", cal: 480, pro: 32 }, { name: "Protein shake", cal: 160, pro: 25 }],
     meds: [
       { id: "m-lis", name: "Lisinopril", kind: "rx", dose: "10", unit: "mg", times: ["07:30"], notes: "With water, before coffee.", counts: 0, active: true },
       { id: "m-vitd", name: "Vitamin D", kind: "otc", dose: "2000", unit: "IU", times: ["07:30"], notes: "", counts: 0, active: true },
@@ -102,7 +103,13 @@ export function seedRosa(db) {
     ] };
   });
   db.docs[`users/${uid}/medlog/${today}`] = { date: today, items: [{ id: "lt", medId: "m-lis", name: "Lisinopril", dose: "10", unit: "mg", at: new Date(`${today}T07:42:00`).getTime() }] };
-  db.docs[`users/${uid}/days/${today}`] = { date: today, logged: true, updated: 0, a: { calories: 900, protein: 45, bed: "22:35", wake: "06:10", c: { pepper: [true] } } };
+  db.docs[`users/${uid}/days/${today}`] = { date: today, logged: true, updated: 0, a: {
+    meals: [
+      { id: "p1", name: "Greek yogurt & berries", cal: 220, pro: 18, hunger: 3, at: new Date(`${today}T07:15:00`).getTime() },
+      { id: "p2", name: "Turkey sandwich", cal: 480, pro: 32, hunger: 4, at: new Date(`${today}T12:40:00`).getTime() },
+      { id: "p3", name: "Handful of almonds", cal: 170, pro: 6, at: new Date(`${today}T15:30:00`).getTime() },
+    ],
+    calories: 870, protein: 56, fv: 2, fruitVeg: false, water: 4, bed: "22:35", wake: "06:10", c: { pepper: [true] } } };
 
   const T = (id, goal, ms, name, due, hours, extra = {}) => ({ id, goal, ms, name, due, hours, done: "", created: id, ...extra });
   db.docs[`users/${uid}/lists/work`] = {

@@ -13,6 +13,7 @@ import { isLadder, ladderStatus, levelLabel, levelOf } from "../ladder.js";
 import { WEEK_GOAL_BONUS, LEVEL_UP_BONUS, EDIT_WINDOW_TEXT } from "../constants.js";
 import { weekOf, weekday } from "../util.js";
 import { normalizeLayout, sectionHidden, tabHidden } from "../layout.js";
+import { foodLog, counter } from "./food.js";
 import { breathingBanner, pausedNote, isPausedCat, breathingSheet } from "./breathing.js";
 
 const fieldValue = (v) => v ?? "";
@@ -39,9 +40,13 @@ function builtinCard(id, a, t) {
     case "diet": {
       const penalty = [[0, "None"], [1, "Some −1"], [2, "Excess −2"]];
       return html`${hint}
-        <div class="row"><label class="lbl" for="wlc-cal">Calories</label><input class="field" id="wlc-cal" type="number" inputmode="numeric" min="0" data-answer="calories" value="${fieldValue(a.calories)}"><span class="muted small">target ${t.calTarget}</span></div>
-        <div class="row"><label class="lbl" for="wlc-pro">Protein (g)</label><input class="field" id="wlc-pro" type="number" inputmode="numeric" min="0" data-answer="protein" value="${fieldValue(a.protein)}"><span class="muted small">goal ${t.proteinTarget} g</span></div>
-        <div class="row">${toggle("fruitVeg", "Hit my fruit and veg goal", a.fruitVeg)}</div>
+        ${foodLog(a, t)}
+        ${a.meals?.length ? html`<div class="foodtot"><span><b>${a.calories}</b> <span class="muted small">/ ${t.calTarget} cal</span></span><span><b>${a.protein} g</b> <span class="muted small">/ ${t.proteinTarget} g protein</span></span></div>`
+        : html`<div class="row"><label class="lbl" for="wlc-cal">Calories</label><input class="field" id="wlc-cal" type="number" inputmode="numeric" min="0" data-answer="calories" value="${fieldValue(a.calories)}"><span class="muted small">target ${t.calTarget}</span></div>
+        <div class="row"><label class="lbl" for="wlc-pro">Protein (g)</label><input class="field" id="wlc-pro" type="number" inputmode="numeric" min="0" data-answer="protein" value="${fieldValue(a.protein)}"><span class="muted small">goal ${t.proteinTarget} g</span></div>`}
+        ${counter("fv", "Fruit & veg", a.fv, t.fvTarget)}
+        ${a.fv === undefined && a.fruitVeg ? html`<p class="hint small">Fruit &amp; veg goal ticked.</p>` : ""}
+        ${counter("water", "Water", a.water, t.waterTarget)}
         <div class="row"><span class="lbl">Processed sugar</span>${choices("sugar", penalty, a.sugar, "warn")}</div>
         <div class="row"><span class="lbl">Processed food</span>${choices("processed", penalty, a.processed, "warn")}</div>`;
     }

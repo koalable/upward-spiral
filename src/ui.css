@@ -720,3 +720,34 @@ html:has(#wlc .gpanel){overflow:hidden}
 #wlc.ui .pdots i{width:9px;height:9px;border-radius:50%;border:1.5px solid var(--control)}
 #wlc.ui .pdots i.on{background:var(--good);border-color:var(--good)}
 #wlc.ui .pdots i.extra{border-style:dashed}
+
+/* Food log (Diet card) */
+#wlc.ui .foodlog{display:flex;flex-direction:column;gap:8px;margin:4px 0 10px}
+#wlc.ui .foodlog .favs{flex-wrap:nowrap;overflow-x:auto;gap:6px;padding-bottom:2px;scrollbar-width:none}
+#wlc.ui .foodlog .favs .chip{flex:none}
+#wlc.ui ul.meals{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+#wlc.ui li.meal{display:grid;grid-template-columns:auto 1fr auto auto;align-items:center;gap:2px 8px;padding:6px 0;border-bottom:1px solid var(--control)}
+#wlc.ui li.meal:last-child{border-bottom:0}
+#wlc.ui li.meal .mtime{font-size:.78em;opacity:.7;white-space:nowrap}
+#wlc.ui li.meal .mname{display:flex;flex-wrap:wrap;align-items:baseline;gap:0 8px;min-width:0}
+#wlc.ui li.meal .mhunger{grid-column:2/-1;display:flex;align-items:center;gap:8px}
+#wlc.ui li.meal [data-act=mealStar]{width:32px;height:32px;opacity:.55}
+#wlc.ui li.meal [data-act=mealStar][aria-pressed=true]{opacity:1}
+#wlc.ui li.meal [data-act=mealStar][aria-pressed=true] i{color:var(--good)}
+#wlc.ui .seg.hunger button{min-width:26px;height:24px;padding:0 4px;font-size:.78em}
+#wlc.ui .mealform{display:flex;flex-direction:column;gap:8px;border:1px dashed var(--control);border-radius:12px;padding:10px}
+#wlc.ui .mealform .field[type=number]{width:80px}
+#wlc.ui .mealform label.tog input{margin-right:6px}
+#wlc.ui .foodtot{display:flex;flex-wrap:wrap;gap:4px 18px;padding:6px 0;font-size:1.05em}
+#wlc.ui .row.counter{display:grid;grid-template-columns:5.5em auto 1fr;align-items:center;gap:10px}
+#wlc.ui .row.counter .lbl{margin:0}
+#wlc.ui .row.counter .cof{display:flex;flex-direction:column;gap:2px;min-width:0}
+#wlc.ui .row.counter .pdots{flex-wrap:wrap}
+#wlc.ui .row.counter span.step button{width:34px}
+#wlc.ui .row.counter .cnum{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-left:1px solid var(--control);border-right:1px solid var(--control)}
+#wlc.ui li.meal .mhunger>span:first-child{white-space:nowrap}
+#wlc.ui .seg.hunger{display:inline-flex;flex-wrap:nowrap;width:auto;padding:2px}
+#wlc.ui .seg.hunger button{flex:none;width:30px;min-width:0}
+#wlc.ui .row.counter .cof .muted{white-space:nowrap}
+#wlc.ui .row.counter .pdots{flex-wrap:nowrap}
+#wlc.ui .row.counter .pdots i{width:8px;height:8px}

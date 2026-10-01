@@ -16,6 +16,8 @@ import { edit as docEdit } from "../docs.js";
 import { pausable } from "../views/breathing.js";
 import { weekStart } from "../util.js";
 import { questionsView, parseQuestionDraft } from "../views/questions.js";
+import { addMeal, removeMeal, setServings, toggleFavorite, isFavorite } from "../food.js";
+import { atTime } from "../util.js";
 import { targetsView } from "../views/targets.js";
 
 const $ = (sel) => ui.view.querySelector(sel);
@@ -26,6 +28,9 @@ function answer(fn) {
   commitDay();
   return "patch";
 }
+
+// A meal logged for an earlier day goes in at noon; today's at the moment it's logged.
+const mealTime = () => (state.date === todayKey() ? Date.now() : atTime(state.date, "12:00"));
 
 function addSession(minutes) {
   if (!isEditable(state.date)) return "none";
@@ -171,6 +176,49 @@ const actions = {
   removeSession(el) {
     if (!isEditable(state.date)) return "none";
     answers().sessions.splice(Number(el.dataset.index), 1);
+    commitDay();
+  },
+  // food log (Diet card)
+  mealNew() { openSheet("meal", {}); },
+  mealCancel() { closeSheet(); },
+  mealDraftHunger(el) { const d = sheet("meal"); if (d) d.hunger = d.hunger === Number(el.dataset.h) ? undefined : Number(el.dataset.h); },
+  mealSave() {
+    const d = sheet("meal");
+    if (!d || !isEditable(state.date)) return "none";
+    if (!String(d.name || "").trim()) return $("#meal-name")?.focus(), "none";
+    const meal = addMeal(answers(), d, mealTime());
+    if (d.fav && !isFavorite(settings().foods, meal)) { settings().foods = toggleFavorite(settings().foods, meal); saveSettings(); }
+    closeSheet();
+    commitDay();
+  },
+  mealFav(el) {
+    const f = (settings().foods || [])[Number(el.dataset.i)];
+    if (!f || !isEditable(state.date)) return "none";
+    addMeal(answers(), f, mealTime());
+    commitDay();
+  },
+  mealDel(el) {
+    if (!isEditable(state.date)) return "none";
+    removeMeal(answers(), el.dataset.id);
+    commitDay();
+  },
+  mealStar(el) {
+    const m = (answers().meals || []).find((x) => x.id === el.dataset.id);
+    if (!m) return "none";
+    settings().foods = toggleFavorite(settings().foods, m);
+    saveSettings();
+  },
+  mealHunger(el) {
+    const m = (answers().meals || []).find((x) => x.id === el.dataset.id);
+    if (!m || !isEditable(state.date)) return "none";
+    const h = Number(el.dataset.h);
+    if (m.hunger === h) delete m.hunger; else m.hunger = h;
+    commitDay();
+  },
+  foodStep(el) {
+    if (!isEditable(state.date)) return "none";
+    const a = answers(), key = el.dataset.key, n = Math.max(0, (Number(a[key]) || 0) + Number(el.dataset.by));
+    if (key === "fv") setServings(a, n, targets().fvTarget); else a[key] = n;
     commitDay();
   },
   finish: () => answer((a) => { a.doneAt = Date.now(); }),

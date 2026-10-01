@@ -78,6 +78,8 @@ var DEFAULT_TARGETS = {
   wakeTarget: "07:00",
   calTarget: 2200,
   proteinTarget: 120,
+  waterTarget: 8,
+  fvTarget: 5,
   weekPts: 140,
   writeMin: 60,
   readMin: 30,

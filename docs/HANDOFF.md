@@ -41,6 +41,11 @@ Words: **habit** = one recurring action; **ritual** = a saved sequence of habits
 - Preview personas: `dist/preview-*.html` (you + Ada/Bea), `preview-rosa-*` (beta tester), `preview-new-*` (first visit).
 - Code cleanup: `src/docs.js` read/edit for lists, `state.route` + `state.sheet`, timer read from the Work doc by the server. See HOW-IT-WORKS.
 
+## Released Oct 1
+- **Folding headings** on Check-in → Today: On your plate, Meds & substances, every category card and Close the day fold shut with a tap (`fold()` in components.js; remembered per device in pref `folded`).
+- **Few-times-a-week habits** (e.g. Shower 3–4× a week; `perWeek`, optional `perWeekMax`): pace dots + "last X days ago" on the Habits page; "Habits due" on Check-in's On your plate only when it's been a while (gap ≥ 7/perWeek days) or the week is running out (`pace()` in src/routines.js). Phone nudge: Settings → Notifications → "Few-times-a-week habits" (default on, 6 pm; notify id `pace`; the server reads the last 14 days of `routinelog`).
+- **Food log** in the Diet card (`src/food.js`, `src/views/food.js`): meals/snacks with name, rough calories, protein, hunger before eating (1–5); the meals' totals fill the day's calories and protein (scoring unchanged; with no meals you type totals as before). Star a meal = one-tap favorite (`settings.foods`, max 12). Water glasses and fruit & veg servings counters (targets `waterTarget` 8, `fvTarget` 5 in Targets & scoring); reaching the servings target ticks the fruit & veg goal. Rosa's preview shows it.
+
 ## Open questions for Karla
 - Should Tidy up also cover to-dos with due dates (Habits page)?
 - Retire the old Webflow backup pages (`challenge-*-old`) and stop building `dist/cdn/`? (Needs her OK: it's her public site.)
