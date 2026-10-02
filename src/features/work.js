@@ -46,7 +46,7 @@ function saveItem() {
 }
 
 export default {
-  tabs: [["wtoday", "Today", workTodayView], ["wgoals", "Goals", workGoalsView]],
+  tabs: [["wtoday", "Today", workTodayView], ["wgoals", "Projects", workGoalsView]],
   actions: {
     wToggle(el) { edit((w) => toggleDone(w, el.dataset.id, state.date)); },
     wTimerStart(el) { edit((w) => startTimer(w, el.dataset.id, Date.now())); },
@@ -105,6 +105,12 @@ export default {
       const { goal, ms } = el.dataset;
       state.route = { ...state.route, goal, ms };
     },
+    wArchive(el) {
+      edit((w) => { const g = w.goals.find((x) => x.id === el.dataset.id); if (g) g.archived = state.date; if (w.timer && w.tasks.find((t) => t.id === w.timer.id)?.goal === el.dataset.id) delete w.timer; });
+      state.route = { tab: state.tab }; // back to the list
+    },
+    wOrder(el) { edit((w) => { const g = w.goals.find((x) => x.id === el.dataset.id); if (g) { if (g.anyOrder) delete g.anyOrder; else g.anyOrder = true; } }); },
+    wUnarchive(el) { edit((w) => { const g = w.goals.find((x) => x.id === el.dataset.id); if (g) delete g.archived; }); },
     wCancel: closeSheet,
     wSave: saveItem,
     wCopyPrompt(el) {
@@ -114,10 +120,10 @@ export default {
     wImport() {
       const text = ui.view.querySelector("#w-import")?.value || "";
       const p = parsePlan(text, newId);
-      if (!p.goals.length) { state.workImport = "Nothing to import. Each plan needs a line starting with GOAL:"; return; }
+      if (!p.goals.length) { state.workImport = "Nothing to import. Each plan needs a line starting with GOAL: (that's a project)."; return; }
       edit((w) => { w.goals.push(...p.goals); w.milestones.push(...p.milestones); w.tasks.push(...p.tasks); });
       const n = (k, word) => `${k} ${word}${k === 1 ? "" : "s"}`;
-      state.workImport = `Imported ${n(p.goals.length, "goal")}, ${n(p.milestones.length, "milestone")} and ${n(p.tasks.length, "task")}.`
+      state.workImport = `Imported ${n(p.goals.length, "project")}, ${n(p.milestones.length, "milestone")} and ${n(p.tasks.length, "task")}.`
         + (p.skipped.length ? ` Skipped ${p.skipped.length} line${p.skipped.length === 1 ? "" : "s"}: ${p.skipped.slice(0, 3).join(" · ")}${p.skipped.length > 3 ? " …" : ""}` : "");
     },
     wRemove() {

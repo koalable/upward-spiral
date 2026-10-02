@@ -17,7 +17,7 @@ function workCard() {
   const name = pageLabel(l, "work", "Projects");
   const link = html`<a class="linkbtn" data-page="work" href="${pageUrl("work")}">Open ${name} →</a>`;
   const head = (extra) => html`<h3 class="platehead">${icon(pageIcon(l, "work", "work"))} ${name}${extra}</h3>`;
-  if (!w.goals.length) return html`<div class="plateblock">${head("")}<p class="hint">No goals yet. ${link}</p></div>`;
+  if (!w.goals.some((g) => !g.archived)) return html`<div class="plateblock">${head("")}<p class="hint">No projects yet. ${link}</p></div>`;
   const picks = todayPicks(w, key, pausedIds(state.settings, "goal", key)), done = picks.filter((t) => t.done).length;
   const goal = (t) => w.goals.find((g) => g.id === t.goal)?.name || "";
   return html`<div class="plateblock">${head(html` <span class="pts">${done}/${picks.length}</span>`)}

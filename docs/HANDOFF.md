@@ -50,6 +50,9 @@ Words: **habit** = one recurring action; **ritual** = a saved sequence of habits
 - **Meds tiles** (Oct 2): log buttons are squares, three across on phones, with a short status (`medStatus().short`); full status on long-press/title.
 - **Bulk edit of logged doses**: Meds → History → "Edit several times": tick doses (or "Select all" per day), set one date and time, Save (`setLogsTime` in src/meds.js; doses unchanged; substance units move with the date).
 
+## Released Oct 2
+- Projects: "Goals" renamed Projects; milestones locked in order (per-project "any order" switch); archive / restore projects.
+
 ## Open questions for Karla
 - Should Tidy up also cover to-dos with due dates (Habits page)?
 - Retire the old Webflow backup pages (`challenge-*-old`) and stop building `dist/cdn/`? (Needs her OK: it's her public site.)

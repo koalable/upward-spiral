@@ -15,7 +15,7 @@ export const HIDEABLE_PAGES = [["routines", "Habits"], ["work", "Projects"], ["p
 export const HIDEABLE_TABS = {
   checkin: [["meds", "Meds"], ["reflect", "Reflect"]],
   routines: [["routines", "Rituals"], ["rsetup", "Set up habits & rituals"], ["todos", "To-dos"]],
-  work: [["wtoday", "Today"], ["wgoals", "Goals"]],
+  work: [["wtoday", "Today"], ["wgoals", "Projects"]],
   progress: [["streaks", "Streaks & badges"], ["me", "My progress"], ["group", "Group"]],
 };
 export const SECTIONS = [

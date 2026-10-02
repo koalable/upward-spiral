@@ -1,7 +1,7 @@
-// Work: Today (a few tasks, picked for you) and Goals (goal → milestones → tasks, with progress).
+// Work: Today (a few tasks, picked for you) and Projects (project → milestones → tasks, with progress). Code says "goal".
 import { html, shortDate, longDate, clock, atTime, addDays, daysBetween } from "../util.js";
 import { state, sheet } from "../state.js";
-import { normalizeWork, todayState, todayPicks, blocker, progress, countdown, goalTheme, msIcon, goalIcon, MS_ICONS, saturation, staleTasks, PUSH_WHYS, ARCHIVE_WHYS } from "../work.js";
+import { normalizeWork, todayState, todayPicks, blocker, progress, countdown, goalTheme, msIcon, goalIcon, MS_ICONS, saturation, staleTasks, PUSH_WHYS, ARCHIVE_WHYS, activeGoals, archivedGoals, msBlocker, taskMsBlocker } from "../work.js";
 import { timerFor, isRunning, isUp, msLeft, minutesLeft, countdownText, durationText } from "../timer.js";
 import { pressed, saveStatus, icon } from "./components.js";
 import { pausedIds } from "../breathing.js";
@@ -98,27 +98,27 @@ function tidyCard(w, key) {
 
 export function workTodayView() {
   const w = workData(), key = state.date;
-  if (!w.goals.length) {
-    return html`<article class="round padding"><h5>Start with one big goal</h5>
-      <p>Add a goal with a deadline, break it into monthly milestones, then into small tasks. Each day this page picks a few tasks for you, most urgent first, so there's nothing to decide.</p>
-      <nav><button data-act="wNew" data-kind="goal">${icon("add")}<span>Add a goal</span></button></nav></article>`;
+  if (!activeGoals(w).length) {
+    return html`<article class="round padding"><h5>Start with one big project</h5>
+      <p>Add a project with a deadline, break it into milestones, then into small tasks. Each day this page picks a few tasks for you, most urgent first, so there's nothing to decide.</p>
+      <nav><button data-act="wNew" data-kind="goal">${icon("add")}<span>Add a project</span></button></nav></article>${archivedList(w)}`;
   }
   const g = pageGoal(w);
   const tidy = tidyCard(w, key);
   const t = todayState(w, key), picks = todayPicks(w, key, pausedGoals(key)), pins = t.pins || [];
   const done = picks.filter((x) => x.done).length, all = picks.length && done === picks.length;
-  const open = w.tasks.filter((x) => !x.done), blocked = open.filter((x) => blocker(x, w.tasks)).length;
+  const open = w.tasks.filter((x) => !x.done && !isArchivedTask(w, x)), blocked = open.filter((x) => blocker(x, w.tasks) || taskMsBlocker(w, x)).length;
   return html`${tidy}<article class="round no-padding ritual themed ember">
       <nav class="padding">${icon("target")}<div class="max"><h6>${longDate(key)}</h6><div class="small-text">${done} of ${picks.length} done</div></div>
         ${all ? html`<span class="chip fill">${icon("done_all")}Done</span>` : ""}</nav>
       <progress value="${picks.length ? Math.round((100 * done) / picks.length) : 0}" max="100"></progress>
       ${picks.length ? html`<ul class="list">${picks.map((x) => todayRow(w, x, key, pins.includes(x.id)))}</ul>`
-        : html`<p class="padding small-text">Nothing open right now${blocked ? ` (${blocked} waiting on other tasks)` : ""}. Add tasks under Goals.</p>`}
+        : html`<p class="padding small-text">Nothing open right now${blocked ? ` (${blocked} waiting on other tasks)` : ""}. Add tasks under Projects.</p>`}
       ${all && open.length > blocked ? html`<nav class="padding"><span class="max">Nice work. That's today handled.</span><button class="border" data-act="wMore">${icon("add")}<span>One more</span></button></nav>` : ""}
     </article>
     <nav class="wrap tasksday"><span class="small-text">Tasks a day:</span>${[3, 4, 5].map((n) => html`<button class="chip ${n === w.perDay ? "fill" : "border"}" data-act="wPerDay" data-n="${n}" aria-pressed="${pressed(n === w.perDay)}">${n}</button>`)}</nav>
-    <p class="small-text workhint">Picked for you: overdue first, then whatever's due soonest. Unfinished tasks carry over. ${icon("pin")} keeps a task on today's list; ${icon("swap")} swaps it for the next one. Tasks waiting on another task stay hidden until that one's done. Tasks with a start time go to the top. ${icon("play_arrow")} starts a timer for what's left of the estimate (25 minutes if there isn't one).</p>
-    <h3 class="gsection">Goals</h3>
+    <p class="small-text workhint">Picked for you: overdue first, then whatever's due soonest. Unfinished tasks carry over. ${icon("pin")} keeps a task on today's list; ${icon("swap")} swaps it for the next one. Tasks waiting on another task, or in a milestone that's still locked, stay hidden until they open up. Tasks with a start time go to the top. ${icon("play_arrow")} starts a timer for what's left of the estimate (25 minutes if there isn't one).</p>
+    <h3 class="gsection">Projects</h3>
     ${goalDeck(w, key)}${g ? goalPage(w, g, key) : ""}${taskSheet(w, key)}`;
 }
 
@@ -131,10 +131,11 @@ function status(p, due, key) {
 }
 
 function taskRow(w, t, key) {
-  const b = blocker(t, w.tasks), tm = timerFor(w, t.id);
-  return html`<li class="${t.done ? "done" : ""}${tm ? " timing" : ""}">${b ? html`<span class="circle lockd" title="Waiting on: ${b.name}">${icon("lock")}</span>` : check(t)}
+  const mb = t.done ? null : taskMsBlocker(w, t), b = blocker(t, w.tasks) || mb, tm = timerFor(w, t.id);
+  const why = mb ? `Unlocks when “${mb.name}” is done` : b ? `Waiting on: ${b.name}` : "";
+  return html`<li class="${t.done ? "done" : ""}${tm ? " timing" : ""}">${b ? html`<span class="circle lockd" title="${why}">${icon("lock")}</span>` : check(t)}
     <div class="max"><button class="tname rname" data-act="wTask" data-id="${t.id}">${t.name}</button>
-      <div class="small-text">${meta([startAt(t), timeText(t)], t, key)}${b ? ` · after “${b.name}”` : ""}${t.done ? ` · done ${shortDate(t.done)}` : ""}</div></div>
+      <div class="small-text">${meta([startAt(t), timeText(t)], t, key)}${mb ? "" : b ? ` · after “${b.name}”` : ""}${t.done ? ` · done ${shortDate(t.done)}` : ""}</div></div>
     ${t.done || b || tm ? "" : html`<button class="circle transparent" data-act="wTimerStart" data-id="${t.id}" aria-label="Start a ${minutesLeft(t)}-minute timer: ${t.name}" title="Timer (${durationText(minutesLeft(t))})">${icon("play_arrow")}</button>`}
     <button class="circle transparent" data-act="wEdit" data-kind="task" data-id="${t.id}" aria-label="Edit ${t.name}">${icon("edit")}</button>
     ${timerStrip(w, t)}</li>`;
@@ -170,8 +171,9 @@ function milestoneTabs(w, g, key) {
   return html`<div class="folder">
     <div class="ftabs" role="group" aria-label="Milestones">${themed.map((y) => {
       const on = y === x, d = y.tasks.filter((t) => t.done).length, late = y.tasks.some((t) => !t.done && t.due && t.due < key);
-      return html`<button class="ftab ink satbg ${y.theme}${on ? " on" : ""}" style="--sat:${saturation(progress(y.tasks, key).pct)}" aria-pressed="${on ? "true" : "false"}" data-act="wMs" data-goal="${g.id}" data-ms="${y.id}">
-        ${icon(y.icon)}<span>${y.name}</span><small>${late ? html`<i class="late" title="Something's overdue"></i>` : ""}${d}/${y.tasks.length}</small></button>`;
+      const lock = y.m && msBlocker(w, y.m.id);
+      return html`<button class="ftab ink satbg ${y.theme}${on ? " on" : ""}${lock ? " locked" : ""}" style="--sat:${saturation(progress(y.tasks, key).pct)}" aria-pressed="${on ? "true" : "false"}" data-act="wMs" data-goal="${g.id}" data-ms="${y.id}"${lock ? html` title="Locked until “${lock.name}” is done"` : ""}>
+        ${icon(lock ? "lock" : y.icon)}<span>${y.name}</span><small>${late && !lock ? html`<i class="late" title="Something's overdue"></i>` : ""}${d}/${y.tasks.length}</small></button>`;
     })}</div>
     <div class="fcard ink satbg ${x.theme}" style="--sat:${saturation(p.pct)}" role="region" aria-label="${x.name}">
       <div class="fhead"><span class="fico" aria-hidden="true">${icon(x.icon)}</span>
@@ -180,6 +182,7 @@ function milestoneTabs(w, g, key) {
           ${m && p.total ? html`<div class="stat">${status(p, m.due, key)}</div>` : ""}</div>
         ${m ? html`<button class="circle transparent" data-act="wEdit" data-kind="ms" data-id="${m.id}" aria-label="Edit ${m.name}">${icon("edit")}</button>` : ""}</div>
       <div class="mcard plain">
+        ${m && msBlocker(w, m.id) ? html`<p class="small-text mlocked">${icon("lock")} Unlocks when <b>${msBlocker(w, m.id).name}</b> is done. You can still plan and edit these tasks.</p>` : ""}
         ${tasks.length ? html`<ul class="list">${tasks.map((t) => taskRow(w, t, key))}</ul>` : ""}
         <button class="transparent addtask" data-act="wNew" data-kind="task" data-goal="${g.id}" data-ms="${m?.id || ""}">${icon("add")}<span>Add task</span></button>
       </div></div></div>`;
@@ -187,7 +190,10 @@ function milestoneTabs(w, g, key) {
 
 const goalButtons = (g) => html`<nav class="wrap gbtns"><button class="border small" data-act="wNew" data-kind="ms" data-goal="${g.id}">${icon("flag")}<span>Milestone</span></button>
   <button class="border small" data-act="wNew" data-kind="task" data-goal="${g.id}">${icon("add")}<span>Task</span></button>
-  <button class="border small" data-act="wEdit" data-kind="goal" data-id="${g.id}">${icon("edit")}<span>Edit goal</span></button></nav>`;
+  <button class="border small" data-act="wEdit" data-kind="goal" data-id="${g.id}">${icon("edit")}<span>Edit project</span></button>
+  <button class="border small" data-act="wOrder" data-id="${g.id}" aria-pressed="${pressed(!g.anyOrder)}" title="Lock each milestone until the one before is done">${icon(g.anyOrder ? "list" : "lock")}<span>${g.anyOrder ? "Milestones: any order" : "Milestones: in order"}</span></button>
+  ${g.archived ? html`<button class="border small" data-act="wUnarchive" data-id="${g.id}">${icon("folder")}<span>Restore</span></button>`
+    : html`<button class="border small" data-act="wArchive" data-id="${g.id}">${icon("folder")}<span>Archive</span></button>`}</nav>`;
 
 function pbar(p) {
   return html`<div class="pbar"><span class="ptrack" role="progressbar" aria-label="${p.done} of ${p.total} tasks done" aria-valuenow="${p.pct}" aria-valuemax="100"><i style="width:${p.pct}%"></i></span><span>${p.pct}%</span></div>`;
@@ -195,7 +201,7 @@ function pbar(p) {
 
 // All goals: a stacked deck. Each card peeks out; tap one to open its page.
 function goalDeck(w, key) {
-  return html`<div class="deck">${w.goals.map((g) => {
+  return html`<div class="deck">${activeGoals(w).map((g) => {
     const p = progress(w.tasks.filter((t) => t.goal === g.id), key);
     const when = g.due ? countdown(g.due, key) : "Ongoing";
     return html`<article class="dcard ink satbg ${goalTheme(w, g.id)}" style="--sat:${saturation(p.pct)}">
@@ -221,19 +227,22 @@ function goalPage(w, g, key) {
     <div class="gptop"><h2 class="gptitle">${g.name}</h2><span class="gsun satbg" style="--sat:${saturation(p.pct)}" aria-hidden="true">${icon(goalIcon(g))}</span></div>
     <div class="gpmeta">${g.due ? `${shortDate(g.due)} · ${countdown(g.due, key)}` : "Ongoing"} ${p.total ? status(p, g.due, key) : ""}</div>
     <div class="gpprog">${pbar(p)}<div class="gprow"><span>${p.done}/${p.total} tasks</span>${extra ? html`<span>${extra}</span>` : ""}</div></div>
+    ${g.archived ? html`<p class="small-text archnote">${icon("folder")} Archived ${shortDate(g.archived)}. Its tasks are off your lists. Restore it to bring them back.</p>`
+      : p.total && p.done === p.total ? html`<div class="finished">${icon("check")}<span class="max">Every task is done. Archive this project?</span><button class="small" data-act="wArchive" data-id="${g.id}">Archive</button></div>` : ""}
     ${milestoneTabs(w, g, key)}
     ${goalButtons(g)}
     <p class="small-text">${saveStatus()}</p></div>
   </section>`;
 }
 
+const isArchivedTask = (w, t) => Boolean(goalOf(w, t.goal)?.archived);
 const pageGoal = (w) => (state.route.goal ? w.goals.find((g) => g.id === state.route.goal) : null);
 
 // One task, on a card that slides up: when, time, timer, what it waits on, and actions.
 function taskSheet(w, key) {
   const t = sheet("task") && w.tasks.find((x) => x.id === state.sheet.id);
   if (!t) return "";
-  const g = goalOf(w, t.goal), m = msOf(w, t.ms), b = blocker(t, w.tasks), tm = timerFor(w, t.id);
+  const g = goalOf(w, t.goal), m = msOf(w, t.ms), mb = t.done ? null : taskMsBlocker(w, t), b = blocker(t, w.tasks) || mb, tm = timerFor(w, t.id);
   const next = w.tasks.filter((x) => x.after === t.id && !x.done);
   const est = (Number(t.hours) || 0) * 60, spent = Number(t.spent) || 0;
   const when = [t.at ? html`<span class="tpill">${icon("timer")}${startAt(t)}</span>` : "", t.due ? html`<span class="tpill">${icon("event")}${dueLabel(t, key)}</span>` : ""];
@@ -250,7 +259,7 @@ function taskSheet(w, key) {
       ${t.done || b ? "" : tm ? timerStrip(w, t)
         : html`<button class="tstart" data-act="wTimerStart" data-id="${t.id}">${icon("play_arrow")}<span>Start a ${durationText(minutesLeft(t))} timer</span></button>`}</div>
     ${b || next.length ? html`<div class="tblock plain"><div class="tlabel">Order</div>
-      ${b ? html`<p>${icon("lock")} Waiting on <b>${b.name}</b></p>` : ""}
+      ${mb ? html`<p>${icon("lock")} Unlocks when the milestone <b>${mb.name}</b> is done</p>` : b ? html`<p>${icon("lock")} Waiting on <b>${b.name}</b></p>` : ""}
       ${next.length ? html`<p>${icon("arrow_downward")} Unlocks ${next.map((x) => x.name).join(", ")}</p>` : ""}</div>` : ""}
     <nav class="wrap tacts">${b ? "" : html`<button data-act="wToggle" data-id="${t.id}">${icon(t.done ? "close" : "check")}<span>${t.done ? "Not done" : "Mark done"}</span></button>`}
       <button class="border" data-act="wEdit" data-kind="task" data-id="${t.id}">${icon("edit")}<span>Edit</span></button>
@@ -259,11 +268,11 @@ function taskSheet(w, key) {
 }
 
 
-const KIND = { goal: "goal", ms: "milestone", task: "task" };
+const KIND = { goal: "project", ms: "milestone", task: "task" };
 
 function workForm(w) {
   const e = sheet("work");
-  if (!e) return html`<nav class="wrap addgoal"><button data-act="wNew" data-kind="goal">${icon("add")}<span>Add a goal</span></button></nav>`;
+  if (!e) return html`<nav class="wrap addgoal"><button data-act="wNew" data-kind="goal">${icon("add")}<span>Add a project</span></button></nav>`;
   const goalTasks = w.tasks.filter((t) => t.goal === e.goal && t.id !== e.id);
   const goalMs = w.milestones.filter((m) => m.goal === e.goal);
   return html`<article class="border round padding" id="wform"><h6>${e.id ? "Edit" : "New"} ${KIND[e.kind]}</h6>
@@ -296,8 +305,18 @@ function importBox(open) {
     ${msg ? html`<p class="small-text importmsg">${msg}</p>` : ""}</details>`;
 }
 
+// Archived projects: folded away at the bottom, each with Open and Restore.
+function archivedList(w) {
+  const list = archivedGoals(w);
+  if (!list.length) return "";
+  return html`<details class="archived"><summary>${icon("folder")} Archived (${list.length})</summary>
+    <ul class="list">${list.map((g) => html`<li><div class="max"><button class="tname rname" data-act="wOpen" data-id="${g.id}">${g.name}</button>
+      <div class="small-text">Archived ${shortDate(g.archived)}</div></div>
+      <button class="border small" data-act="wUnarchive" data-id="${g.id}">Restore</button></li>`)}</ul></details>`;
+}
+
 export function workGoalsView() {
   const w = workData(), key = state.date, g = pageGoal(w);
-  return html`${g ? "" : workForm(w)}${importBox(!w.goals.length)}${goalDeck(w, key)}${g ? goalPage(w, g, key) : ""}${taskSheet(w, key)}
-    <p class="small-text">Private to you. Tap a goal to open it, and a task for its details. A lock means a task is waiting on another one. ${saveStatus()}</p>`;
+  return html`${g ? "" : workForm(w)}${importBox(!activeGoals(w).length)}${goalDeck(w, key)}${archivedList(w)}${g ? goalPage(w, g, key) : ""}${taskSheet(w, key)}
+    <p class="small-text">Private to you. Tap a project to open it, and a task for its details. A lock means a task is waiting on another one, or its milestone opens once the one before is done. ${saveStatus()}</p>`;
 }

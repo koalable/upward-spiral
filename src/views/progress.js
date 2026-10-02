@@ -35,7 +35,8 @@ function doubleMisses() {
 // (the average of the three weeks before). Named after the projects page (e.g. House).
 function projectsProgress(today) {
   const w = read("work");
-  if (!w.goals.length) return "";
+  const goals = w.goals.filter((g) => !g.archived);
+  if (!goals.length) return "";
   const l = normalizeLayout(state.settings?.layout);
   if (pageHidden(l, "work")) return "";
   const wk = weekStart(today), weeks = [3, 2, 1].map((n) => weekStart(addDays(wk, -7 * n)));
@@ -44,7 +45,7 @@ function projectsProgress(today) {
   const all = w.tasks, now = doneIn(all, wk), before = usual(all);
   return html`<section class="panel projprog"><h2>${pageLabel(l, "work", "Projects")}</h2>
     <p class="hint">${now} task${now === 1 ? "" : "s"} done this week · usually ${before}</p>
-    <ul class="plist">${w.goals.map((g) => {
+    <ul class="plist">${goals.map((g) => {
       const tasks = all.filter((t) => t.goal === g.id), p = progress(tasks, today), wkDone = doneIn(tasks, wk);
       const paused = isPaused(state.settings, "goal", g.id, today);
       const status = p.total && p.done === p.total ? ["Complete", "good"] : paused ? ["Paused this week", ""]

@@ -276,11 +276,24 @@ function blocker(t, tasks) {
   const b = tasks.find((x) => x.id === t.after);
   return b && !b.done ? b : null;
 }
+var isArchived = (w, goalId) => Boolean(w.goals.find((g) => g.id === goalId)?.archived);
+var goalMilestones = (w, goalId) => w.milestones.filter((m) => m.goal === goalId).sort((a, b) => (a.due || "9999").localeCompare(b.due || "9999"));
+function msBlocker(w, msId) {
+  const m = w.milestones.find((x) => x.id === msId);
+  if (!m || w.goals.find((g) => g.id === m.goal)?.anyOrder) return null;
+  for (const prev of goalMilestones(w, m.goal)) {
+    if (prev.id === m.id) return null;
+    if (w.tasks.some((t) => t.ms === prev.id && !t.done)) return prev;
+  }
+  return null;
+}
+var taskMsBlocker = (w, t) => t.ms ? msBlocker(w, t.ms) : null;
+var workable = (w, t) => !blocker(t, w.tasks) && !taskMsBlocker(w, t) && !isArchived(w, t.goal);
 var urgency = (a, b) => (a.due || "9999").localeCompare(b.due || "9999") || String(a.created || "").localeCompare(String(b.created || ""));
 function todayPicks(w, key, pausedGoals = []) {
   const t = todayState(w, key), size = w.perDay + (t.extra || 0);
-  const doneToday = w.tasks.filter((x) => x.done === key);
-  const open = w.tasks.filter((x) => !x.done && !blocker(x, w.tasks) && !pausedGoals.includes(x.goal));
+  const doneToday = w.tasks.filter((x) => x.done === key && !isArchived(w, x.goal));
+  const open = w.tasks.filter((x) => !x.done && workable(w, x) && !pausedGoals.includes(x.goal));
   const pinned = (t.pins || []).map((id) => open.find((x) => x.id === id)).filter(Boolean);
   const timed = open.filter((x) => x.at && x.due === key && !pinned.includes(x));
   const rest = open.filter((x) => !pinned.includes(x) && !timed.includes(x) && !(t.skips || []).includes(x.id)).sort(urgency);

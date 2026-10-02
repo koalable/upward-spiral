@@ -13,7 +13,7 @@ export const isPausedCat = (id, date) => isPaused(settings(), "cat", id, date);
 export function pausable() {
   const cats = settings().cats.filter((q) => isScored(q) || isLadder(q));
   const habits = read("routines").items;
-  const goals = read("work").goals;
+  const goals = read("work").goals.filter((g) => !g.archived);
   return { cats, habits, goals };
 }
 const nameOf = (x, p) => (x.kind === "cat" ? questionName(p.cats.find((q) => q.id === x.id) || { kind: "custom", name: x.id })
@@ -71,7 +71,7 @@ export function breathingSheet() {
       <div class="brlevels">${LEVELS.map(([id, name, hint]) => html`<button class="brlevel${d.level === id ? " on" : ""}" data-act="brLevel" data-level="${id}" aria-pressed="${pressed(d.level === id)}"><b>${name}</b><span class="small-text">${hint}</span></button>`)}</div></div></div>
 
     <div class="brstep"><div class="brnum">2</div><div class="max"><h3>What gets a break?</h3>
-      ${group("Check-in", p.cats, "cat")}${group("Habits", p.habits, "habit")}${group("Goals", p.goals, "goal")}
+      ${group("Check-in", p.cats, "cat")}${group("Habits", p.habits, "habit")}${group("Projects", p.goals, "goal")}
       <p class="hint small">Meds are never paused.</p></div></div>
 
     <div class="brstep"><div class="brnum">3</div><div class="max"><h3>Why?</h3>

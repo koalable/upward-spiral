@@ -1,6 +1,6 @@
 // Work: big goals broken into milestones and tasks, and a short list of what to do today. Private to each person.
 // One doc, users/{uid}/lists/work:
-//   goals:      [{ id, name, due }]
+//   goals:      [{ id, name, due, archived, anyOrder }]   archived = date put away; anyOrder = milestones not locked in order
 //   milestones: [{ id, goal, name, due }]
 //   tasks:      [{ id, goal, ms, name, due, at, hours, spent, after, done, created }]
 //               done = date finished, or ""; at = start time "HH:MM" (optional); spent = minutes on the timer
@@ -32,7 +32,7 @@ export const PUSH_WHYS = [["longer", "Took longer than planned"], ["waiting", "W
 export const ARCHIVE_WHYS = [["unneeded", "Not needed any more"], ["someone", "Someone else did it"], ["notworth", "Not worth the effort"], ["plans", "Plans changed"], ["replan", "Too big, I'll re-plan it"], ["other", "Something else"]];
 
 export const staleTasks = (w, key) => w.tasks
-  .filter((t) => !t.done && t.due && daysBetween(t.due, key) > STALE_DAYS)
+  .filter((t) => !t.done && t.due && daysBetween(t.due, key) > STALE_DAYS && !isArchived(w, t.goal) && !taskMsBlocker(w, t))
   .sort((a, b) => a.due.localeCompare(b.due));
 
 // Records what happened to a late task. action: "pushed" (to = new due date), "archived" or "done".
@@ -59,6 +59,29 @@ export function blocker(t, tasks) {
   return b && !b.done ? b : null;
 }
 
+// ---------- Archived projects: put away, kept, restorable; their tasks leave every list ----------
+export const isArchived = (w, goalId) => Boolean(w.goals.find((g) => g.id === goalId)?.archived);
+export const activeGoals = (w) => w.goals.filter((g) => !g.archived);
+export const archivedGoals = (w) => w.goals.filter((g) => g.archived);
+
+// ---------- Milestones run in order: each one unlocks when every task in the one before is done ----------
+// Order = the order the tabs show (by due date). Milestones with no tasks don't hold anything up.
+export const goalMilestones = (w, goalId) => w.milestones.filter((m) => m.goal === goalId)
+  .sort((a, b) => (a.due || "9999").localeCompare(b.due || "9999"));
+// The unfinished milestone that keeps this one locked, or null.
+export function msBlocker(w, msId) {
+  const m = w.milestones.find((x) => x.id === msId);
+  if (!m || w.goals.find((g) => g.id === m.goal)?.anyOrder) return null; // a project can switch the order off
+  for (const prev of goalMilestones(w, m.goal)) {
+    if (prev.id === m.id) return null;
+    if (w.tasks.some((t) => t.ms === prev.id && !t.done)) return prev;
+  }
+  return null;
+}
+export const taskMsBlocker = (w, t) => (t.ms ? msBlocker(w, t.ms) : null);
+// Can be worked on now: not waiting on a task, not in a locked milestone, project not archived.
+export const workable = (w, t) => !blocker(t, w.tasks) && !taskMsBlocker(w, t) && !isArchived(w, t.goal);
+
 // Most urgent first: overdue, then soonest due, then undated, then oldest.
 const urgency = (a, b) => (a.due || "9999").localeCompare(b.due || "9999") || String(a.created || "").localeCompare(String(b.created || ""));
 
@@ -68,8 +91,8 @@ const urgency = (a, b) => (a.due || "9999").localeCompare(b.due || "9999") || St
 // pausedGoals: goals on a breathing-room pause this week; their tasks sit out.
 export function todayPicks(w, key, pausedGoals = []) {
   const t = todayState(w, key), size = w.perDay + (t.extra || 0);
-  const doneToday = w.tasks.filter((x) => x.done === key);
-  const open = w.tasks.filter((x) => !x.done && !blocker(x, w.tasks) && !pausedGoals.includes(x.goal));
+  const doneToday = w.tasks.filter((x) => x.done === key && !isArchived(w, x.goal));
+  const open = w.tasks.filter((x) => !x.done && workable(w, x) && !pausedGoals.includes(x.goal));
   const pinned = (t.pins || []).map((id) => open.find((x) => x.id === id)).filter(Boolean);
   const timed = open.filter((x) => x.at && x.due === key && !pinned.includes(x));
   const rest = open.filter((x) => !pinned.includes(x) && !timed.includes(x) && !(t.skips || []).includes(x.id)).sort(urgency);

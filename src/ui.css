@@ -771,3 +771,9 @@ html:has(#wlc .gpanel){overflow:hidden}
 #wlc.ui details.ritfold:not([open]){padding-bottom:10px}
 #wlc.ui .rithead .foldchev{margin-left:2px}
 #wlc.ui details.ritfold:not([open]) .rithead .foldchev{transform:rotate(-90deg)}
+#wlc.ui .ftab.locked{opacity:.6}
+#wlc.ui .mlocked{margin:4px 4px 10px;line-height:1.5}
+#wlc.ui .finished{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:var(--radius);border:1px solid var(--border);margin:10px 0}
+#wlc.ui .archnote{margin:10px 0}
+#wlc.ui details.archived{border:1px dashed var(--border);border-radius:var(--radius);padding:10px 14px;margin:14px 0}
+#wlc.ui details.archived summary{cursor:pointer;font-weight:600;display:flex;align-items:center;gap:8px}
