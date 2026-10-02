@@ -78,6 +78,9 @@ export function seedRosa(db) {
     meds: [
       { id: "m-lis", name: "Lisinopril", kind: "rx", dose: "10", unit: "mg", times: ["07:30"], notes: "With water, before coffee.", counts: 0, active: true },
       { id: "m-vitd", name: "Vitamin D", kind: "otc", dose: "2000", unit: "IU", times: ["07:30"], notes: "", counts: 0, active: true },
+      { id: "m-ibu", name: "Ibuprofen", kind: "otc", dose: "400", unit: "mg", times: [], notes: "With food.", every: 6, max: 4, counts: 0, active: true },
+      { id: "m-mel", name: "Melatonin gummy", kind: "otc", dose: "5", unit: "mg", times: ["21:30"], notes: "", counts: 0, active: true },
+      { id: "m-wine", name: "Wine", kind: "sub", dose: "1", unit: "glass", times: [], notes: "", counts: 1, active: true },
     ],
     layout: { preset: "simple", names: { work: "House" }, icons: { work: "building" }, hidePages: ["routines", "progress"], hideTabs: [], hideSections: [] },
   };

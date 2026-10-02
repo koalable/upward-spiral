@@ -27,7 +27,7 @@ const scheduleOf = (med) => (med.times || []).filter(Boolean).sort();
 export function medStatus(med, now = Date.now()) {
   const today = todayKey();
   const takenToday = logsFor(med, today).length;
-  const parts = [];
+  const parts = [], brief = []; // brief: the same, short enough for a small tile
   let warn = false;
 
   const times = scheduleOf(med);
@@ -36,9 +36,11 @@ export function medStatus(med, now = Date.now()) {
       const next = atTime(today, times[takenToday]);
       const due = now >= next;
       parts.push(due ? `Due now (${clock(next)})` : `Next at ${clock(next)}`);
+      brief.push(due ? "Due now" : `Next ${clock(next)}`);
       warn ||= due;
     } else {
       parts.push(`✓ All ${times.length} done today`);
+      brief.push("✓ Done today");
     }
   }
   if (toNum(med.every) > 0) {
@@ -46,15 +48,18 @@ export function medStatus(med, now = Date.now()) {
     if (last) {
       const okAt = last.at + toNum(med.every) * HOUR_MS;
       parts.push(now < okAt ? `Next dose OK at ${clock(okAt)} (in ${duration(okAt - now)})` : `Last ${clock(last.at)} · OK to take`);
+      brief.push(now < okAt ? `OK in ${duration(okAt - now)}` : `Last ${clock(last.at)}`);
     }
   }
   if (toNum(med.max) > 0) {
     parts.push(`${takenToday} of ${toNum(med.max)} today`);
-    if (takenToday >= toNum(med.max)) { parts.push("You've reached your daily max"); warn = true; }
+    brief.push(`${takenToday}/${toNum(med.max)} today`);
+    if (takenToday >= toNum(med.max)) { parts.push("You've reached your daily max"); brief.push("Max reached"); warn = true; }
   } else if (!times.length && takenToday) {
     parts.push(`${takenToday} today`);
+    brief.push(`${takenToday} today`);
   }
-  return { text: parts.join(" · ") || "Tap to log", warn };
+  return { text: parts.join(" · ") || "Tap to log", short: brief.join(" · ") || "Tap to log", warn };
 }
 
 

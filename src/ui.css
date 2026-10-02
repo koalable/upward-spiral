@@ -156,10 +156,13 @@
 #wlc.ui .floorlist{display:flex;flex-wrap:wrap;gap:4px 18px}
 #wlc.ui .goallist li.done span{text-decoration:line-through;color:var(--muted)}
 #wlc.ui .goallist span{flex:1;overflow-wrap:anywhere}
-#wlc.ui .medgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,13em),1fr));gap:8px}
-#wlc.ui .medbtn{height:auto;min-height:60px;flex-direction:column;align-items:flex-start;gap:2px;padding:10px 12px;background:transparent;color:var(--fg);border:1px solid var(--border);text-align:left;white-space:normal}
-#wlc.ui .medname{font-weight:600}
-#wlc.ui .medstat{font-size:.8em;color:var(--muted);font-weight:400}
+#wlc.ui .medgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+@media (min-width:600px){#wlc.ui .medgrid{grid-template-columns:repeat(auto-fill,minmax(8em,1fr))}}
+#wlc.ui .medbtn{height:auto;aspect-ratio:1;min-width:0;display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-start;gap:2px;padding:9px 10px;background:transparent;color:var(--fg);border:1px solid var(--border);border-radius:14px;text-align:left;white-space:normal;overflow:hidden}
+#wlc.ui .medbtn.warn{border-color:var(--bad)}
+#wlc.ui .medname{font-weight:600;font-size:.92em;line-height:1.2;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+#wlc.ui .meddose{font-size:.8em;color:var(--muted);line-height:1.2}
+#wlc.ui .medstat{margin-top:auto;font-size:.72em;line-height:1.25;color:var(--muted);font-weight:400;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 #wlc.ui .medstat.warn{color:var(--bad)}
 #wlc.ui .timesrow{display:flex;flex-wrap:wrap;gap:6px}
 #wlc.ui .calrow{width:100%;color:var(--muted)}

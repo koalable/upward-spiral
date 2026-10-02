@@ -19,9 +19,9 @@ function logButtons() {
   if (!meds.length) return "";
   return html`<div class="medgrid">${meds.map((m) => {
     const s = medStatus(m);
-    return html`<button class="medbtn" data-act="medTake" data-id="${m.id}">
-      <span class="medname">${m.name} ${m.dose ? html`<span class="muted">${doseLabel(m.dose, m.unit)}</span>` : ""}</span>
-      <span class="medstat${s.warn ? " warn" : ""}" data-med-status="${m.id}">${s.text}</span></button>`;
+    return html`<button class="medbtn${s.warn ? " warn" : ""}" data-act="medTake" data-id="${m.id}" title="${s.text}" aria-label="Log ${m.name}. ${s.text}">
+      <span class="medname">${m.name}</span>${m.dose ? html`<span class="meddose">${doseLabel(m.dose, m.unit)}</span>` : ""}
+      <span class="medstat${s.warn ? " warn" : ""}" data-med-status="${m.id}">${s.short}</span></button>`;
   })}</div>`;
 }
 
@@ -37,8 +37,10 @@ export function patchMedStatus(view) {
     const el = view.querySelector(`[data-med-status="${m.id}"]`);
     if (!el) continue;
     const s = medStatus(m);
-    el.textContent = s.text;
+    el.textContent = s.short;
     el.classList.toggle("warn", s.warn);
+    el.parentElement.classList.toggle("warn", s.warn);
+    el.parentElement.title = s.text;
   }
   const t = view.querySelector("#live-toast");
   if (t && !toastVisible() && t.innerHTML) { state.toast = null; t.innerHTML = ""; }
