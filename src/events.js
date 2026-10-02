@@ -28,6 +28,7 @@ function onClick(event) {
   const el = event.target.closest("[data-act]");
   if (!el || !ui.root.contains(el)) return;
   const action = findAction(el.dataset.act);
+  if (el.closest("summary")) event.preventDefault(); // a button in a fold's heading doesn't also fold it
   if (action) run(action(el, event));
 }
 

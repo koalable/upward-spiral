@@ -7,7 +7,7 @@ import {
   DAY_LETTERS, EVERY_DAY, WEEKDAYS, normalizeRoutines, inRitual, doneCount, target, isDone, isScheduled,
   scheduleLabel, doneThisWeek, pace, lastLabel,
 } from "../routines.js";
-import { pressed, saveStatus, icon } from "./components.js";
+import { pressed, saveStatus, icon, foldedSet } from "./components.js";
 import { isPaused, pausedIds } from "../breathing.js";
 
 export const routineData = () => read("routines");
@@ -53,15 +53,18 @@ function ritualCard(rit, key, open) {
   const steps = ritualSteps(rit.id, key);
   if (!steps.length) return "";
   const done = steps.filter((r) => isDone(r, key, state.routinelog)).length, all = done === steps.length;
-  return html`<article class="round no-padding ritual themed dusk">
-    <nav class="padding">
+  // Tap the heading to fold the list away; remembered on this device (pref "folded", id rit-<id>).
+  const id = `rit-${rit.id}`;
+  return html`<article class="round no-padding ritual themed dusk"><details class="fold ritfold" data-fold="${id}" ${foldedSet().has(id) ? "" : "open"}>
+    <summary class="rithead"><nav class="padding">
       ${icon(rit.icon || "checklist")}
       <div class="max"><h6>${rit.name}</h6><div class="small-text">${rit.time ? clock12(rit.time) + " · " : ""}${done} of ${steps.length} done</div></div>
       ${open && !all ? html`<button data-act="runStart" data-ritual="${rit.id}">${icon("play_arrow")}<span>${done ? "Resume" : "Start"}</span></button>` : ""}
       ${all ? html`<span class="chip fill">${icon("done_all")}Done</span>` : ""}
+      <span class="foldchev" aria-hidden="true">${icon("expand_more")}</span>
     </nav>
-    <progress value="${Math.round((100 * done) / steps.length)}" max="100"></progress>
-    <ul class="list">${steps.map((r) => routineRow(r, key, open))}</ul></article>`;
+    <progress value="${Math.round((100 * done) / steps.length)}" max="100"></progress></summary>
+    <ul class="list">${steps.map((r) => routineRow(r, key, open))}</ul></details></article>`;
 }
 
 const STARTERS = [["morning", "Morning starter"], ["evening", "Evening starter"], ["work", "Workday starter"]];

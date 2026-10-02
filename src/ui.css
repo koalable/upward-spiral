@@ -766,3 +766,8 @@ html:has(#wlc .gpanel){overflow:hidden}
 #wlc.ui li.logrow.pick.on .pickbtn{background:color-mix(in srgb,var(--good) 14%,transparent);border-radius:8px}
 #wlc.ui .pickbtn .brbox{flex:none}
 #wlc.ui li.logrow.pick.on .brbox{background:var(--good);border-color:var(--good);color:#fff}
+
+/* Habits: ritual cards fold from their heading */
+#wlc.ui details.ritfold:not([open]){padding-bottom:10px}
+#wlc.ui .rithead .foldchev{margin-left:2px}
+#wlc.ui details.ritfold:not([open]) .rithead .foldchev{transform:rotate(-90deg)}
