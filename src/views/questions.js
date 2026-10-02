@@ -87,7 +87,7 @@ export function questionsView() {
       <button class="x" data-act="qMove" data-index="${i}" data-by="${up}" aria-label="Move ${questionName(q)} up" ${up ? "" : "disabled"}>↑</button>
       <button class="x" data-act="qMove" data-index="${i}" data-by="${down}" aria-label="Move ${questionName(q)} down" ${down ? "" : "disabled"}>↓</button>
       <button class="linkbtn" data-act="qEdit" data-index="${i}">Edit</button>
-      <button class="x" data-act="qRemove" data-index="${i}" aria-label="Remove ${questionName(q)}">×</button></div></li>`;
+      <button class="linkbtn" data-act="qRemove" data-index="${i}" aria-label="Hide ${questionName(q)}">Hide</button></div></li>`;
   };
   const groupsHtml = sections.map(({ g, test }) => {
     const list = s.cats.map((q, i) => [q, i]).filter(([q]) => test(q));
@@ -96,13 +96,17 @@ export function questionsView() {
       : html`<h3 class="also">Also tracking <span class="muted small">(not scored)</span></h3>`;
     return html`${head}<ul class="qlist${g ? ` qgroup themed ${g.theme}` : ""}">${list.map(([q, i], k) => row(q, i, list, k))}</ul>`;
   });
-  const missing = BUILTIN_ORDER.filter((id) => !hasQuestion(id));
+  const hidden = s.hiddenCats || [];
+  const missing = BUILTIN_ORDER.filter((id) => !hasQuestion(id) && !hidden.some((x) => x.id === id));
   return html`
     <section class="panel"><h2>Categories</h2>
       <p class="hint">🔒 Only you can see these. Each scored category is worth 4 points. Your total is scaled so it's always out of ${MAX_DAILY}, however many you pick. Eight is the classic setup.</p>
       <p class="small"><b>${scored.length}</b> scored · <b>${s.cats.length - scored.length}</b> tracked only ${saveStatus()}</p>
       ${s.cats.length ? groupsHtml : html`<p class="muted">No categories yet.</p>`}
-      ${missing.length ? html`<p class="hint spaced">Add back a built-in:</p><div class="chips">${missing.map((id) => html`<button class="chip" data-act="qAddBuiltin" data-id="${id}">+ ${BUILTINS[id].name}</button>`)}</div>` : ""}
+      ${hidden.length ? html`<h3 class="also">Hidden <span class="muted small">(answers kept)</span></h3>
+        <p class="hint">Add one back and it returns exactly as it was, with all its past answers.</p>
+        <div class="chips">${hidden.map((q) => html`<button class="chip" data-act="qRestore" data-id="${q.id}">+ ${questionName(q)}</button>`)}</div>` : ""}
+      ${missing.length ? html`<p class="hint spaced">Add a built-in:</p><div class="chips">${missing.map((id) => html`<button class="chip" data-act="qAddBuiltin" data-id="${id}">+ ${BUILTINS[id].name}</button>`)}</div>` : ""}
       <div class="formslot">${editor()}</div></section>
     <section class="panel"><h2>Streak and floor day</h2>
       <div class="targets"><label>My streak runs on<select class="field" id="q-lead">

@@ -16,6 +16,7 @@ import { edit as docEdit } from "../docs.js";
 import { pausable } from "../views/breathing.js";
 import { weekStart } from "../util.js";
 import { questionsView, parseQuestionDraft } from "../views/questions.js";
+import { hideCat, restoreCat } from "../categories.js";
 import { addMeal, removeMeal, setServings, toggleFavorite, isFavorite } from "../food.js";
 import { atTime } from "../util.js";
 import { targetsView } from "../views/targets.js";
@@ -267,10 +268,15 @@ const actions = {
     [cats[i], cats[j]] = [cats[j], cats[i]];
     saveSettings();
   },
+  // Hide keeps the whole category; Add back restores it as it was (see src/categories.js).
   qRemove(el) {
-    const cats = settings().cats, q = cats[Number(el.dataset.index)];
-    if (q.kind !== "builtin" && !confirm(`Remove "${q.name}"? Past answers stay in your history.`)) return "none";
-    cats.splice(Number(el.dataset.index), 1);
+    const q = settings().cats[Number(el.dataset.index)];
+    if (!q) return "none";
+    hideCat(settings(), q.id);
+    tidyStreakAndFloor();
+  },
+  qRestore(el) {
+    restoreCat(settings(), el.dataset.id);
     tidyStreakAndFloor();
   },
   qAddBuiltin(el) {
