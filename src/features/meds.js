@@ -60,6 +60,7 @@ export default {
       closeSheet();
      
     },
+    medWeek(el) { state.medWeek = Math.min(0, (state.medWeek || 0) + Number(el.dataset.by)); },
     // bulk edit: pick several logged doses, set one date and time for all
     medBulk() { openSheet("bulk", { picks: [], date: todayKey(), time: hhmmOf(Date.now()) }); },
     medBulkCancel: closeSheet,

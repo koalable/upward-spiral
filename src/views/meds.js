@@ -1,10 +1,11 @@
 // Meds & substances: one-tap logging, the personal list (with reminder times), and history.
-import { html, todayKey, addDays, longDate, clock, hhmmOf, atTime } from "../util.js";
+import { html, todayKey, addDays, longDate, clock, hhmmOf, atTime, weekday, shortDate } from "../util.js";
 import { MED_KINDS, TOAST_MS, MEDLOG_DAYS } from "../constants.js";
 import { state, hasQuestion } from "../state.js";
 import { sheet } from "../state.js";
 import { medList, activeMeds, logsOn, medStatus, doseLabel, substanceUnits } from "../meds.js";
 import { saveStatus, fold, icon } from "./components.js";
+import { medWeek } from "./medweek.js";
 
 export const toastVisible = () => state.toast && Date.now() - state.toast.when < TOAST_MS;
 
@@ -91,9 +92,9 @@ function logRow(x, key) {
     <input class="field" type="time" id="log-time" value="${hhmmOf(x.at)}" aria-label="Time">
     <input class="field" id="log-dose" value="${x.dose || ""}" aria-label="Dose" placeholder="Dose"><span class="muted">${x.unit || ""}</span>
     <button class="btn" data-act="medSaveLog" data-day="${key}" data-id="${x.id}">Save</button><button class="linkbtn" data-act="medCancelLog">Cancel</button></li>`;
-  return html`<li class="logrow"><span class="logtime">${clock(x.at)}</span>
+  return html`<li class="logrow compact"><span class="logtime">${clock(x.at)}</span>
     <span class="logname">${x.name} ${x.dose ? html`<span class="muted">${doseLabel(x.dose, x.unit)}</span>` : ""} ${x.note ? html`<span class="muted small">${x.note}</span>` : ""}</span>
-    <button class="linkbtn" data-act="medEditLog" data-day="${key}" data-id="${x.id}">Edit</button>
+    <button class="x" data-act="medEditLog" data-day="${key}" data-id="${x.id}" aria-label="Edit ${x.name} at ${clock(x.at)}">${icon("edit")}</button>
     <button class="x" data-act="medDeleteLog" data-day="${key}" data-id="${x.id}" aria-label="Delete entry">×</button></li>`;
 }
 
@@ -114,7 +115,7 @@ function history() {
   return [0, 1, 2, 3, 4, 5, 6].map((n) => addDays(today, -n)).map((key, n) => {
     const logs = logsOn(key);
     if (!logs.length && n) return "";
-    const title = n === 0 ? "Today" : n === 1 ? "Yesterday" : longDate(key);
+    const title = n === 0 ? "Today" : n === 1 ? "Yesterday" : `${weekday(key)}, ${shortDate(key)}`;
     const all = sheet("bulk") && logs.length ? html`<button class="linkbtn small" data-act="medPickDay" data-day="${key}">${logs.every((x) => sheet("bulk").picks.includes(`${key}|${x.id}`)) ? "Clear" : "Select all"}</button>` : "";
     return html`<h3 class="rulehead loghead"><span class="max">${title}</span>${all}</h3><ul class="loglist">${logs.length ? logs.map((x) => logRow(x, key)) : html`<li class="muted small">Nothing logged yet.</li>`}</ul>`;
   });
@@ -144,6 +145,6 @@ export function medsView() {
     <section class="panel"><h2>Reminders</h2>
       <p class="hint">Add scheduled times to an item and your phone reminds you then, unless that dose is already logged. Turn reminders on under Notifications.</p>
       <p><button class="btn ghost" data-act="openTab" data-tab="notify">Notification settings</button></p>${saveStatus()}</section>
-    <section class="panel"><div class="cat-head"><h2>History</h2>${sheet("bulk") ? "" : html`<button class="linkbtn" data-act="medBulk">Edit several times</button>`}</div>${bulkBar()}${history()}</section>`;
+    <section class="panel"><div class="cat-head"><h2>History</h2>${sheet("bulk") ? "" : html`<button class="linkbtn" data-act="medBulk">Edit several times</button>`}</div>${sheet("bulk") ? "" : medWeek()}${bulkBar()}<h3 class="rulehead">Last 7 days, dose by dose</h3>${history()}</section>`;
 }
 

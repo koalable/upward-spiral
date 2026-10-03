@@ -777,3 +777,41 @@ html:has(#wlc .gpanel){overflow:hidden}
 #wlc.ui .archnote{margin:10px 0}
 #wlc.ui details.archived{border:1px dashed var(--border);border-radius:var(--radius);padding:10px 14px;margin:14px 0}
 #wlc.ui details.archived summary{cursor:pointer;font-weight:600;display:flex;align-items:center;gap:8px}
+
+/* Meds history: condensed rows */
+#wlc.ui .loglist .logrow.compact{display:grid;grid-template-columns:5.2em minmax(0,1fr) auto auto;gap:4px;align-items:center;padding:3px 0;flex-wrap:nowrap}
+#wlc.ui .loglist .logrow.compact .logname{min-width:0;overflow-wrap:anywhere}
+#wlc.ui .loglist .logrow.compact .x{width:32px;height:32px;padding:0}
+#wlc.ui h3.loghead{margin:12px 0 2px;font-size:.72em}
+/* Meds: week at a glance */
+#wlc.ui .medweek{margin:4px 0 18px}
+#wlc.ui .mwnav{display:flex;align-items:center;gap:8px;margin-bottom:6px;text-align:center}
+#wlc.ui .mwaxis,#wlc.ui .mwrow{display:grid;grid-template-columns:2.8em 1fr;gap:6px;align-items:center}
+#wlc.ui .mwticks{position:relative;height:16px;font-size:.66em;color:var(--muted)}
+#wlc.ui .mwticks em{position:absolute;transform:translateX(-50%);font-style:normal}
+#wlc.ui .mwticks em:first-child{transform:none}#wlc.ui .mwticks em:last-child{transform:translateX(-100%)}
+#wlc.ui .mwrow{height:34px}
+#wlc.ui .mwday{display:flex;flex-direction:column;line-height:1.05;font-size:.72em}
+#wlc.ui .mwday small{color:var(--muted)}
+#wlc.ui .mwrow.today .mwday b{color:var(--fg);text-decoration:underline;text-underline-offset:3px}
+#wlc.ui .mwrow.future{opacity:.45}
+#wlc.ui .mwtrack{position:relative;height:100%;border-bottom:1px solid var(--border);background-image:repeating-linear-gradient(to right,var(--border) 0 1px,transparent 1px 25%)}
+#wlc.ui .mwdot,#wlc.ui .mwring{position:absolute;width:11px;height:11px;border-radius:50%;transform:translate(-50%,-50%)}
+#wlc.ui .mwdot{box-shadow:0 0 0 2px var(--card)}
+#wlc.ui .mwring{border:2px solid;width:15px;height:15px;opacity:.75}
+#wlc.ui .mwlegend{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:10px;font-size:.8em}
+#wlc.ui .mwlegend span{display:inline-flex;align-items:center;gap:6px}
+#wlc.ui .mwlegend i{width:10px;height:10px;border-radius:50%;display:inline-block}
+#wlc.ui .mwlegend i.ring{border:2px solid var(--muted);background:none}
+
+/* Projects: milestones stacked vertically (open one shows its card under its tab) */
+#wlc.ui .folder.vstack{display:flex;flex-direction:column;gap:6px;margin:6px 0 10px}
+#wlc.ui .vstack .ftab{display:flex;align-items:center;gap:10px;width:100%;height:auto;margin:0;padding:12px 14px;border:0;border-radius:14px;background:var(--p);color:var(--fg);font:inherit;text-align:left;opacity:.7;white-space:normal}
+#wlc.ui .vstack .ftab .fname{flex:1;min-width:0;font:400 1.02em/1.2 var(--serif);text-transform:uppercase;letter-spacing:.04em}
+#wlc.ui .vstack .ftab .fnum{font-size:.75em;font-variant-numeric:tabular-nums;opacity:.7;min-width:1em}
+#wlc.ui .vstack .ftab small{font-size:.8em;font-variant-numeric:tabular-nums;display:flex;align-items:center;gap:4px;opacity:.85}
+#wlc.ui .vstack .ftab i{color:var(--pd)}
+#wlc.ui .vstack .ftab.on{opacity:1;border-radius:14px 14px 4px 4px}
+#wlc.ui .vstack .ftab.locked{opacity:.5}
+#wlc.ui .vstack .ftab.complete .fname{text-decoration:line-through;text-decoration-thickness:1px}
+#wlc.ui .vstack .fcard{margin-top:-4px;border-radius:4px 4px 20px 20px}

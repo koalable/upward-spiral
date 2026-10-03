@@ -168,14 +168,8 @@ function milestoneTabs(w, g, key) {
   const x = themed.find((y) => y.id === state.route.ms) || firstOpen;
   const p = progress(x.tasks, key), m = x.m;
   const tasks = [...x.tasks].sort((a, b) => Boolean(a.done) - Boolean(b.done) || (a.due || "9999").localeCompare(b.due || "9999"));
-  return html`<div class="folder">
-    <div class="ftabs" role="group" aria-label="Milestones">${themed.map((y) => {
-      const on = y === x, d = y.tasks.filter((t) => t.done).length, late = y.tasks.some((t) => !t.done && t.due && t.due < key);
-      const lock = y.m && msBlocker(w, y.m.id);
-      return html`<button class="ftab ink satbg ${y.theme}${on ? " on" : ""}${lock ? " locked" : ""}" style="--sat:${saturation(progress(y.tasks, key).pct)}" aria-pressed="${on ? "true" : "false"}" data-act="wMs" data-goal="${g.id}" data-ms="${y.id}"${lock ? html` title="Locked until “${lock.name}” is done"` : ""}>
-        ${icon(lock ? "lock" : y.icon)}<span>${y.name}</span><small>${late && !lock ? html`<i class="late" title="Something's overdue"></i>` : ""}${d}/${y.tasks.length}</small></button>`;
-    })}</div>
-    <div class="fcard ink satbg ${x.theme}" style="--sat:${saturation(p.pct)}" role="region" aria-label="${x.name}">
+  // Milestones stack vertically, top to bottom in order; the open one shows its card right under its tab.
+  const card = html`<div class="fcard ink satbg ${x.theme}" style="--sat:${saturation(p.pct)}" role="region" aria-label="${x.name}">
       <div class="fhead"><span class="fico" aria-hidden="true">${icon(x.icon)}</span>
         <div class="max"><h3>${x.name}</h3>
           <div class="small-text">${m?.due ? `${shortDate(m.due)} · ${countdown(m.due, key)} · ` : ""}${p.done}/${p.total} done${p.spent ? ` · ${durationText(p.spent)} spent` : ""}</div>
@@ -185,7 +179,13 @@ function milestoneTabs(w, g, key) {
         ${m && msBlocker(w, m.id) ? html`<p class="small-text mlocked">${icon("lock")} Unlocks when <b>${msBlocker(w, m.id).name}</b> is done. You can still plan and edit these tasks.</p>` : ""}
         ${tasks.length ? html`<ul class="list">${tasks.map((t) => taskRow(w, t, key))}</ul>` : ""}
         <button class="transparent addtask" data-act="wNew" data-kind="task" data-goal="${g.id}" data-ms="${m?.id || ""}">${icon("add")}<span>Add task</span></button>
-      </div></div></div>`;
+      </div></div>`;
+  return html`<div class="folder vstack" role="group" aria-label="Milestones">${themed.map((y, i) => {
+      const on = y === x, d = y.tasks.filter((t) => t.done).length, late = y.tasks.some((t) => !t.done && t.due && t.due < key);
+      const lock = y.m && msBlocker(w, y.m.id), all = y.tasks.length && d === y.tasks.length;
+      return html`<button class="ftab ink satbg ${y.theme}${on ? " on" : ""}${lock ? " locked" : ""}${all ? " complete" : ""}" style="--sat:${saturation(progress(y.tasks, key).pct)}" aria-pressed="${on ? "true" : "false"}" aria-expanded="${on ? "true" : "false"}" data-act="wMs" data-goal="${g.id}" data-ms="${y.id}"${lock ? html` title="Locked until “${lock.name}” is done"` : ""}>
+        <span class="fnum">${y.m ? i + 1 : ""}</span>${icon(lock ? "lock" : all ? "check" : y.icon)}<span class="fname">${y.name}</span><small>${late && !lock ? html`<i class="late" title="Something's overdue"></i>` : ""}${d}/${y.tasks.length}</small></button>${on ? card : ""}`;
+    })}</div>`;
 }
 
 const goalButtons = (g) => html`<nav class="wrap gbtns"><button class="border small" data-act="wNew" data-kind="ms" data-goal="${g.id}">${icon("flag")}<span>Milestone</span></button>

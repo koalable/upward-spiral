@@ -16,7 +16,7 @@ export const state = {
   settings: null, days: {}, weekly: {}, medlog: {}, routines: null, routinelog: {}, work: null, notify: null, todos: null,
   // what's open: one form, card or sheet at a time (see sheet() below), plus a few status messages
   sheet: null, workImport: "", run: null, toast: null, timer: null,
-  area: "checkins", calMonth: null, pushStatus: "",
+  area: "checkins", calMonth: null, medWeek: 0, pushStatus: "",
   loaded: false,
   historyStart: addDays(todayKey(), -HISTORY_DAYS),
 };
