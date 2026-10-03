@@ -150,12 +150,26 @@ function routineForm() {
     <nav><button data-act="rSave">Save</button><button class="transparent" data-act="rCancel">Cancel</button></nav></article>`;
 }
 
+// Link a ritual to a project (it shows there, "2 this week"), and optionally tick off one of its tasks
+// once the ritual has run N times in a week (e.g. "Post 3× this week").
+function linkFields(e) {
+  const w = read("work"), goals = w.goals.filter((g) => !g.archived);
+  if (!goals.length) return "";
+  const goal = e.linkGoal || "", tasks = goal ? w.tasks.filter((t) => t.goal === goal && (!t.done || t.id === e.linkTask)) : [];
+  return html`<div class="grid ritlink">
+    <div class="s12 m5">${field("Counts toward project", html`<select data-draft="linkGoal" data-redraw><option value="">None</option>${goals.map((g) => html`<option value="${g.id}" ${g.id === goal ? "selected" : ""}>${g.name}</option>`)}</select>`)}</div>
+    ${goal ? html`<div class="s8 m5">${field("Tick off a task (optional)", html`<select data-draft="linkTask" data-redraw><option value="">No</option>${tasks.map((t) => html`<option value="${t.id}" ${t.id === e.linkTask ? "selected" : ""}>${t.name}</option>`)}</select>`)}</div>
+      ${e.linkTask ? html`<div class="s4 m2">${field("after × this week", html`<input type="number" min="1" max="7" data-draft="linkTimes" data-num value="${e.linkTimes || 3}">`)}</div>` : ""}` : ""}
+  </div>`;
+}
+
 function ritualForm() {
   const e = sheet("ritual");
   if (!e) return "";
   return html`<article class="border round padding" data-open><h6>${e.id ? "Edit ritual" : "New ritual"}</h6>
     <div class="grid"><div class="s12 m8">${field("Name", html`<input placeholder=" " id="rit-name" data-draft="name" maxlength="40" value="${e.name || ""}" placeholder="Workday shutdown">`)}</div>
       <div class="s12 m4">${field("Time (optional)", html`<input placeholder=" " id="rit-time" data-draft="time" type="time" value="${e.time || ""}">`)}</div></div>
+    ${linkFields(e)}
     <nav><button data-act="ritSave">Save</button><button class="transparent" data-act="ritCancel">Cancel</button>
       ${e.id && e.custom ? html`<button class="transparent error-text" data-act="ritRemove">Delete ritual</button>` : ""}</nav></article>`;
 }

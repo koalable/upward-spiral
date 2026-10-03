@@ -815,3 +815,97 @@ html:has(#wlc .gpanel){overflow:hidden}
 #wlc.ui .vstack .ftab.locked{opacity:.5}
 #wlc.ui .vstack .ftab.complete .fname{text-decoration:line-through;text-decoration-thickness:1px}
 #wlc.ui .vstack .fcard{margin-top:-4px;border-radius:4px 4px 20px 20px}
+
+/* ======================================================================
+   POSTER — the colourful look (Settings → Account → Look). Printed paper:
+   peach page, cream cards, 2px ink outlines, hard offset shadows, sticker
+   pills, Anton for big numbers and names, Young Serif headings, Outfit text.
+   Built on top of .light; only overrides here.
+   ====================================================================== */
+html.poster-page,html.poster-page body{background:#f7e2cf}
+#wlc.ui.poster{--bg:#f7e2cf;--card:#fdf3e8;--fg:#1a1714;--muted:#5f5249;--border:#1a1714;--input:#1a1714;--control:#1a1714;--primary:#1a1714;--on-primary:#fdf3e8;--accent:#f0cfb3;--ring:#2e4bd6;--good:#2c7a3c;--bad:#c8321c;--gold:#b7810a;
+  --tomato:#e5472f;--mustard:#f3b51b;--cobalt:#2e4bd6;--pink:#f3a6c3;--green:#2c7a3c;--lavender:#c8b9f4;--sea:#a8c3ea;--cream:#fdf3e8;--ink:#1a1714;
+  --sh:3px 3px 0 var(--ink);--bw:2px;--radius:18px;
+  --serif:"Young Serif",Georgia,serif;--display:"Anton","Oswald",Impact,"Arial Narrow",sans-serif;
+  font-family:Outfit,system-ui,-apple-system,"Segoe UI",sans-serif}
+/* cards and panels: outlined, hard shadow */
+#wlc.ui.poster :is(.panel,.cat,article,.eover,.egroup,.hero,.dcard,.fcard,.goal,.importbox,details.archived,.tidy,.medweek,.plateblock,.qgroup){border:var(--bw) solid var(--ink)!important;box-shadow:var(--sh);background-color:var(--card)}
+#wlc.ui.poster :is(.panel,.cat,article,.hero){border-radius:var(--radius)}
+#wlc.ui.poster .medweek{padding:12px;border-radius:var(--radius)}
+/* headings */
+#wlc.ui.poster :is(.panel h2,.cat h2){font-family:var(--serif);font-weight:400;color:var(--cobalt)}
+#wlc.ui.poster :is(.rulehead,h3.also,.egrouphead .tname,.ghead .tname,.grphead .tname,.gsection){font-family:Outfit,sans-serif;font-weight:700;letter-spacing:.1em;color:var(--muted)}
+#wlc.ui.poster header .title,#wlc.ui.poster h6.title{font-family:var(--display);font-weight:400;letter-spacing:.03em;text-transform:uppercase;font-size:1.6em}
+/* big numbers and names: extruded Anton */
+#wlc.ui.poster :is(.big,.etitle,.gptitle,.pname,.etile .num,.eq4 .serif,.ghead h3,.egrouphead h3,.grphead .gname){font-family:var(--display)!important;font-weight:400;letter-spacing:.03em;text-transform:uppercase}
+#wlc.ui.poster :is(.big,.etitle,.gptitle){color:var(--fg);-webkit-text-stroke:1px var(--ink);text-shadow:1px 1px 0 var(--ink),2px 2px 0 var(--ink),3px 3px 0 var(--ink),4px 4px 0 var(--ink)}
+#wlc.ui.poster .streaknum{color:var(--mustard)}
+#wlc.ui.poster .etitle em{color:var(--cobalt);font-style:normal}
+/* buttons: pill, outlined, pressable */
+#wlc.ui.poster :is(button,a.button,.btn):not(.x):not(.linkbtn):not(.transparent):not(.circle):not(.chip):not(.ftab):not(.tname):not(.pchev):not(.iconbtn){border:var(--bw) solid var(--ink);border-radius:999px;box-shadow:var(--sh);font-weight:700;transition:transform .08s,box-shadow .08s}
+#wlc.ui.poster :is(button,a.button,.btn):not(.x):not(.linkbtn):not(.transparent):not(.circle):not(.chip):not(.ftab):not(.tname):not(.pchev):not(.iconbtn):active{transform:translate(3px,3px);box-shadow:0 0 0 var(--ink)}
+#wlc.ui.poster :is(button.border,.btn.ghost){background:var(--card);color:var(--ink)}
+#wlc.ui.poster :is(button:not(.border):not(.transparent):not(.circle):not(.chip):not(.x):not(.linkbtn):not(.ftab):not(.tname):not(.pchev):not(.iconbtn),.btn:not(.ghost)){background:var(--ink);color:var(--cream)}
+#wlc.ui.poster .linkbtn{color:var(--cobalt);text-decoration-thickness:2px}
+#wlc.ui.poster .iconbtn{border:var(--bw) solid var(--ink);background:var(--card);border-radius:50%}
+/* chips and pills: sticker style */
+#wlc.ui.poster .chip{border:var(--bw) solid var(--ink)!important;background:var(--card);color:var(--ink);font-weight:600}
+#wlc.ui.poster .chip.fill,#wlc.ui.poster .chip[aria-pressed="true"]{background:var(--lavender)!important;color:var(--ink)!important;box-shadow:2px 2px 0 var(--ink)}
+#wlc.ui.poster :is(.badge,.tag,.pts,.lvlbadge,.delta){border:var(--bw) solid var(--ink)!important;color:var(--ink)!important;background:var(--card);font-weight:700;transform:rotate(-2deg);box-shadow:2px 2px 0 var(--ink)}
+#wlc.ui.poster .badge.good{background:var(--green);color:var(--cream)!important}
+#wlc.ui.poster .badge.bad{background:var(--tomato);color:var(--cream)!important}
+#wlc.ui.poster .badge.on{background:var(--mustard)}
+#wlc.ui.poster .badge.ice{background:var(--sea)}
+/* inputs */
+#wlc.ui.poster :is(input.field,textarea,select,.field input,.field select,.field textarea,input[type=number],input[type=date],input[type=time]){border:var(--bw) solid var(--ink)!important;background:#fffaf3;border-radius:12px}
+/* checkboxes / round checks */
+#wlc.ui.poster button.circle.border{border:var(--bw) solid var(--ink)}
+#wlc.ui.poster button.circle[aria-pressed="true"]{background:var(--cobalt);color:var(--cream);border:var(--bw) solid var(--ink)}
+/* lists: dashed separators */
+#wlc.ui.poster :is(.list li,.qrow,.logrow,.goallist li){border-top:1.5px dashed color-mix(in srgb,var(--ink) 35%,transparent)}
+/* top tabs: segmented poster control */
+#wlc.ui.poster .tabs{background:var(--card);border:var(--bw) solid var(--ink);border-radius:999px;padding:3px}
+#wlc.ui.poster .tabs a{color:var(--ink);font-weight:700;border-radius:999px}
+#wlc.ui.poster .tabs a.active{background:var(--ink);color:var(--cream);box-shadow:none}
+/* page links: colour blocks, one colour per page */
+#wlc.ui.poster nav.pages .chip:nth-child(1){--pc:var(--cobalt);--pt:var(--cream)}
+#wlc.ui.poster nav.pages .chip:nth-child(2){--pc:var(--green);--pt:var(--cream)}
+#wlc.ui.poster nav.pages .chip:nth-child(3){--pc:var(--tomato);--pt:var(--cream)}
+#wlc.ui.poster nav.pages .chip:nth-child(4){--pc:var(--mustard);--pt:var(--ink)}
+#wlc.ui.poster nav.pages .chip.fill{background:var(--pc)!important;color:var(--pt)!important}
+@media (display-mode: standalone){
+  #wlc.ui.poster nav.pages{background:var(--ink);border-top:var(--bw) solid var(--ink);gap:2px;padding:0 0 env(safe-area-inset-bottom);-webkit-backdrop-filter:none;backdrop-filter:none}
+  #wlc.ui.poster nav.pages .chip{border:0!important;border-radius:0;background:var(--card)!important;color:var(--ink)!important;box-shadow:none;padding:10px 2px;font-family:var(--display);font-weight:400;letter-spacing:.04em;text-transform:uppercase;font-size:.8em}
+  #wlc.ui.poster nav.pages .chip.fill{background:var(--pc)!important;color:var(--pt)!important}
+  #wlc.ui.poster nav.pages .chip.fill i{color:var(--pt)}
+}
+/* energy groups in poster colours (solid shades for momentum) */
+#wlc.ui.poster .garden{--h:#2c7a3c;--s0:#d6ead2;--s1:#9fd19a;--s2:#5fae63;--s3:#2c7a3c;--s4:#18501f}
+#wlc.ui.poster .tide{--h:#2e4bd6;--s0:#dbe2fb;--s1:#a8c3ea;--s2:#6f8ae6;--s3:#2e4bd6;--s4:#1a2c8a}
+#wlc.ui.poster .ember{--h:#e5472f;--s0:#fbdcd4;--s1:#f5a38f;--s2:#ee7357;--s3:#e5472f;--s4:#a52a17}
+#wlc.ui.poster .dusk{--h:#7a5fd8;--s0:#ece6fd;--s1:#c8b9f4;--s2:#a28ef0;--s3:#7a5fd8;--s4:#4a3399}
+#wlc.ui.poster :is(.etile,.eq4 a){border:var(--bw) solid var(--ink);box-shadow:var(--sh)}
+#wlc.ui.poster .gicon,#wlc.ui.poster .tchip{border:var(--bw) solid var(--ink)}
+/* project colours: the poster palette */
+#wlc.ui.poster .gc1{--p:#2e4bd6;--on:#fdf3e8;--pd:#f3b51b}
+#wlc.ui.poster .gc2{--p:#e5472f;--on:#fdf3e8;--pd:#fdf3e8}
+#wlc.ui.poster .gc3{--p:#f3b51b;--on:#1a1714;--pd:#1a1714}
+#wlc.ui.poster .gc4{--p:#2c7a3c;--on:#fdf3e8;--pd:#f3a6c3}
+#wlc.ui.poster .gc5{--p:#f3a6c3;--on:#1a1714;--pd:#1a1714}
+#wlc.ui.poster .gc6{--p:#c8b9f4;--on:#1a1714;--pd:#2e4bd6}
+#wlc.ui.poster .gc7{--p:#17151c;--on:#fdf3e8;--pd:#f3b51b}
+#wlc.ui.poster :is(.dcard,.fcard,.vstack .ftab,.gsun,.tsheet){border:var(--bw) solid var(--ink)!important;box-shadow:var(--sh)}
+#wlc.ui.poster .vstack .ftab{opacity:1;filter:saturate(.55)}
+#wlc.ui.poster .vstack .ftab.on{filter:none}
+#wlc.ui.poster .vstack .ftab.locked{filter:grayscale(.6);opacity:.75}
+/* rings and progress */
+#wlc.ui.poster .rings .track{stroke:#ecd3bd}
+#wlc.ui.poster progress{border:var(--bw) solid var(--ink);height:12px}
+#wlc.ui.poster :is(.ptrack,.prog){border:var(--bw) solid var(--ink);background:var(--card)}
+/* calendars */
+#wlc.ui.poster .cday.all{border:var(--bw) solid var(--ink)}
+/* bottom sheets */
+#wlc.ui.poster .bsheet{border:var(--bw) solid var(--ink);border-bottom:0;background:var(--card)}
+#wlc.ui .ritlinks{list-style:none;padding:0;margin:8px 0 12px;display:grid;gap:6px}
+#wlc.ui .ritlinks li{display:flex;align-items:center;gap:8px;font-size:.9em;padding:8px 12px;border:1px solid var(--border);border-radius:12px}
+#wlc.ui.poster .ritlinks li{border:var(--bw) solid var(--ink);background:var(--card);box-shadow:2px 2px 0 var(--ink)}

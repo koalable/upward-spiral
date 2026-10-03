@@ -79,3 +79,12 @@ export function pace(r, key, log) {
 }
 
 export const lastLabel = (n) => (n === null ? "not yet" : n === 0 ? "today" : n === 1 ? "yesterday" : `${n} days ago`);
+
+// A ritual "ran" on a day when every step due that day was done.
+// Steps on a few-times-a-week schedule count too (unlike dayStatus), so doing half the ritual isn't a run.
+export function ritualRan(items, ritId, key, log) {
+  const due = inRitual(items, ritId).filter((r) => !(r.since && key < r.since) && (r.perWeek || (r.days || EVERY_DAY).includes(parseKey(key).getDay())));
+  return due.length > 0 && due.every((r) => isDone(r, key, log));
+}
+// How many days this week (Mon → key) the ritual ran.
+export const ritualRunsThisWeek = (items, ritId, key, log) => weekOf(key).filter((d) => d <= key && ritualRan(items, ritId, d, log)).length;

@@ -52,6 +52,7 @@ Words: **habit** = one recurring action; **ritual** = a saved sequence of habits
 
 ## Released Oct 2
 - Projects: "Goals" renamed Projects; milestones locked in order (per-project "any order" switch); archive / restore projects.
+- Milestones stack vertically; Meds week chart + condensed dose history; Poster look (3rd theme); rituals can count toward a project and tick a task after N runs a week.
 
 ## Open questions for Karla
 - Should Tidy up also cover to-dos with due dates (Habits page)?

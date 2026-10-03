@@ -39,10 +39,11 @@ export function customizeView() {
 }
 
 export function accountView() {
-  const dark = getPref("theme") !== "light", size = Number(getPref("fs")) || TEXT_SIZES[0];
+  const theme = getPref("theme") || "dark", size = Number(getPref("fs")) || TEXT_SIZES[0];
   return html`
     <section class="panel"><h2>Look</h2>
-      ${swatch(dark, "theme", "", "Dark mode")}
+      <div class="chips looks" role="group" aria-label="Look">${[["dark", "Dark"], ["light", "Light"], ["poster", "Poster (colourful)"]].map(([id, label]) =>
+        html`<button class="chip ${theme === id ? "fill" : "border"}" data-act="theme" data-theme="${id}" aria-pressed="${theme === id ? "true" : "false"}">${label}</button>`)}</div>
       <div class="row textsize"><span class="max">Text size</span>
         <button class="border small" data-act="textSmaller" ${size === TEXT_SIZES[0] ? "disabled" : ""} aria-label="Smaller text">A−</button>
         <button class="border small" data-act="textLarger" ${size === TEXT_SIZES[TEXT_SIZES.length - 1] ? "disabled" : ""} aria-label="Larger text">A+</button></div></section>

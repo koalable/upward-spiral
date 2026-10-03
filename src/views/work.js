@@ -6,6 +6,7 @@ import { timerFor, isRunning, isUp, msLeft, minutesLeft, countdownText, duration
 import { pressed, saveStatus, icon } from "./components.js";
 import { pausedIds } from "../breathing.js";
 import { read } from "../docs.js";
+import { ritualRunsThisWeek } from "../routines.js";
 import { normalizeLayout, pageLabel } from "../layout.js";
 
 export const workData = () => read("work");
@@ -229,6 +230,7 @@ function goalPage(w, g, key) {
     <div class="gpprog">${pbar(p)}<div class="gprow"><span>${p.done}/${p.total} tasks</span>${extra ? html`<span>${extra}</span>` : ""}</div></div>
     ${g.archived ? html`<p class="small-text archnote">${icon("folder")} Archived ${shortDate(g.archived)}. Its tasks are off your lists. Restore it to bring them back.</p>`
       : p.total && p.done === p.total ? html`<div class="finished">${icon("check")}<span class="max">Every task is done. Archive this project?</span><button class="small" data-act="wArchive" data-id="${g.id}">Archive</button></div>` : ""}
+    ${linkedRituals(w, g, key)}
     ${milestoneTabs(w, g, key)}
     ${goalButtons(g)}
     <p class="small-text">${saveStatus()}</p></div>
@@ -236,6 +238,16 @@ function goalPage(w, g, key) {
 }
 
 const isArchivedTask = (w, t) => Boolean(goalOf(w, t.goal)?.archived);
+// Rituals that count toward this project (set on the Habits page), with how often they ran this week.
+function linkedRituals(w, g, key) {
+  const r = read("routines"), mine = r.rituals.filter((x) => x.linkGoal === g.id);
+  if (!mine.length) return "";
+  return html`<ul class="ritlinks">${mine.map((x) => {
+    const n = ritualRunsThisWeek(r.items, x.id, key, state.routinelog), t = x.linkTask && w.tasks.find((y) => y.id === x.linkTask), need = Number(x.linkTimes) || 3;
+    return html`<li>${icon("repeat")}<span class="max"><b>${x.name} ritual</b> · ${n}× this week${t ? html` · ${t.done ? html`ticked off “${t.name}”` : html`ticks off “${t.name}” at ${need}`}` : ""}</span></li>`;
+  })}</ul>`;
+}
+
 const pageGoal = (w) => (state.route.goal ? w.goals.find((g) => g.id === state.route.goal) : null);
 
 // One task, on a card that slides up: when, time, timer, what it waits on, and actions.

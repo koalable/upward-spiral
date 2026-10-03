@@ -33,17 +33,22 @@ export function mountShell(root) {
 }
 
 // ---------- theme and text size ----------
-// Dark by default; the choice is remembered per device.
-const isDark = () => ui.root.classList.contains("dark");
+// Three looks, remembered per device: dark (default), light (cream), poster (colourful printed-paper; built on light).
+export const THEMES = [["dark", "Dark"], ["light", "Light"], ["poster", "Poster"]];
+const currentTheme = () => (ui.root.classList.contains("poster") ? "poster" : ui.root.classList.contains("light") ? "light" : "dark");
 export function applyTheme(theme) {
-  const dark = theme !== "light";
-  ui.root.classList.toggle("dark", dark);
-  ui.root.classList.toggle("light", !dark);
+  const t = THEMES.some(([id]) => id === theme) ? theme : "dark";
+  ui.root.classList.toggle("dark", t === "dark");
+  ui.root.classList.toggle("light", t !== "dark");
+  ui.root.classList.toggle("poster", t === "poster");
+  document.documentElement.classList.toggle("poster-page", t === "poster");
   const btn = ui.root.querySelector("#theme-btn");
-  if (btn) btn.innerHTML = String(icon(dark ? "light_mode" : "dark_mode"));
+  if (btn) btn.innerHTML = String(icon(t === "dark" ? "light_mode" : t === "light" ? "palette" : "dark_mode"));
 }
-export function toggleTheme() {
-  const next = isDark() ? "light" : "dark";
+// The header button steps through them: dark → light → poster → dark.
+export function toggleTheme(to) {
+  const ids = THEMES.map(([id]) => id), cur = currentTheme();
+  const next = ids.includes(to) ? to : ids[(ids.indexOf(cur) + 1) % ids.length];
   setPref("theme", next);
   applyTheme(next);
 }

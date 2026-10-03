@@ -28,7 +28,7 @@ export default {
   input: intoDraft,
   change: (el) => (intoDraft(el) ? ("redraw" in el.dataset && render(), true) : false),
   actions: {
-    theme: () => { toggleTheme(); },
+    theme: (el) => { toggleTheme(el?.dataset?.theme); },
     textSmaller: () => { stepTextSize(-1); },
     textLarger: () => { stepTextSize(1); },
     signIn: () => (auth.signIn(), "none"),

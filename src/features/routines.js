@@ -1,10 +1,10 @@
 // Routines: check off recurring tasks, run timers, and set routines up.
 import { state, isEditable, sheet, openSheet, closeSheet } from "../state.js";
 import { save, paths } from "../store.js";
-import { edit as docEdit } from "../docs.js";
+import { edit as docEdit, read } from "../docs.js";
 import { clone, newId, todayKey } from "../util.js";
 import { ui, render } from "../render.js";
-import { doneCount, target, EVERY_DAY, WEEKDAYS } from "../routines.js";
+import { doneCount, target, EVERY_DAY, WEEKDAYS, ritualRunsThisWeek } from "../routines.js";
 import { routinesView, routineSetupView, patchRoutines, modeOf, routineData, ritualSteps } from "../views/routines.js";
 
 const $ = (sel) => ui.view.querySelector(sel);
@@ -18,6 +18,16 @@ function setCount(id, key, n) {
   if (n > 0) doc.done[id] = n; else delete doc.done[id];
   state.routinelog[key] = doc;
   save(paths.routineLog(state.uid, key), doc, 300);
+  creditRitual(id, key);
+}
+
+// A ritual linked to a project task ("Post 3× this week"): once it has run enough times this week, tick the task.
+function creditRitual(habitId, key) {
+  const { items, rituals } = routineData();
+  const habit = items.find((r) => r.id === habitId), rit = habit && rituals.find((r) => r.id === (habit.group || "anytime"));
+  if (!rit?.linkTask || ritualRunsThisWeek(items, rit.id, key, state.routinelog) < (Number(rit.linkTimes) || 3)) return;
+  const t = read("work").tasks.find((x) => x.id === rit.linkTask);
+  if (t && !t.done) docEdit("work", (w) => { const x = w.tasks.find((y) => y.id === t.id); if (x) x.done = key; });
 }
 const findRoutine = (id) => routineData().items.find((r) => r.id === id);
 
@@ -99,6 +109,8 @@ export default {
       editList((items, data) => {
         const rituals = data.rituals, at = rituals.findIndex((r) => r.id === e.id);
         const rit = { ...e, id: e.id || newId("rit"), icon: e.icon || "checklist" };
+        if (!rit.linkGoal) { delete rit.linkGoal; delete rit.linkTask; delete rit.linkTimes; }
+        else if (!rit.linkTask) { delete rit.linkTask; delete rit.linkTimes; }
         if (at >= 0) rituals[at] = rit; else rituals.push(rit);
       });
       closeSheet();
