@@ -126,7 +126,7 @@ function groupBlock(g, qs, a, t, lead, r) {
   const got = qs.reduce((n, q) => n + (r.points[q.id] || 0), 0), max = qs.length * 4;
   const filled = qs.every((q) => (r.points[q.id] || 0) > 0);
   return html`<details class="egroup" id="grp-${g.id}" ${filled ? "" : "open"}>
-    <summary class="egrouphead ${g.theme}"><span class="gicon">${icon(g.icon)}</span><div class="max"><div class="tname">${g.themeName}</div><h3>${g.name}</h3></div>
+    <summary class="egrouphead ${g.theme}"><span class="gicon">${icon(g.icon)}</span><div class="max"><h3>${g.name}</h3></div>
       <span class="gpts" id="live-grp-${g.id}">${got} / ${max}</span><span class="gfold" aria-hidden="true">${icon("expand_more")}</span></summary>
     ${qs.map((q) => questionCard(q, a, t, q.id === lead, true))}</details>`;
 }

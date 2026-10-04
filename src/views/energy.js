@@ -70,7 +70,7 @@ export function energyView() {
       <div class="escale"><span>Slipping</span><span class="sw garden"><i></i><i></i><i></i><i></i><i></i></span><span>Surging</span></div>
     </div>
     ${groups.map((g) => html`<div class="egroup ${g.theme}" id="eg-${g.id}">
-      <div class="ghead"><div class="gtitle"><span class="gicon">${icon(g.icon)}</span><div><div class="tname">${g.themeName}</div><h3 class="serif">${g.name}</h3></div></div>
+      <div class="ghead"><div class="gtitle"><span class="gicon">${icon(g.icon)}</span><div><h3 class="serif">${g.name}</h3></div></div>
         <div class="gsum"><b>${g.t.now}</b> <span class="small">${MOMENTUM[g.t.level]}</span></div></div>
       <p class="gwhy">${g.why}</p>
       <div class="etiles">${g.tiles.map((x, i) => tile(g.theme, { ...x, wide: g.tiles.length % 2 === 1 && i === g.tiles.length - 1 }))}</div></div>`)}

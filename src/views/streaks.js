@@ -143,7 +143,7 @@ export function streaksView() {
       <thead><tr><th>Area</th><th class="n">Streak</th><th class="n">Best</th><th class="n">This month</th></tr></thead>
       ${GROUPS.map((g) => {
         const mine = list.filter((a) => a.group === g.id);
-        return mine.length ? html`<tbody class="${g.theme}"><tr class="grp"><th colspan="4"><div class="grphead"><span class="gicon">${icon(g.icon)}</span><div><div class="tname">${g.themeName}</div><div class="gname">${g.name}</div></div></div></th></tr>
+        return mine.length ? html`<tbody class="${g.theme}"><tr class="grp"><th colspan="4"><div class="grphead"><span class="gicon">${icon(g.icon)}</span><div><div class="gname">${g.name}</div></div></div></th></tr>
           ${mine.map((a) => html`<tr class="${a.id === area.id ? "me" : ""}"><td><button class="linkbtn arealink" data-act="area" data-area="${a.id}"><span class="tchip">${icon(a.ico)}</span>${a.name}</button></td>
             <td class="n num">${results[a.id].current}</td><td class="n num">${results[a.id].best}</td><td class="n num">${fullThisMonth(a)}</td></tr>`)}</tbody>` : "";
       })}</table></div></section>`;

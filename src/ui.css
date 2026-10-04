@@ -909,3 +909,17 @@ html.poster-page,html.poster-page body{background:#f7e2cf}
 #wlc.ui .ritlinks{list-style:none;padding:0;margin:8px 0 12px;display:grid;gap:6px}
 #wlc.ui .ritlinks li{display:flex;align-items:center;gap:8px;font-size:.9em;padding:8px 12px;border:1px solid var(--border);border-radius:12px}
 #wlc.ui.poster .ritlinks li{border:var(--bw) solid var(--ink);background:var(--card);box-shadow:2px 2px 0 var(--ink)}
+
+/* Poster: energy groups are separate cards with breathing room; heading sits inside the card */
+#wlc.ui.poster details.egroup{margin:0 0 18px;padding:2px 14px 14px}
+#wlc.ui.poster details.egroup>.egrouphead{margin:12px 0}
+#wlc.ui.poster details.egroup:not([open]){padding-bottom:2px}
+#wlc.ui.poster details.egroup:not([open])>.egrouphead{margin:10px 0}
+#wlc.ui.poster details.egroup .cat{margin:12px 0 0}
+#wlc.ui.poster .egrouphead h3{font-size:1.6em}
+/* Poster spiral: labels are plain text, not buttons; arcs in the full poster colours */
+#wlc.ui.poster .rings .rlab{border:0!important;background:none!important;box-shadow:none!important;border-radius:0;color:var(--ink);font-weight:700;padding:0;height:calc(18 / 236 * 100%)}
+#wlc.ui.poster .rings .rlab.full{color:var(--cream)}
+#wlc.ui.poster .rings .rlab:active{transform:translateY(-50%)}
+#wlc.ui.poster .rings .tab,#wlc.ui.poster .rings .arc{stroke:var(--h)}
+#wlc.ui.poster .rings g.full .tab,#wlc.ui.poster .rings g.full .arc{stroke:var(--h)}
