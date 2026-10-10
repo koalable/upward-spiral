@@ -48,6 +48,9 @@ export const monthName = (mk) => fmt(`${mk}-01`, { month: "long" });
 export const minutesOf = (hhmm) => { const [h, m] = hhmm.split(":").map(Number); return h * 60 + m; };
 export const clock = (ms) => new Date(ms).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
 export const hhmmOf = (ms) => { const d = new Date(ms); return `${pad(d.getHours())}:${pad(d.getMinutes())}`; };
+// A reminder that only runs on some weekdays (0 = Sunday). No days, or all seven = every day.
+export const onWeekday = (days, key) => !days?.length || days.includes(parseKey(key).getDay());
+
 export function atTime(key, hhmm) {
   const d = parseKey(key);
   const [h, m] = hhmm.split(":").map(Number);

@@ -84,3 +84,10 @@ test("few-times-a-week nudge: only when a habit is due, at the pace time", async
   const notDue = dueNotifications(prefs, { settings: {}, routines, routinelogs: logs(["2026-09-29"]) }, now, {});
   assert.equal(notDue.find((m) => m.id === "pace"), undefined);
 });
+
+test("meds: a weekly reminder only fires on its day", () => {
+  const cfg = { ...settings, meds: [{ id: "w", name: "Weekly shot", times: ["09:00"], days: [6] }] };
+  const sat = { date: "2026-10-10", minutes: 9 * 60 }, sun = { date: "2026-10-11", minutes: 9 * 60 };
+  assert.deepEqual(ids(dueNotifications({}, { settings: cfg }, sat)), ["med:w:09:00"]);
+  assert.deepEqual(ids(dueNotifications({}, { settings: cfg }, sun)), []);
+});

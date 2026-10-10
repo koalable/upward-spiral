@@ -4,7 +4,8 @@ import { MED_KINDS, TOAST_MS, MEDLOG_DAYS } from "../constants.js";
 import { state, hasQuestion } from "../state.js";
 import { sheet } from "../state.js";
 import { medList, activeMeds, logsOn, medStatus, doseLabel, substanceUnits } from "../meds.js";
-import { saveStatus, fold, icon } from "./components.js";
+import { saveStatus, fold, icon, pressed } from "./components.js";
+import { DAY_LETTERS } from "../routines.js";
 import { medWeek } from "./medweek.js";
 
 export const toastVisible = () => state.toast && Date.now() - state.toast.when < TOAST_MS;
@@ -47,6 +48,10 @@ export function patchMedStatus(view) {
   if (t && !toastVisible() && t.innerHTML) { state.toast = null; t.innerHTML = ""; }
 }
 
+// "Every day", "Saturdays", "Mo We Fr"
+const FULL_DAYS = ["Sundays", "Mondays", "Tuesdays", "Wednesdays", "Thursdays", "Fridays", "Saturdays"];
+const daysText = (days) => !days?.length || days.length === 7 ? "Every day" : days.length === 1 ? FULL_DAYS[days[0]] : [...days].sort().map((d) => DAY_LETTERS[d]).join(" ");
+
 function medForm() {
   const e = sheet("med");
   if (!e) return html`<p><button class="btn" data-act="medNew">Add a medication or substance</button></p>`;
@@ -57,6 +62,7 @@ function medForm() {
     <label>Usual dose<input class="field" id="med-dose" data-draft="dose" maxlength="20" value="${e.dose || ""}" placeholder="50"></label>
     <label>Unit<input class="field" id="med-unit" data-draft="unit" maxlength="20" value="${e.unit || ""}" placeholder="mg, pill, drink"></label>
     <label class="full">Reminder times (optional, sends a phone notification)<span class="timesrow">${times.map((t, i) => html`<input class="field" type="time" data-draft="times.${i}" value="${t}" aria-label="Time ${i + 1}">`)}</span></label>
+    <div class="full"><span class="small muted">Reminder days</span><nav class="wrap no-space">${DAY_LETTERS.map((l, d) => html`<button class="chip ${!e.days?.length || e.days.includes(d) ? "fill" : "border"}" data-act="medDay" data-day="${d}" aria-pressed="${pressed(!e.days?.length || e.days.includes(d))}">${l}</button>`)}</nav><span class="small muted">${daysText(e.days)}. Tap days to choose; one day = a weekly reminder.</span></div>
     <label>Hours between doses (optional)<input class="field" id="med-every" data-draft="every" data-num type="number" min="0" step="0.5" value="${e.every ?? ""}" placeholder="e.g. 6"></label>
     <label>Daily max (optional)<input class="field" id="med-max" data-draft="max" data-num type="number" min="0" step="1" value="${e.max ?? ""}" placeholder="e.g. 4"></label>
     <label class="full">Notes<input class="field" id="med-notes" data-draft="notes" maxlength="200" value="${e.notes || ""}" placeholder="With food, etc."></label>
@@ -75,7 +81,7 @@ function listItem(m, i) {
     <div class="qmain"><b>${m.name}</b>${m.dose ? html`<span class="muted">${doseLabel(m.dose, m.unit)}</span>` : ""}
       <span class="tag">${MED_KINDS[m.kind] || ""}</span>${substanceUnits(m.counts) ? html`<span class="tag on">Counts as ${UNIT_LABEL[substanceUnits(m.counts)] || `${substanceUnits(m.counts)} unit`}</span>` : ""}</div>
     <div class="qbtns"><button class="linkbtn" data-act="medEdit" data-index="${i}">Edit</button><button class="x" data-act="medRemove" data-index="${i}" aria-label="Remove ${m.name}">×</button></div>
-    ${times.length ? html`<div class="calrow small muted">Reminds at ${times.map((t) => clock(atTime(todayKey(), t))).join(", ")}</div>` : ""}
+    ${times.length ? html`<div class="calrow small muted">Reminds ${m.days?.length && m.days.length < 7 ? daysText(m.days) + " " : ""}at ${times.map((t) => clock(atTime(todayKey(), t))).join(", ")}</div>` : ""}
   </li>`;
 }
 

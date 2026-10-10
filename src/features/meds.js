@@ -24,6 +24,7 @@ function saveMed() {
   e.max = e.max === "" ? undefined : Math.max(0, Math.round(Number(e.max)));
   if (!e.name) return $("#med-name").focus(), "none";
   const med = { id: e.id || newId("m"), name: e.name, kind: e.kind || "rx", dose: e.dose || "", unit: e.unit || "", times: (e.times || []).slice(0, 4), notes: e.notes || "", counts: substanceUnits(e.counts), active: true };
+  if (e.days?.length && e.days.length < 7) med.days = [...e.days].sort();
   if (e.every > 0) med.every = e.every;
   if (e.max > 0) med.max = e.max;
   const list = medList(), at = list.findIndex((m) => m.id === med.id);
@@ -87,6 +88,12 @@ export default {
       state.toast = null;
       closeSheet();
       return n ? undefined : "none";
+    },
+    medDay(el) {
+      const e = sheet("med"), d = Number(el.dataset.day);
+      const days = new Set(e.days?.length && e.days.length < 7 ? e.days : []);
+      if (days.has(d)) days.delete(d); else days.add(d);
+      e.days = days.size === 7 ? [] : [...days].sort();
     },
     medNew() { openSheet("med", { kind: "rx", times: [] }); },
     medEdit(el) { openSheet("med", clone(medList()[Number(el.dataset.index)])); },

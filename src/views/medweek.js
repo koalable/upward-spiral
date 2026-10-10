@@ -1,6 +1,6 @@
 // Meds: a week on one screen. One row per day, time of day across; each item has its own colour.
 // Filled dot = logged dose. Hollow ring = a reminder time for that item (so a ring with no dot nearby = not logged).
-import { html, todayKey, addDays, weekStart, weekday, shortDate, dateRange, clock, atTime } from "../util.js";
+import { html, todayKey, addDays, weekStart, weekday, shortDate, dateRange, clock, atTime, onWeekday } from "../util.js";
 import { MEDLOG_DAYS } from "../constants.js";
 import { state } from "../state.js";
 import { medList, logsOn, doseLabel } from "../meds.js";
@@ -34,7 +34,7 @@ export function medWeek() {
       const label = `${x.name}${x.dose ? " " + doseLabel(x.dose, x.unit) : ""} · ${clock(x.at)}`;
       return html`<i class="mwdot" style="left:${pct(minutesOf(x.at))};${lane(x.medId)};background:${color}" title="${label}" aria-label="${label}"></i>`;
     });
-    const rings = future ? [] : meds.filter((m) => m.active !== false).flatMap((m) => (m.times || []).filter(Boolean).map((t) => {
+    const rings = future ? [] : meds.filter((m) => m.active !== false && onWeekday(m.days, key)).flatMap((m) => (m.times || []).filter(Boolean).map((t) => {
       const min = Number(t.slice(0, 2)) * 60 + Number(t.slice(3, 5));
       if (key === today && min > minutesOf(Date.now())) return "";
       return html`<i class="mwring" style="left:${pct(min)};${lane(m.id)};border-color:${colorOf.get(m.id)}" title="${m.name} reminder · ${clock(atTime(key, t))}"></i>`;

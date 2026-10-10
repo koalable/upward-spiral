@@ -3,7 +3,7 @@
 // Choices live in users/{uid}/notify/settings:
 //   { tz, tokens: [{ t, ua, at }], checkin: {on,time}, rituals: {on}, pace: {on,time}, meds: {on}, work: {on,time},
 //     streak: {on,time}, quiet: {on,from,to}, sent: { date, ids: [] } }
-import { minutesOf } from "./util.js";
+import { minutesOf, onWeekday } from "./util.js";
 import { scoreDay, scoredQuestions } from "./scoring.js";
 import { normalizeRoutines, inRitual, pace, lastLabel } from "./routines.js";
 import { normalizeWork, todayPicks } from "./work.js";
@@ -110,7 +110,7 @@ export function dueNotifications(prefs, data, now, links = {}) {
   // Meds: the nth scheduled time, if fewer than n doses are logged today.
   if (p.meds.on) {
     const taken = (id) => (data.medlog?.items || []).filter((x) => x.medId === id).length;
-    for (const m of (cfg.meds || []).filter((x) => x.active !== false)) {
+    for (const m of (cfg.meds || []).filter((x) => x.active !== false && onWeekday(x.days, date))) {
       (m.times || []).filter(Boolean).sort().forEach((t, i) => {
         if (inWindow(t, minutes) && taken(m.id) <= i) {
           add(`med:${m.id}:${t}`, `Time for ${m.name}`, [m.dose, m.unit].filter(Boolean).join(" ") || "Tap to log it.", home);

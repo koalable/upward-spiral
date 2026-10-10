@@ -62,6 +62,7 @@ var minutesOf = (hhmm) => {
   const [h, m] = hhmm.split(":").map(Number);
   return h * 60 + m;
 };
+var onWeekday = (days, key) => !days?.length || days.includes(parseKey(key).getDay());
 
 // src/constants.js
 var POINTS_PER_CATEGORY = 4;
@@ -404,7 +405,7 @@ function dueNotifications(prefs, data, now, links = {}) {
   }
   if (p.meds.on) {
     const taken = (id) => (data.medlog?.items || []).filter((x) => x.medId === id).length;
-    for (const m of (cfg.meds || []).filter((x) => x.active !== false)) {
+    for (const m of (cfg.meds || []).filter((x) => x.active !== false && onWeekday(x.days, date))) {
       (m.times || []).filter(Boolean).sort().forEach((t, i) => {
         if (inWindow(t, minutes) && taken(m.id) <= i) {
           add(`med:${m.id}:${t}`, `Time for ${m.name}`, [m.dose, m.unit].filter(Boolean).join(" ") || "Tap to log it.", home);

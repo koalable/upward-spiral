@@ -2,7 +2,7 @@
 import { state, settings, findQuestion, isEditable } from "./state.js";
 import { dayFor, commitDay } from "./day.js";
 import { save, paths } from "./store.js";
-import { clone, newId, isSet, toNum, getPath, setPath, dateKey, todayKey, atTime, hhmmOf, clock, duration } from "./util.js";
+import { clone, newId, isSet, toNum, getPath, setPath, dateKey, todayKey, atTime, hhmmOf, clock, duration, onWeekday, addDays, weekday } from "./util.js";
 import { HOUR_MS } from "./constants.js";
 
 export const medList = () => settings().meds;
@@ -31,7 +31,15 @@ export function medStatus(med, now = Date.now()) {
   let warn = false;
 
   const times = scheduleOf(med);
-  if (times.length) {
+  const offDay = times.length && !onWeekday(med.days, today);
+  if (offDay) {
+    // A weekly (or some-days) item: say which day it's next due.
+    let next = today;
+    for (let i = 1; i <= 7 && !onWeekday(med.days, next); i++) next = addDays(today, i);
+    if (next === today) next = addDays(today, 7);
+    parts.push(`Next ${weekday(next)} ${clock(atTime(next, times[0]))}`);
+    brief.push(`Next ${weekday(next)}`);
+  } else if (times.length) {
     if (takenToday < times.length) {
       const next = atTime(today, times[takenToday]);
       const due = now >= next;
@@ -55,7 +63,7 @@ export function medStatus(med, now = Date.now()) {
     parts.push(`${takenToday} of ${toNum(med.max)} today`);
     brief.push(`${takenToday}/${toNum(med.max)} today`);
     if (takenToday >= toNum(med.max)) { parts.push("You've reached your daily max"); brief.push("Max reached"); warn = true; }
-  } else if (!times.length && takenToday) {
+  } else if ((!times.length || offDay) && takenToday) {
     parts.push(`${takenToday} today`);
     brief.push(`${takenToday} today`);
   }
