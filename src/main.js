@@ -130,18 +130,38 @@ function startPreview(seed) {
 // the page shifted so the bar floats above the bottom. Hide the bar while typing; nudge the page back after.
 const TYPES = /^(text|search|email|url|tel|number|password|date|time|datetime-local|month|week)$/;
 const typingIn = (el) => el && (el.tagName === "TEXTAREA" || el.tagName === "SELECT" || (el.tagName === "INPUT" && TYPES.test(el.type)) || el.isContentEditable);
-const settle = () => { window.scrollBy(0, 1); window.scrollBy(0, -1); };
+// iOS can also leave the whole screen "shorter" after the keyboard (or after coming back to the app), so the
+// bar sits at the bottom of a smaller screen. Hiding and re-showing the app for one frame makes iOS measure again.
+let tallest = window.innerHeight;
+function remeasure() {
+  tallest = Math.max(tallest, window.innerHeight);
+  if (tallest - window.innerHeight <= 4 || document.body.classList.contains("typing")) return;
+  const root = document.getElementById("wlc"), y = window.scrollY;
+  if (!root) return;
+  root.style.display = "none";
+  void root.offsetHeight; // forces iOS to lay the page out again
+  root.style.display = "";
+  window.scrollTo(0, y);
+}
+const settle = () => { window.scrollBy(0, 1); window.scrollBy(0, -1); remeasure(); };
 function keepTabBarDown() {
   document.addEventListener("focusin", (e) => { if (typingIn(e.target)) document.body.classList.add("typing"); });
   document.addEventListener("focusout", () => setTimeout(() => {
     if (typingIn(document.activeElement)) return;
     document.body.classList.remove("typing");
     settle();
+    setTimeout(remeasure, 300); // after the keyboard's close animation
   }, 50));
-  // Also after the keyboard's close animation, and whenever the visible area settles.
+  // Also whenever the visible area settles, and when the app comes back to the front.
   window.visualViewport?.addEventListener("resize", () => {
-    if (!document.body.classList.contains("typing") && window.visualViewport.offsetTop) settle();
+    if (document.body.classList.contains("typing")) return;
+    if (window.visualViewport.offsetTop) settle(); else remeasure();
   });
+  window.addEventListener("resize", () => { if (!document.body.classList.contains("typing")) setTimeout(remeasure, 150); });
+  const back = () => { if (document.visibilityState === "visible") setTimeout(settle, 250); };
+  document.addEventListener("visibilitychange", back);
+  window.addEventListener("pageshow", back);
+  window.addEventListener("orientationchange", () => { tallest = 0; setTimeout(() => { tallest = window.innerHeight; }, 500); });
 }
 
 // pages: { pageId: [features] } (the app), or features: [...] for a one-page bundle.
